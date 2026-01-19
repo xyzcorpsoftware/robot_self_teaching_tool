@@ -1,0 +1,8 @@
+string seq_no
+string cmd
+uint8 channel
+---
+string seq_no
+uint16 response_cd
+string component_cd
+string status_cd

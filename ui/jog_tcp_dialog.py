@@ -1,0 +1,128 @@
+from PyQt5.QtWidgets import QDialog, QGroupBox, QGridLayout, QVBoxLayout, QHBoxLayout, QPushButton
+from PyQt5.QtCore import Qt
+
+
+class TCPJogDialog(QDialog):
+    """
+    TCP 조그 다이얼로그
+    - X/Y, Z 조그
+    - Saved: target_name 포인트로 저장 요청
+    - cup1/2/3일 때 Cup Extract 버튼 예시 포함
+    """
+
+    def __init__(self, controller, sequence, target_name: str, parent=None):
+        super().__init__(parent)   # ❗ 반드시 제일 먼저
+
+        self.controller = controller
+        self.sequence = sequence
+        self.target_name = target_name
+
+        self.setWindowTitle(f"TCP Jog - {target_name}")
+        self._build_ui()
+
+    def _build_ui(self):
+        main = QHBoxLayout(self)
+
+        # X/Y 그룹
+        xy_group = QGroupBox("X / Y")
+        xy_layout = QGridLayout()
+        btn_y_p = QPushButton("+Y")
+        btn_y_m = QPushButton("-Y")
+        btn_x_p = QPushButton("+X")
+        btn_x_m = QPushButton("-X")
+        xy_layout.addWidget(btn_y_p, 0, 1)
+        xy_layout.addWidget(btn_x_m, 1, 0)
+        xy_layout.addWidget(btn_x_p, 1, 2)
+        xy_layout.addWidget(btn_y_m, 2, 1)
+        xy_group.setLayout(xy_layout)
+
+        # Z 그룹
+        z_group = QGroupBox("Z")
+        z_layout = QVBoxLayout()
+        btn_z_p = QPushButton("+Z")
+        btn_z_m = QPushButton("-Z")
+        z_layout.addWidget(btn_z_p)
+        z_layout.addWidget(btn_z_m)
+        z_group.setLayout(z_layout)
+
+        # 오른쪽 버튼 영역
+        right_layout = QVBoxLayout()
+        right_layout.addStretch()
+
+        # cup 계열일 때만 표시되는 추가 버튼 (예시)
+        if self.target_name in ("cup1", "cup2", "cup3"):
+            btn_cup_extra = QPushButton("Cup Extract")
+            right_layout.addWidget(btn_cup_extra)
+            btn_cup_extra.clicked.connect(self._on_cup_extra_clicked)
+
+        btn_save = QPushButton("Saved")
+        right_layout.addWidget(btn_save)
+
+        main.addWidget(xy_group)
+        main.addWidget(z_group)
+        main.addLayout(right_layout)
+
+        # 조그 연결
+        step = 1.0
+        btn_x_p.clicked.connect(lambda: self._jog("x+", step))
+        btn_x_m.clicked.connect(lambda: self._jog("x-", step))
+        btn_y_p.clicked.connect(lambda: self._jog("y+", step))
+        btn_y_m.clicked.connect(lambda: self._jog("y-", step))
+        btn_z_p.clicked.connect(lambda: self._jog("z+", step))
+        btn_z_m.clicked.connect(lambda: self._jog("z-", step))
+        btn_save.clicked.connect(self._on_save)
+
+    def _jog(self, direction: str, step: float):
+        if self.sequence is None:
+            return
+
+        self.sequence.jog_tcp(
+            ui_point_name=self.target_name,
+            direction=direction,
+            step=step,
+            controller=self.controller
+        )
+
+    def _on_save(self):
+        """
+        저장 우선순위:
+        1) sequence.save_point(target_name, controller) 제공되면 그걸 사용
+        2) controller.save_current_tcp(target_name) 제공되면 그걸 사용
+        """
+        try:
+            if self.sequence is not None and hasattr(self.sequence, "save_point"):
+                self.sequence.save_point(self.target_name, controller=self.controller)
+            elif self.controller is not None and hasattr(self.controller, "save_current_tcp"):
+                self.controller.save_current_tcp(self.target_name)
+            else:
+                print("[WARN] No save handler. Implement sequence.save_point() or controller.save_current_tcp()")
+        except Exception as e:
+            print(f"[ERROR] save failed: {e}")
+        finally:
+            self.accept()
+
+    def _on_cup_extra_clicked(self):
+        if self.sequence and hasattr(self.sequence, "cup_extract_async"):
+            self.sequence.cup_extract_async(self.target_name)
+        print(f"[UI] Extra button clicked for {self.target_name}")
+
+    def closeEvent(self, event):
+        """
+        X 버튼으로 조그 창을 닫을 때 저장된 복귀 모션을 실행한다.
+        SequenceService에 반환 모션 헬퍼가 있으면 활용한다.
+        """
+        try:
+            if self.sequence and hasattr(self.sequence, "_return_motion_after_save"):
+                # target_name을 실제 포인트명으로 변환해 복귀 수행
+                if hasattr(self.sequence, "_resolve_saved_point_name"):
+                    target = self.sequence._resolve_saved_point_name(self.target_name)
+                else:
+                    target = self.target_name
+                self.sequence._return_motion_after_save(
+                    target,
+                    controller=self.controller
+                )
+        except Exception as e:
+            print(f"[UI][WARN] closeEvent return failed: {e}")
+        super().closeEvent(event)
+
