@@ -1,0 +1,10 @@
+/__pycache__/
+/data/__pycache__/
+/robot/__pycache__/
+/ros/__pycache__/
+/usecase/__pycache__/
+/ui/__pycache__/
+/venv/
+*.pyc
+/.qtcreator/
+/.vscode/
