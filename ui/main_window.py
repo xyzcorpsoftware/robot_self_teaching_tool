@@ -261,8 +261,6 @@ class MainWindow(QDialog):
         ice_index = 1
         cup_index = 1
 
-        ICE_LABEL_MAP = {1: 2, 2: 1}  # 필요 없으면 {1:1,2:2} 로
-
         for tty, row in rows_with_tty:
             m = re.search(r"ttyS(\d+)", tty)
             s_label = f"S{m.group(1)}" if m else tty
@@ -294,11 +292,9 @@ class MainWindow(QDialog):
 
             # ICE
             elif comp == "ice":
-                ICE_LABEL_MAP = {1: 2, 2: 1}  # 예: ICE num=1을 ice2로, num=2를 ice1로
 
                 if num is not None:
-                    mapped = ICE_LABEL_MAP.get(int(num), int(num))
-                    label = f"ice{mapped}"
+                    label = f"ice{int(num)}"
                 else:
                     label = f"ice{ice_index}"
                     ice_index += 1
@@ -349,6 +345,11 @@ class MainWindow(QDialog):
                 )
                 row_layout.addWidget(btn)
             row_layout.addStretch(1)
+
+        # add_buttons 호출 전에 추가
+        group_specs["ice"].sort(
+            key=lambda s: int(s["text"].replace("ice", "") or 0)
+        )
 
         add_buttons(self._cup_row_layout, group_specs["cup"])
         add_buttons(self._ice_row_layout, group_specs["ice"])
