@@ -510,7 +510,9 @@ class BrewService:
         self._return_motion_after_save(saved_point_name, controller,
                                        vel=self.DEFAULT_RETURN_VEL,
                                        acc=self.DEFAULT_RETURN_ACC)
-
+    def save_pulse(self, ui_point_name: str, pulse: str):
+        # Implement pulse saving logic here
+        pass
     def jog_tcp(self, ui_point_name: str, direction: str, step: float, controller=None):
         if controller is None:
             print("[BREW] jog_tcp ignored: controller is None")

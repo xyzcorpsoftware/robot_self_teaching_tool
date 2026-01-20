@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QDialog, QGroupBox, QGridLayout, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit
+from PyQt5.QtWidgets import QDialog, QGroupBox, QGridLayout, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QLabel
 from PyQt5.QtCore import Qt
 
 class TCPDispenserName:
@@ -10,6 +10,19 @@ class TCPDispenserName:
         "powder" : ["powder1", "powder2"],
         "ice" : ["ice1", "ice2"]
     }
+    RAIL_TARGET_PULSE = {
+        "cup1": 0,
+        "cup2": 0,
+        "ice1": 200000,
+        "ice2": 465000,
+        "cof":  705000,
+        "pow":  1026000,
+        "cup3": 1350000,
+        "cup4": 1350000,
+        "pic1": 1260000,
+        "pic2": 1260000,
+    }
+
 class TCPJogDialog(QDialog):
     """
     TCP 조그 다이얼로그
@@ -25,7 +38,7 @@ class TCPJogDialog(QDialog):
         self.sequence = sequence
         self.target_name = target_name
         self.rail_msg = None
-        self.rail_position = 0
+        self.rail_position = TCPDispenserName.RAIL_TARGET_PULSE.get(target_name, 0)
         self.setWindowTitle(f"TCP Jog - {target_name}")
         self._build_ui()
 
@@ -55,11 +68,20 @@ class TCPJogDialog(QDialog):
         z_group.setLayout(z_layout)
 
         # 오른쪽 버튼 영역
+
         right_layout = QVBoxLayout()
         right_layout.addStretch()
 
-
-
+        current_pos_label = QLabel(text=f'Current DP \n\n {self.target_name.upper()}')
+        current_pos_label.setAlignment(Qt.AlignCenter)
+        current_pos_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+        current_pos_label.setFixedHeight(70)
+        current_pos_label.setFixedWidth(150)
+        # current_pos_label.setFrameStyle(QLabel.Panel | QLabel.Sunken)
+        current_pos_label.setLineWidth(2)
+        current_pos_label.setMargin(5)
+        current_pos_label.setWordWrap(True)
+        right_layout.addWidget(current_pos_label)
         self.rail_msg = QLineEdit(str(self.rail_position))
         self.rail_msg.setAlignment(Qt.AlignCenter)
         
@@ -118,12 +140,17 @@ class TCPJogDialog(QDialog):
         2) controller.save_current_tcp(target_name) 제공되면 그걸 사용
         """
         try:
+
             if self.sequence is not None and hasattr(self.sequence, "save_point"):
                 self.sequence.save_point(self.target_name, controller=self.controller)
             elif self.controller is not None and hasattr(self.controller, "save_current_tcp"):
                 self.controller.save_current_tcp(self.target_name)
             else:
                 print("[WARN] No save handler. Implement sequence.save_point() or controller.save_current_tcp()")
+            
+            if self.rail_position != self.rail_msg.text():
+                self.rail_position = self.rail_msg.text()
+                self.sequence.save_pulse(self.target_name, self.rail_position)
         except Exception as e:
             print(f"[ERROR] save failed: {e}")
         finally:
