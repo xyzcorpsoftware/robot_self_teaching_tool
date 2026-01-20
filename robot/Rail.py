@@ -1,7 +1,7 @@
 import socket
 from threading import Lock, Thread
 import time
-from RailLibrary import RailAlarm, RailCheck, RailPacket, RailConstant, RailMotion
+from robot.RailLibrary import RailAlarm, RailCheck, RailPacket, RailConstant, RailMotion
 import traceback
 
 
@@ -21,10 +21,15 @@ class RailSocket:
         self.socket_buffer_size = 1024
         self.current_position = 0
         self.thread = Thread(target=self.update_position_loop, daemon=True)
+
+        self.connect()
     def connect(self):
         """
         소켓 연결
         """ 
+        if self.use_real_robot is False:
+            return
+
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(self.timeout)
         self.sock.connect((self.ip, self.port))
@@ -130,7 +135,7 @@ class RailSocket:
         return self.sync_no
 
     def _send_and_recv(self, pkt: bytes, min_resp_len: int = 6) -> bytes:
-        self.connect(do_init=False)
+        # self.connect(do_init=False)
         with self._lock:
             self.sock.sendall(pkt)
 

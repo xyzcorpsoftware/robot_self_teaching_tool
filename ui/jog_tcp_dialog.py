@@ -1,7 +1,15 @@
-from PyQt5.QtWidgets import QDialog, QGroupBox, QGridLayout, QVBoxLayout, QHBoxLayout, QPushButton
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5.QtWidgets import QDialog, QGroupBox, QGridLayout, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit
 from PyQt5.QtCore import Qt
 
-
+class TCPDispenserName:
+    name_dict ={
+        "cup" : ["cup1", "cup2", "cup3","cup4"],
+        "coffee" : ["coffee1", "coffee2"],
+        "powder" : ["powder1", "powder2"],
+        "ice" : ["ice1", "ice2"]
+    }
 class TCPJogDialog(QDialog):
     """
     TCP 조그 다이얼로그
@@ -16,7 +24,8 @@ class TCPJogDialog(QDialog):
         self.controller = controller
         self.sequence = sequence
         self.target_name = target_name
-
+        self.rail_msg = None
+        self.rail_position = 0
         self.setWindowTitle(f"TCP Jog - {target_name}")
         self._build_ui()
 
@@ -49,11 +58,30 @@ class TCPJogDialog(QDialog):
         right_layout = QVBoxLayout()
         right_layout.addStretch()
 
+
+
+        self.rail_msg = QLineEdit(str(self.rail_position))
+        self.rail_msg.setAlignment(Qt.AlignCenter)
+        
+        right_layout.addWidget(self.rail_msg)
+
+        # rail_position.setAlignment(Qt.AlignCenter)
+
+        btn_rail_start = QPushButton("Rail Move Start")
+        right_layout.addWidget(btn_rail_start)
+        btn_rail_start.clicked.connect(self.rail_move_start)
+        
+        
         # cup 계열일 때만 표시되는 추가 버튼 (예시)
-        if self.target_name in ("cup1", "cup2", "cup3"):
+        if self.target_name in TCPDispenserName.name_dict["cup"]:
             btn_cup_extra = QPushButton("Cup Extract")
             right_layout.addWidget(btn_cup_extra)
             btn_cup_extra.clicked.connect(self._on_cup_extra_clicked)
+
+        if self.target_name in TCPDispenserName.name_dict["coffee"]:
+            btn_coffee_extra = QPushButton("Coffee Extract")
+            right_layout.addWidget(btn_coffee_extra)
+            btn_coffee_extra.clicked.connect(self._on_coffee_extra_clicked)
 
         btn_save = QPushButton("Saved")
         right_layout.addWidget(btn_save)
@@ -105,6 +133,27 @@ class TCPJogDialog(QDialog):
         if self.sequence and hasattr(self.sequence, "cup_extract_async"):
             self.sequence.cup_extract_async(self.target_name)
         print(f"[UI] Extra button clicked for {self.target_name}")
+    def _on_coffee_extra_clicked(self):
+        if self.sequence and hasattr(self.sequence, "coffee_extract_async"):
+            self.sequence.coffee_extract_async(self.target_name)
+        print(f"[UI] Extra button clicked for {self.target_name}")
+    def _on_ice_extra_clicked(self):
+        if self.sequence and hasattr(self.sequence, "ice_extract_async"):
+            self.sequence.ice_extract_async(self.target_name)
+        print(f"[UI] Extra button clicked for {self.target_name}")
+    def _on_powder_extra_clicked(self):
+        if self.sequence and hasattr(self.sequence, "powder_extract_async"):
+            self.sequence.powder_extract_async(self.target_name)
+        print(f"[UI] Extra button clicked for {self.target_name}")
+
+    def rail_move_start(self):
+    
+        if self.rail_position != self.rail_msg.text():
+            self.rail_position = self.rail_msg.text()
+        
+        if self.sequence and hasattr(self.sequence, "rail_move_async"):
+            self.sequence.rail_move_async(self.target_name, self.rail_position, controller=self.controller)
+        print(f"[UI] Rail Move Start clicked for {self.target_name} to position {self.rail_position}")
 
     def closeEvent(self, event):
         """

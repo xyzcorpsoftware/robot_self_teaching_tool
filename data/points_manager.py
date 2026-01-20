@@ -48,14 +48,16 @@ class RobotPointsManager:
     # DB
     # ─────────────────────────────────────────────
     def _connect(self):
-        return pymysql.connect(
-            host=self.host,
-            user=self.user,
-            password=self.password,
-            database=self.database,
-            charset="utf8mb4",
-        )
-
+        try:
+            return pymysql.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database,
+                charset="utf8mb4",
+            )
+        except Exception as error:
+            print("[PointDB][ERROR] Connection failed:\n", traceback.format_exc())
     def load_points_from_db(self):
         """
         DB에서 포인트 로드
@@ -313,13 +315,16 @@ class BrewPointsManager:
     # DB
     # ─────────────────────────────────────────────
     def _connect(self):
-        return pymysql.connect(
-            host=self.host,
-            user=self.user,
-            password=self.password,
-            database=self.database,
-            charset="utf8mb4",
-        )
+        try:
+            return pymysql.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database,
+                charset="utf8mb4",
+            )
+        except Exception as error:
+            print("[PointDB][ERROR] Connection failed:\n", traceback.format_exc())
     
     def load_points_from_db(self):
         conn = None

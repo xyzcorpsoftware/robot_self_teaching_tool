@@ -47,8 +47,8 @@ class BrewService:
             else:
                 rail_ip, rail_port = default_ip, default_port
 
-            self.rail = _RailClient(rail_ip, rail_port, timeout=3.0, use_real_robot=self.use_real_robot)
-            self.rail.connect(do_init=True)
+            self.rail = RailSocket(rail_ip, rail_port, timeout=3.0, use_real_robot=self.use_real_robot)
+            # self.rail.connect(do_init=True)
             print(f"[BREW][RAIL][INFO] connected+servo_on to {rail_ip}:{rail_port}")
 
         self.RAIL_TARGET_PULSE = {
@@ -64,7 +64,7 @@ class BrewService:
             "pic2": 1260000,
         }
 
-    def _move_rail_before_motion(self, label: str):
+    def _move_rail_before_motion(self, label: str, target_pose: str = None):
         key = (label or "").lower().strip().replace(" ", "").replace("_", "")
         if not key or key == "none":
             print("[BREW][RAIL] skip (empty label)")
@@ -78,6 +78,7 @@ class BrewService:
             return
 
         try:
+            target = int(target_pose) if target_pose is not None else self.RAIL_TARGET_PULSE.get(key)
             # ✅ 폴링/포지션 로그 포함
             final_pos = self.rail.move_to_pulse_and_wait(
                 target_pulse=target,
@@ -622,8 +623,8 @@ class _RailClient:
         except Exception:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        s.settimeout(self.timeout)
         s.connect((self.ip, self.port))
+        s.settimeout(self.timeout)
         # 원본: connect 후 timeout 설정(10)했지만, 여기선 timeout 그대로 유지
         self.sock = s
 
@@ -717,7 +718,7 @@ class _RailClient:
         return chunk
 
     def _send_and_recv(self, pkt: bytes, min_resp_len: int = 6) -> bytes:
-        self.connect(do_init=False)
+        # self.connect(do_init=False)
         with self._lock:
             self.sock.sendall(pkt)
 
