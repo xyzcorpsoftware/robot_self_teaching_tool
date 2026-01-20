@@ -7,10 +7,10 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
     
-from app.ros.cup_service_client import CupServiceClient
+from ros.cup_service_client import CupServiceClient
 
 
-class SequenceResult:
+class BrewXResult:
     def __init__(self, open_jog=True, jog_target=None, jog_mode="tcp", ui_extras=None):
         self.open_jog = open_jog
         self.jog_target = jog_target
@@ -18,7 +18,7 @@ class SequenceResult:
         self.ui_extras = ui_extras or {}
 
 
-class SequenceService:
+class BrewXService:
     def __init__(self, points_manager=None):
         self.points_manager = points_manager
 

@@ -14,9 +14,9 @@ from PyQt5.QtWidgets import QGridLayout, QGroupBox
 
 from PyQt5.QtCore import Qt, QTimer
 
-from app.ui.jog_tcp_dialog import TCPJogDialog
-from app.ui.jog_joint_dialog import JointJogDialog
-from app.usecase.brew_service import BrewService
+from ui.jog_tcp_dialog import TCPJogDialog
+from ui.jog_joint_dialog import JointJogDialog
+from usecase.brew_service import BrewService
 import pymysql
 
 

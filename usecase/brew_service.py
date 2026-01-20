@@ -5,16 +5,16 @@ import socket
 import time
 import traceback
 from threading import Lock
-
+from robot.Rail import RailSocket
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from app.data.robot_info import RobotInfoManager
+from data.robot_info import RobotInfoManager
 
 
 class BrewService:
-    def __init__(self, points_manager=None):
+    def __init__(self, points_manager=None, use_real_robot=False):
         self.points_manager = points_manager
         self._tcp_cache = {}
         self.DEFAULT_RETURN_VEL = 25
@@ -29,18 +29,27 @@ class BrewService:
             auto_load=True,
         )
 
+        self.use_real_robot = use_real_robot
+
+
+        
         default_ip = os.getenv("RAIL_IP", "192.168.0.12")
         default_port = int(os.getenv("RAIL_PORT", "2001"))
 
-        ip_port = self.robot_info.get_ip_port("RAL", default_port=default_port)
-        if ip_port:
-            rail_ip, rail_port = ip_port
-        else:
-            rail_ip, rail_port = default_ip, default_port
+        if not self.use_real_robot:
+            print("[BREW][RAIL] use_real_robot is False: skipping rail connection")
+            self.rail = None
+        else :
 
-        self.rail = _RailClient(rail_ip, rail_port, timeout=3.0)
-        self.rail.connect(do_init=True)
-        print(f"[BREW][RAIL][INFO] connected+servo_on to {rail_ip}:{rail_port}")
+            ip_port = self.robot_info.get_ip_port("RAL", default_port=default_port)
+            if ip_port:
+                rail_ip, rail_port = ip_port
+            else:
+                rail_ip, rail_port = default_ip, default_port
+
+            self.rail = _RailClient(rail_ip, rail_port, timeout=3.0, use_real_robot=self.use_real_robot)
+            self.rail.connect(do_init=True)
+            print(f"[BREW][RAIL][INFO] connected+servo_on to {rail_ip}:{rail_port}")
 
         self.RAIL_TARGET_PULSE = {
             "cup1": 0,
@@ -590,14 +599,15 @@ class _RailClient:
     - position poll 로그 옵션 제공
     """
 
-    def __init__(self, ip: str, port: int, timeout: float = 3.0):
+    def __init__(self, ip: str, port: int, timeout: float = 3.0, use_real_robot=False):
+
         self.ip = ip
         self.port = port
         self.timeout = timeout
         self.sock = None
         self.sync_no = 0
         self._lock = Lock()
-
+        self.use_real_robot = use_real_robot
     # -------------------------
     # socket lifecycle
     # -------------------------
@@ -894,7 +904,7 @@ class _RailClient:
         self,
         target_pulse: int,
         pps: int = 100000,
-        tol: int = 50,
+        pulse_diff: int = 50,
         timeout_s: float = 20.0,
         log_poll: bool = True,
         log_period_s: float = 0.5,
@@ -906,7 +916,7 @@ class _RailClient:
         - ✅ "이미 목표 위치"인지 / "실제로 변화"가 있었는지 로그로 확인 가능
         """
         start = self.get_position_pulse()
-        if abs(start - target_pulse) <= tol:
+        if abs(start - target_pulse) <= pulse_diff:
             if log_poll:
                 print(f"[BREW][RAIL][POS] already at target: start={start}, target={target_pulse}, tol={tol}")
             return start
@@ -924,7 +934,7 @@ class _RailClient:
                 print(f"[BREW][RAIL][POS] curr={curr}, target={target_pulse}, diff={curr-target_pulse}")
                 last_log = time.time()
 
-            if abs(curr - target_pulse) <= tol:
+            if abs(curr - target_pulse) <= pulse_diff:
                 return curr
 
             if (time.time() - t0) > timeout_s:
