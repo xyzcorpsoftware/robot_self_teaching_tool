@@ -28,7 +28,7 @@ class _CupClientNode(Node):
     def __init__(self, service_name: str):
         super().__init__("fr_gui_cup_client")
         # ✅ 너가 사용 중인 srv 타입
-        from app.ros import CupService
+        from ros import CupService
         self._srv_type = CupService
 
         self.client = self.create_client(CupService, service_name)

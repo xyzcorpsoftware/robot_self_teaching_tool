@@ -12,14 +12,15 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
     
 # ✅ 패키지 import (우분투 기준)
-from app.robot.fake_controller import FakeRobotController
-from app.robot.fr_controller import FrRobotController
-from app.data.points_manager import RobotPointsManager
-from app.data.points_manager import BrewPointsManager
-from app.usecase.sequence_service import SequenceService
-from app.usecase.brew_service import BrewService
-from app.ui.main_window import MainWindow
+from robot.fake_controller import FakeRobotController
+from robot.fr_controller import FrRobotController
+from data.points_manager import RobotPointsManager
+from data.points_manager import BrewPointsManager
+from usecase.brewx_service import BrewXService
+from usecase.brew_service import BrewService
+from ui.main_window import MainWindow
 
+from data import db_data
 
 class ConnectDialog(QDialog):
     """
@@ -29,23 +30,8 @@ class ConnectDialog(QDialog):
 
     # ✅ 네가 올려준 프로세스명 그대로 (systemd 서비스/노드 이름에 맞게)
     ROBOT_PROCESS_KEYWORD = "RobotSystemNode"
-    UI_INFO_TABLE = "T_ROBOT_INFO"
-    UI_DB = {
-        "host": "localhost",
-        "user": "baris",
-        "password": "xyz20190529",
-        "database": "baris_brew",
-        "charset": "utf8mb4",
-    }
-    COMPONENT_INFO_TABLE = "T_COMPONENT_INFO"
-    COMPONENT_DB = {
-        "host": "localhost",
-        "user": "baris",
-        "password": "xyz20190529",
-        "database": "baris_brew",
-        "charset": "utf8mb4",
-    }
-
+ 
+    
     def __init__(self, use_real_robot=False):
         super().__init__()
         self.use_real_robot = use_real_robot
@@ -78,9 +64,9 @@ class ConnectDialog(QDialog):
         """
         conn = None
         try:
-            conn = pymysql.connect(**self.UI_DB)
+            conn = pymysql.connect(**db_data.DB_CONFIG.config)
             cursor = conn.cursor()
-            sql = f"SELECT COUNT(*) FROM {self.UI_INFO_TABLE}"
+            sql = f"SELECT COUNT(*) FROM {db_data.DB_CONFIG.ROBOT_INFO_TABLE}"
             cursor.execute(sql)
             row = cursor.fetchone()
             return int(row[0]) if row else None
@@ -174,26 +160,26 @@ class ConnectDialog(QDialog):
 
         # ✅ 공통: controller
         controller = FrRobotController(ip=ip) if self.use_real_robot else FakeRobotController(ip=ip)
-
+        
         # ✅ UI별로 points_manager/sequence/brew_service 분리
         if not is_brew_ui:
             # main_window.ui (기존)
             points_manager = RobotPointsManager()              # 바리스 브루X 등 기존 DB 포인트
-            sequence = SequenceService(points_manager=points_manager)
+            sequence = BrewXService(points_manager=points_manager)
             brew_service = None
         else:
             # main_window_brew.ui (브루 전용)
             points_manager = BrewPointsManager()               # 바리스 브루 전용 DB 포인트
             sequence = None                                    # brew UI에서는 sequence 안 씀
-            brew_service = BrewService(points_manager=points_manager)
+            brew_service = BrewService(points_manager=points_manager,use_real_robot=self.use_real_robot)  # ✅ 여기 중요
 
         self.main_window = MainWindow(
             controller=controller,
             points_manager=points_manager,
             sequence=sequence,
             brew_service=brew_service,              # ✅ 여기 중요
-            component_db=self.COMPONENT_DB,
-            component_table=self.COMPONENT_INFO_TABLE,
+            component_db=db_data.DB_CONFIG.config,
+            component_table=db_data.DB_CONFIG.COMPONENT_INFO_TABLE,
             ui_path=ui_path,
         )
         self.main_window.show()
