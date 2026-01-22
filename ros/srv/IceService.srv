@@ -1,0 +1,15 @@
+# Request
+string  seq_no
+string  cmd
+uint16  ice_qty
+uint16  water_qty
+uint8   channel
+---
+# Result
+string  seq_no
+uint16  response_cd
+string  component_cd
+string  status_cd
+uint8   channel
+uint8   component_no
+

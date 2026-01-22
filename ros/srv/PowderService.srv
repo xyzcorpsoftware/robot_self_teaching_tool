@@ -1,0 +1,12 @@
+string seq_no
+string cmd
+uint16 part_no
+string menu_id
+string opt_id
+uint8 channel
+uint8 req_value
+---
+string seq_no
+uint16 response_cd
+string component_cd
+string status_cd

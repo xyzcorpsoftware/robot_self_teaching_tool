@@ -1,0 +1,16 @@
+# Request
+string seq_no
+string cmd
+uint8 protocol_id
+uint8 device_id
+float32 delay_time
+---
+
+# Result
+string  seq_no
+uint16  response_cd
+string  component_cd
+uint8   device_id
+string  menu_name
+string  status_cd
+uint8   component_no
