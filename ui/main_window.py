@@ -373,19 +373,19 @@ class MainWindow(QDialog):
 
             self._pic2_row_layout.addStretch(1)
 
-            btn_pic2 = QPushButton("pic2")
+            btn_pic2 = QPushButton("pickupzone front")
             btn_pic2.setObjectName("btn_pic2")
             btn_pic2.setFixedHeight(40)
-            btn_pic2.clicked.connect(lambda _, n="pic2": self._on_brew_button_clicked("pic", n))
+            btn_pic2.clicked.connect(lambda _, n="pickupzone front": self._on_brew_button_clicked("pic", n))
             self._pic2_row_layout.addWidget(btn_pic2)
 
         if self._pic1_row_layout is not None:
             self._pic1_row_layout.addStretch(1)
 
-            btn_pic1 = QPushButton("pic1")
+            btn_pic1 = QPushButton("pickupzone back")
             btn_pic1.setObjectName("btn_pic1")
             btn_pic1.setFixedHeight(40)
-            btn_pic1.clicked.connect(lambda _, n="pic1": self._on_brew_button_clicked("pic", n))
+            btn_pic1.clicked.connect(lambda _, n="pickupzone back": self._on_brew_button_clicked("pic", n))
             self._pic1_row_layout.addWidget(btn_pic1)
 
 

@@ -104,7 +104,14 @@ class TCPJogDialog(QDialog):
             btn_coffee_extra = QPushButton("Coffee Extract")
             right_layout.addWidget(btn_coffee_extra)
             btn_coffee_extra.clicked.connect(self._on_coffee_extra_clicked)
-
+        if self.target_name in TCPDispenserName.name_dict["ice"]:
+            btn_ice_extra = QPushButton("Ice Extract")
+            right_layout.addWidget(btn_ice_extra)
+            btn_ice_extra.clicked.connect(self._on_ice_extra_clicked)
+        if self.target_name in TCPDispenserName.name_dict["powder"]:
+            btn_powder_extra = QPushButton("Powder Extract")
+            right_layout.addWidget(btn_powder_extra)
+            btn_powder_extra.clicked.connect(self._on_powder_extra_clicked)
         btn_save = QPushButton("Saved")
         right_layout.addWidget(btn_save)
 
@@ -169,8 +176,8 @@ class TCPJogDialog(QDialog):
             self.sequence.ice_extract_async(self.target_name)
         print(f"[UI] Extra button clicked for {self.target_name}")
     def _on_powder_extra_clicked(self):
-        if self.sequence and hasattr(self.sequence, "powder_extract_async"):
-            self.sequence.powder_extract_async(self.target_name)
+        if self.sequence and hasattr(self.sequence, "powder_dispense_async"):
+            self.sequence.powder_dispense_async(self.target_name)
         print(f"[UI] Extra button clicked for {self.target_name}")
 
     def rail_move_start(self):
