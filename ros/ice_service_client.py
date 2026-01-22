@@ -1,5 +1,5 @@
 import datetime
-
+import threading
 try:
     import rclpy
     from rclpy.executors import SingleThreadedExecutor
@@ -46,3 +46,70 @@ class _IceClientNode(Node):
             req.channel = int(channel)
         req.channel = int(channel)
         return self.client.call_async(req)
+    
+
+class IceServiceClient:
+    def __init__(self, service_name: Optional[str] = None):
+        if rclpy is None:
+            raise RuntimeError("rclpy is not available. Run on ROS2 environment.")
+
+        if service_name is None:
+            # 프로젝트에 이미 상수(Service.SERVICE_CUP)가 있으면 그걸 우선 사용
+            try:
+                SERVICE_CUP = 'ice/service'
+                service_name = SERVICE_CUP
+            except Exception:
+                service_name = "/ice/service"
+
+        if not rclpy.ok():
+            rclpy.init(args=None)
+
+        self._node = _IceClientNode(service_name)
+        self._exec = SingleThreadedExecutor()
+        self._exec.add_node(self._node)
+
+        self._spin_thread = threading.Thread(target=self._exec.spin, daemon=True)
+        self._spin_thread.start()
+
+    def dispose(self):
+        try:
+            if self._exec is not None and self._node is not None:
+                self._exec.remove_node(self._node)
+                self._node.destroy_node()
+        except Exception:
+            pass
+
+    def ice_extract_async(
+        self,
+        channel: int,
+        cmd=None,
+        on_done: Optional[Callable] = None,
+        on_error: Optional[Callable] = None,
+    ):
+        """
+        on_done(resp), on_error(exception)
+        """
+        # 서비스 준비 확인(짧게 폴링)
+        try:
+            if not self._node.client.wait_for_service(timeout_sec=0.2):
+                raise RuntimeError("Cup service not available (wait_for_service timeout)")
+        except Exception as e:
+            if on_error:
+                on_error(e)
+            else:
+                raise
+            return
+
+        future = self._node.call_async(channel=channel, cmd=cmd)
+
+        def _cb(fut):
+            try:
+                resp = fut.result()
+                if on_done:
+                    on_done(resp)
+            except Exception as e:
+                if on_error:
+                    on_error(e)
+
+        future.add_done_callback(_cb)
+        return future
