@@ -14,8 +14,7 @@ from ui.connect_dialog import ConnectDialog
 def main():
     app = QApplication(sys.argv)
 
-    # 기본은 Fake로 개발 (필요하면 True로 바꿔서 Real 연결)
-    dlg = ConnectDialog(use_real_robot=False)
+    dlg = ConnectDialog()
     dlg.show()
 
     sys.exit(app.exec_())

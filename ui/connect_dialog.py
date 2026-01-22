@@ -2,7 +2,7 @@ import subprocess
 import os
 import traceback
 import pymysql
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QCheckBox
 from PyQt5.QtCore import Qt
 
 import sys
@@ -32,10 +32,9 @@ class ConnectDialog(QDialog):
     ROBOT_PROCESS_KEYWORD = "RobotSystemNode"
  
     
-    def __init__(self, use_real_robot=False):
+    def __init__(self):
         super().__init__()
-        self.use_real_robot = use_real_robot
-
+        
         self.setWindowTitle("Robot Connect")
         self.resize(320, 160)
 
@@ -43,6 +42,11 @@ class ConnectDialog(QDialog):
 
         ip_layout = QHBoxLayout()
         ip_layout.addWidget(QLabel("Robot IP:"))
+
+        self.check_box = QCheckBox("Use Real Robot")
+        self.check_box.setChecked(False)
+
+        layout.addWidget(self.check_box)
 
         self.edit_ip = QLineEdit()
         self.edit_ip.setPlaceholderText("예: 192.168.0.13")
@@ -158,6 +162,11 @@ class ConnectDialog(QDialog):
         ui_path = self._resolve_main_window_ui_path()
         is_brew_ui = bool(ui_path) and os.path.basename(ui_path) == "main_window_brew.ui"
 
+
+        if self.check_box.isChecked():
+            self.use_real_robot = True
+        else:
+            self.use_real_robot = False
         # ✅ 공통: controller
         controller = FrRobotController(ip=ip) if self.use_real_robot else FakeRobotController(ip=ip)
         
