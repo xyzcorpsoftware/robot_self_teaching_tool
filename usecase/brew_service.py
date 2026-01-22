@@ -30,9 +30,7 @@ class BrewService:
         )
 
         self.use_real_robot = use_real_robot
-
-
-        
+    
         default_ip = os.getenv("RAIL_IP", "192.168.0.12")
         default_port = int(os.getenv("RAIL_PORT", "2001"))
 
@@ -87,7 +85,7 @@ class BrewService:
                 timeout_s=20.0,
                 log_poll=True,          # ✅ 위치 로그
                 log_period_s=0.5,       # ✅ 0.5초마다 출력
-            )
+            ) if self.use_real_robot is True else print("[BREW][RAIL] use_real_robot is False: skipping rail move")
             print(f"[BREW][RAIL][INFO] rail move successed: label={label}, final={final_pos}, target={target}")
         except Exception as e:
             print(f"[BREW][RAIL][WARN] move failed: label={label}, err={e}")
@@ -451,6 +449,15 @@ class BrewService:
 
         # TODO: component_cd/label에 따른 실제 모션 정의를 추가
         return {"open_jog": True, "jog_target": label}
+    def rail_move_async(self, target_name, rail_position, controller):
+        
+        self._move_rail_before_motion(target_name, rail_position)
+    
+    def save_pulse(self, ui_point_name: str, pulse: str):
+        # Implement pulse saving logic here
+
+        print(ui_point_name, pulse)
+        pass
 
     def save_point(self, ui_point_name: str, controller=None):
         if controller is None:
@@ -510,9 +517,7 @@ class BrewService:
         self._return_motion_after_save(saved_point_name, controller,
                                        vel=self.DEFAULT_RETURN_VEL,
                                        acc=self.DEFAULT_RETURN_ACC)
-    def save_pulse(self, ui_point_name: str, pulse: str):
-        # Implement pulse saving logic here
-        pass
+    
     def jog_tcp(self, ui_point_name: str, direction: str, step: float, controller=None):
         if controller is None:
             print("[BREW] jog_tcp ignored: controller is None")

@@ -28,6 +28,7 @@ class RailSocket:
         소켓 연결
         """ 
         if self.use_real_robot is False:
+            print("None Rail Used")
             return
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -46,31 +47,31 @@ class RailSocket:
             except Exception:
                 pass
             self.sock = None
-    def send(self, data: bytes):
-        """
-        데이터 전송
-        """
-        with self._lock:
-            if not self.sock:
-                raise RuntimeError("Socket is not connected.")
-            self.sock.sendall(data)
-    def receive(self) -> bytes:
-        """
-        데이터 수신
-        """
-        with self._lock:
-            if not self.sock:
-                raise RuntimeError("Socket is not connected.")
-            return self.sock.recv(self.socket_buffer_size)
-    def send_and_receive(self, data: bytes) -> bytes:
-        """
-        데이터 전송 후 응답 수신
-        """
-        with self._lock:
-            if not self.sock:
-                raise RuntimeError("Socket is not connected.")
-            self.sock.sendall(data)
-            return self.sock.recv(self.socket_buffer_size)
+    # def send(self, data: bytes):
+    #     """
+    #     데이터 전송
+    #     """
+    #     with self._lock:
+    #         if not self.sock:
+    #             raise RuntimeError("Socket is not connected.")
+    #         self.sock.sendall(data)
+    # def receive(self) -> bytes:
+    #     """
+    #     데이터 수신
+    #     """
+    #     with self._lock:
+    #         if not self.sock:
+    #             raise RuntimeError("Socket is not connected.")
+    #         return self.sock.recv(self.socket_buffer_size)
+    # def send_and_receive(self, data: bytes) -> bytes:
+    #     """
+    #     데이터 전송 후 응답 수신
+    #     """
+    #     with self._lock:
+    #         if not self.sock:
+    #             raise RuntimeError("Socket is not connected.")
+    #         self.sock.sendall(data)
+    #         return self.sock.recv(self.socket_buffer_size)
     def _raise_sync(self) -> int:
         """
         ✅ 원본 raise_sync_number와 동일하게:
@@ -134,16 +135,26 @@ class RailSocket:
             self.sync_no %= 256
         return self.sync_no
 
-    def _send_and_recv(self, pkt: bytes, min_resp_len: int = 6) -> bytes:
-        # self.connect(do_init=False)
+    def _send_and_recv(self, pkt: bytes, min_resp_len: int = 6, timeout: float = 5.0) -> bytes:
         with self._lock:
             self.sock.sendall(pkt)
-
-            # ✅ 최소 길이만큼 누적 수신 (TCP 분할 대비)
             buf = bytearray()
+            start = time.time()
             while len(buf) < min_resp_len:
-                buf.extend(self._recv_some())
+                # 소켓 통신 전체 타임아웃 체크
+                if time.time() - start > timeout:
+                    raise TimeoutError("Response not received within timeout")
+                try:
+                    # 부족한 데이터 Recv
+                    chunk = self.sock.recv(self.socket_buffer_size)
+                    if not chunk:
+                        raise ConnectionError("Socket closed by peer")
+                    buf.extend(chunk)
+                except socket.timeout:
+                    # recv 자체가 timeout 난 경우
+                    raise TimeoutError("Socket recv timed out")
             return bytes(buf)
+
 
     def _recv_some(self) -> bytes:
         if not self.sock:
@@ -190,7 +201,7 @@ class RailSocket:
         return int.from_bytes(resp[DATA_POS_START:DATA_POS_END], "little", signed=False)
 
     def update_position_loop(self):
-        self.thread.start()
+        # self.thread.start()
         while(self.sock is not None):
             try:
                 with self._lock:
