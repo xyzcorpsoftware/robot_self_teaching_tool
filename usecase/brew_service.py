@@ -452,11 +452,15 @@ class BrewService:
     def rail_move_async(self, target_name, rail_position, controller):
         
         self._move_rail_before_motion(target_name, rail_position)
-    
+        self.RAIL_TARGET_PULSE[target_name] = int(rail_position)
+        
     def save_pulse(self, ui_point_name: str, pulse: str):
         # Implement pulse saving logic here
 
         print(ui_point_name, pulse)
+        
+        # DB에 저장하는 과정 추가
+
         pass
 
     def save_point(self, ui_point_name: str, controller=None):
@@ -517,7 +521,7 @@ class BrewService:
         self._return_motion_after_save(saved_point_name, controller,
                                        vel=self.DEFAULT_RETURN_VEL,
                                        acc=self.DEFAULT_RETURN_ACC)
-    
+        self.save_pulse(ui_point_name, self.RAIL_TARGET_PULSE[saved_point_name.lower().strip().replace(" ", "").replace("_", "")])
     def jog_tcp(self, ui_point_name: str, direction: str, step: float, controller=None):
         if controller is None:
             print("[BREW] jog_tcp ignored: controller is None")

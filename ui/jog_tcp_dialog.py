@@ -157,7 +157,7 @@ class TCPJogDialog(QDialog):
             
             if self.rail_position != self.rail_msg.text():
                 self.rail_position = self.rail_msg.text()
-                self.sequence.save_pulse(self.target_name, self.rail_position)
+                # self.sequence.save_pulse(self.target_name, self.rail_position)
         except Exception as e:
             print(f"[ERROR] save failed: {e}")
         finally:
