@@ -5,6 +5,7 @@ import socket
 import time
 import traceback
 from threading import Lock
+import re
 from robot.Rail import RailSocket
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
@@ -455,13 +456,55 @@ class BrewService:
         self.RAIL_TARGET_PULSE[target_name] = int(rail_position)
         
     def save_pulse(self, ui_point_name: str, pulse: str):
+        """
+            ui_point_name: UI에서 사용하는 포인트 이름 (예: "cup1", "cof", "ice" 등)
+            pulse: 저장할 펄스 값 (문자열 형태)
+        """
         # Implement pulse saving logic here
+        print(f"[BREW] save_pulse called: ui_point_name={ui_point_name}, pulse={pulse}")
 
-        print(ui_point_name, pulse)
+
+        dp_pos =  ui_point_name.lower().strip().replace(" ", "").replace("_", "")
+
+        hold_area = ["cup1", "cup2", "cup3", "cup4", "ice1", "ice2"]
+        pick_area = ["coffee1","coffee2", "powder1", "powder2", "pic1", "pic2"]
+
+        if dp_pos in hold_area:
+            go_cmd = "hold_"
+            back_cmd = "unhold_"
+        elif dp_pos in pick_area:
+            go_cmd = "place_"
+            back_cmd = "pickup_"
+
+        dispenser_name = self.parse_command(dp_pos)[0]
+
+        dispenser_index = self.parse_command(dp_pos)[1]
+
+        go_cmd += dispenser_name
+        go_no = dispenser_index
+        back_cmd += dispenser_name
+        back_no = dispenser_index
+        print(ui_point_name, pulse, dispenser_name, dispenser_index)
         
+        # self.robot_info.update_rail_pulse(
+        #     go_cmd=go_cmd,
+        #     go_no=go_no,
+        #     pulse=int(pulse)
+        # )
+        # self.robot_info.update_rail_pulse(
+        #     back_cmd=go_cmd,
+        #     back_cmd=back_no,
+        #     pulse=int(pulse)
+        # )
         # DB에 저장하는 과정 추가
+    def parse_command(command: str):
+        # 문자 부분 추출
+        name = re.sub(r'\d+', '', command)
+        # 숫자 부분 추출
+        number = int(re.findall(r'\d+', command)[0])
+        return (name, number)
 
-        pass
+    
 
     def save_point(self, ui_point_name: str, controller=None):
         if controller is None:

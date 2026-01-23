@@ -19,6 +19,13 @@ from ui.jog_joint_dialog import JointJogDialog
 from usecase.brew_service import BrewService
 import pymysql
 
+"""
+    Main Window
+    Connect 이후 보이는 메인 화면
+    - 버튼 이벤트 연결
+    - 로봇 상태 인디케이터 표시
+    - 버튼을 누를시 Jog_tcp/jont 다이얼로그 오픈
+"""
 
 class MainWindow(QDialog):
     """
@@ -84,7 +91,8 @@ class MainWindow(QDialog):
 
         # 로봇 아이콘 이벤트
         if self.robot_label:
-            self.robot_label.setText("🤖")
+            self.robot_label.setText("ROBOT\n(Click to Jog)")
+            # self.robot_label.setText("🤖")
             self.robot_label.setAlignment(Qt.AlignCenter)
             self.robot_label.installEventFilter(self)
 
@@ -237,8 +245,10 @@ class MainWindow(QDialog):
 
         # (선택) UI에 기존 고정 버튼이 있으면 숨김
         for name in (
-            "btn_cup1", "btn_cup2", "btn_cup3",
-            "btn_ice1", "btn_ice2", "btn_coffee", "btn_powder",
+            "btn_cup1", "btn_cup2", "btn_cup3","btn_cup4",
+            "btn_ice1", "btn_ice2", 
+            "btn_coffee1","btn_coffee2",
+            "btn_powder1","btn_powder2",
             "btn_home"
         ):
             btn = self.findChild(QPushButton, name)
@@ -376,7 +386,7 @@ class MainWindow(QDialog):
             btn_pic2 = QPushButton("pickupzone front")
             btn_pic2.setObjectName("btn_pic2")
             btn_pic2.setFixedHeight(40)
-            btn_pic2.clicked.connect(lambda _, n="pickupzone front": self._on_brew_button_clicked("pic", n))
+            btn_pic2.clicked.connect(lambda _, n="pic2": self._on_brew_button_clicked("pic", n))
             self._pic2_row_layout.addWidget(btn_pic2)
 
         if self._pic1_row_layout is not None:
@@ -385,7 +395,7 @@ class MainWindow(QDialog):
             btn_pic1 = QPushButton("pickupzone back")
             btn_pic1.setObjectName("btn_pic1")
             btn_pic1.setFixedHeight(40)
-            btn_pic1.clicked.connect(lambda _, n="pickupzone back": self._on_brew_button_clicked("pic", n))
+            btn_pic1.clicked.connect(lambda _, n="pic1": self._on_brew_button_clicked("pic", n))
             self._pic1_row_layout.addWidget(btn_pic1)
 
 

@@ -47,31 +47,7 @@ class RailSocket:
             except Exception:
                 pass
             self.sock = None
-    # def send(self, data: bytes):
-    #     """
-    #     데이터 전송
-    #     """
-    #     with self._lock:
-    #         if not self.sock:
-    #             raise RuntimeError("Socket is not connected.")
-    #         self.sock.sendall(data)
-    # def receive(self) -> bytes:
-    #     """
-    #     데이터 수신
-    #     """
-    #     with self._lock:
-    #         if not self.sock:
-    #             raise RuntimeError("Socket is not connected.")
-    #         return self.sock.recv(self.socket_buffer_size)
-    # def send_and_receive(self, data: bytes) -> bytes:
-    #     """
-    #     데이터 전송 후 응답 수신
-    #     """
-    #     with self._lock:
-    #         if not self.sock:
-    #             raise RuntimeError("Socket is not connected.")
-    #         self.sock.sendall(data)
-    #         return self.sock.recv(self.socket_buffer_size)
+ 
     def _raise_sync(self) -> int:
         """
         ✅ 원본 raise_sync_number와 동일하게:
@@ -136,16 +112,15 @@ class RailSocket:
         return self.sync_no
 
     def _send_and_recv(self, pkt: bytes, min_resp_len: int = 6, timeout: float = 5.0) -> bytes:
+        timeout = 5
+        self.sock.sendall(pkt)
+        buf = bytearray()
+        start = time.time()
         with self._lock:
-            self.sock.sendall(pkt)
-            buf = bytearray()
-            start = time.time()
             while len(buf) < min_resp_len:
-                # 소켓 통신 전체 타임아웃 체크
                 if time.time() - start > timeout:
                     raise TimeoutError("Response not received within timeout")
                 try:
-                    # 부족한 데이터 Recv
                     chunk = self.sock.recv(self.socket_buffer_size)
                     if not chunk:
                         raise ConnectionError("Socket closed by peer")
@@ -153,7 +128,7 @@ class RailSocket:
                 except socket.timeout:
                     # recv 자체가 timeout 난 경우
                     raise TimeoutError("Socket recv timed out")
-            return bytes(buf)
+        return bytes(buf)
 
 
     def _recv_some(self) -> bytes:
@@ -203,13 +178,15 @@ class RailSocket:
     def update_position_loop(self):
         # self.thread.start()
         while(self.sock is not None):
-            try:
-                with self._lock:
-                    pos = self.get_position_pulse()
-                    self.current_position = pos
-                    time.sleep(0.2)
-            except Exception:
-                time.sleep(0.5)
+            print("Rail Socket Is None")
+            time.sleep(0.1)
+        print("Socket Is available")
+        try:
+            pos = self.get_position_pulse()
+            self.current_position = pos
+            time.sleep(0.2)
+        except Exception:
+            time.sleep(0.5)
     # -------------------------
     # init sequence (원본 server_on 흐름과 유사)
     # -------------------------
@@ -249,7 +226,7 @@ class RailSocket:
 
         # 2) servo on
         self.servo_on(True)
-        self.update_position_loop()
+        # self.update_position_loop()
 
     # -------------------------
     # commands
@@ -356,21 +333,20 @@ class RailSocket:
         last = None
 
         while True:
-            with self._lock:
-                curr = self.get_position_pulse()
+            curr = self.get_position_pulse()
 
-                if log_poll and (time.time() - last_log) >= log_period_s:
-                    print(f"[BREW][RAIL][POS] curr={curr}, target={target_pulse}, diff={curr-target_pulse}")
-                    last_log = time.time()
+            if log_poll and (time.time() - last_log) >= log_period_s:
+                print(f"[BREW][RAIL][POS] curr={curr}, target={target_pulse}, diff={curr-target_pulse}")
+                last_log = time.time()
 
-                if abs(curr - target_pulse) <= tol:
-                    return curr
+            if abs(curr - target_pulse) <= tol:
+                return curr
 
-                if (time.time() - t0) > timeout_s:
-                    raise TimeoutError(f"rail move timeout: start={start}, target={target_pulse}, curr={curr}, last={last}")
+            if (time.time() - t0) > timeout_s:
+                raise TimeoutError(f"rail move timeout: start={start}, target={target_pulse}, curr={curr}, last={last}")
 
-                last = curr
-                time.sleep(0.05)
+            last = curr
+            time.sleep(0.05)
 
         
 class RailPacket:

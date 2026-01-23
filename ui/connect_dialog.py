@@ -22,6 +22,13 @@ from ui.main_window import MainWindow
 
 from data import db_data
 
+"""
+    Connect Dialog
+    처음 시작 시 먼저 보이는 화면으로
+    Robot을 실제 사용할지 설정
+    Robot IP 입력 후 Connect 버튼 클릭 시 MainWindow 실행
+"""
+
 class ConnectDialog(QDialog):
     """
     - IP 입력 + Connect 버튼
@@ -43,11 +50,14 @@ class ConnectDialog(QDialog):
         ip_layout = QHBoxLayout()
         ip_layout.addWidget(QLabel("Robot IP:"))
 
+
+        # 체크박스: 실제 로봇 사용 여부
         self.check_box = QCheckBox("Use Real Robot")
         self.check_box.setChecked(False)
 
         layout.addWidget(self.check_box)
 
+        # IP 입력란
         self.edit_ip = QLineEdit()
         self.edit_ip.setPlaceholderText("예: 192.168.0.13")
         self.edit_ip.setText("192.168.0.13")
@@ -55,6 +65,7 @@ class ConnectDialog(QDialog):
 
         layout.addLayout(ip_layout)
 
+        # Connect 버튼
         self.btn_connect = QPushButton("Connect")
         layout.addWidget(self.btn_connect, alignment=Qt.AlignCenter)
 
@@ -162,11 +173,13 @@ class ConnectDialog(QDialog):
         ui_path = self._resolve_main_window_ui_path()
         is_brew_ui = bool(ui_path) and os.path.basename(ui_path) == "main_window_brew.ui"
 
-
+        # ✅ 체크박스 상태에 따라 실제 로봇/페이크 로봇 컨트롤러 선택
         if self.check_box.isChecked():
             self.use_real_robot = True
         else:
             self.use_real_robot = False
+
+
         # ✅ 공통: controller
         controller = FrRobotController(ip=ip) if self.use_real_robot else FakeRobotController(ip=ip)
         

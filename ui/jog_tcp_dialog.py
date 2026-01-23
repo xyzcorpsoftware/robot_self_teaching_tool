@@ -22,7 +22,13 @@ class TCPDispenserName:
         "pic1": 1260000,
         "pic2": 1260000,
     }
+"""
+    TCP Jog Dialog
+    로봇이 해당 버튼에 연결된 디스펜서로 이동한 뒤
+    X,Y,Z 축을 세밀하게 조정하고
+    저장할 수 있는 다이얼로그
 
+"""
 class TCPJogDialog(QDialog):
     """
     TCP 조그 다이얼로그
