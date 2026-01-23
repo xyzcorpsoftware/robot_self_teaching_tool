@@ -12,7 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from data.robot_info import RobotInfoManager
-
+from data.robot_service_req import RobotServiceReqManager
 
 class BrewService:
     def __init__(self, points_manager=None, use_real_robot=False):
@@ -29,7 +29,13 @@ class BrewService:
             table="T_ROBOT_INFO",
             auto_load=True,
         )
-
+        self.robot_srv_manager = RobotServiceReqManager(
+            host=getattr(self.points_manager, "host", "localhost"),
+            user=getattr(self.points_manager, "user", "baris"),
+            password=getattr(self.points_manager, "password", "xyz20190529"),
+            database=getattr(self.points_manager, "database", "baris_brew"),
+            table="T_ROBOT_SERVICE_REQ",
+        )
         self.use_real_robot = use_real_robot
     
         default_ip = os.getenv("RAIL_IP", "192.168.0.12")
@@ -486,15 +492,15 @@ class BrewService:
         back_no = dispenser_index
         print(ui_point_name, pulse, dispenser_name, dispenser_index)
         
-        # self.robot_info.update_rail_pulse(
-        #     go_cmd=go_cmd,
-        #     go_no=go_no,
-        #     pulse=int(pulse)
+        # self.robot_srv_manager.update_rail_pos(
+        #     command=go_cmd,
+        #     no=go_no,
+        #     rail_pos=pulse
         # )
-        # self.robot_info.update_rail_pulse(
-        #     back_cmd=go_cmd,
-        #     back_cmd=back_no,
-        #     pulse=int(pulse)
+        # self.robot_srv_manager.update_rail_pos(
+        #     command=go_cmd,
+        #     no=go_no,
+        #     rail_pos=pulse
         # )
         # DB에 저장하는 과정 추가
     def parse_command(command: str):

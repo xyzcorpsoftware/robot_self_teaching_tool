@@ -79,7 +79,30 @@ class RobotServiceReqManager:
             if conn:
                 conn.close()
             return rail_pos
+    def update_rail_pos(self, command : str, no : int, rail_pos : str):
+        
+        conn = None
+        try:
+            conn = self._connect()
+            cursor = conn.cursor()
 
+            condition = {
+                "robot_command": command,
+                "no": no
+            }
+
+            set_clause = "rail_pos = %s"
+            where_clauses = " AND ".join([f"{key} = %s" for key in condition.keys()])
+            sql = f"UPDATE {self.table} SET {set_clause} WHERE {where_clauses}"
+            params = (rail_pos,) + tuple(condition.values())
+            cursor.execute(sql, params)
+            conn.commit()
+            
+        except Exception:
+            print("[RSR][ERROR] DB update failed:\n", traceback.format_exc())
+        finally:
+            if conn:
+                conn.close()
 
     # def load_robot_info_from_db(self):
     #     """
