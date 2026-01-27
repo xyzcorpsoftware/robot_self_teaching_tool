@@ -56,8 +56,8 @@ class IceServiceClient:
         if service_name is None:
             # 프로젝트에 이미 상수(Service.SERVICE_CUP)가 있으면 그걸 우선 사용
             try:
-                SERVICE_CUP = 'ice/service'
-                service_name = SERVICE_CUP
+                SERVICE_ICE = 'ice/service'
+                service_name = SERVICE_ICE
             except Exception:
                 service_name = "/ice/service"
 
