@@ -1,5 +1,6 @@
 import datetime
 import threading
+import re
 try:
     import rclpy
     from rclpy.executors import SingleThreadedExecutor
@@ -56,8 +57,8 @@ class CoffeeServiceClient:
         if service_name is None:
             # 프로젝트에 이미 상수(Service.SERVICE_CUP)가 있으면 그걸 우선 사용
             try:
-                SERVICE_CUP = 'coffee/service'
-                service_name = SERVICE_CUP
+                SERVICE_COF = 'coffee/service'
+                service_name = SERVICE_COF
             except Exception:
                 service_name = "/coffee/service"
 
@@ -81,35 +82,28 @@ class CoffeeServiceClient:
 
     def coffee_extract_async(
         self,
-        channel: int,
-        cmd=None,
-        on_done: Optional[Callable] = None,
-        on_error: Optional[Callable] = None,
+        point_name : str,
     ):
         """
         on_done(resp), on_error(exception)
         """
         # 서비스 준비 확인(짧게 폴링)
-        try:
-            if not self._node.client.wait_for_service(timeout_sec=0.2):
-                raise RuntimeError("Cup service not available (wait_for_service timeout)")
-        except Exception as e:
-            if on_error:
-                on_error(e)
-            else:
-                raise
-            return
-
-        future = self._node.call_async(channel=channel, cmd=cmd)
+        if not self._node.client.wait_for_service(timeout_sec=0.2):
+            raise RuntimeError("Cup service not available (wait_for_service timeout)")
+        
+        name = re.sub(r'\d+', '', point_name)
+        # 숫자 부분 추출
+        number = int(re.findall(r'\d+', point_name)[0])
+        channel = number-1
+        
+        future = self._node.call_async(channel=channel, cmd='extract')
 
         def _cb(fut):
             try:
                 resp = fut.result()
-                if on_done:
-                    on_done(resp)
+                print(resp.response_cd)
             except Exception as e:
-                if on_error:
-                    on_error(e)
+                print(e)
 
         future.add_done_callback(_cb)
         return future
