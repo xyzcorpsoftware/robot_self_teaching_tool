@@ -247,8 +247,8 @@ class MainWindow(QDialog):
         for name in (
             "btn_cup1", "btn_cup2", "btn_cup3","btn_cup4",
             "btn_ice1", "btn_ice2", 
-            "btn_coffee1","btn_coffee2",
-            "btn_powder1","btn_powder2",
+            "btn_cof1","btn_cof2",
+            "btn_pow1","btn_pow2",
             "btn_home"
         ):
             btn = self.findChild(QPushButton, name)
@@ -325,9 +325,9 @@ class MainWindow(QDialog):
             elif comp == "cof":
 
                 if num is not None:
-                    label = f"coffee{int(num)}"
+                    label = f"cof{int(num)}"
                 else:
-                    label = f"coffee{coffee_index}"
+                    label = f"cof{coffee_index}"
                     coffee_index += 1
 
                 group_specs["coffee"].append({
@@ -339,9 +339,9 @@ class MainWindow(QDialog):
             elif comp == "pow":
 
                 if num is not None:
-                    label = f"powder{int(num)}"
+                    label = f"pow{int(num)}"
                 else:
-                    label = f"powder{powder_index}"
+                    label = f"pow{powder_index}"
                     powder_index += 1
 
                 group_specs["powder"].append({

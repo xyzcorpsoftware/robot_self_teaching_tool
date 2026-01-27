@@ -6,8 +6,8 @@ from PyQt5.QtCore import Qt
 class TCPDispenserName:
     name_dict ={
         "cup" : ["cup1", "cup2", "cup3","cup4"],
-        "coffee" : ["coffee1", "coffee2"],
-        "powder" : ["powder1", "powder2"],
+        "coffee" : ["cof1", "cof2"],
+        "powder" : ["pow1", "pow2"],
         "ice" : ["ice1", "ice2"]
     }
     sequence = None

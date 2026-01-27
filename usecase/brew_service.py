@@ -476,7 +476,7 @@ class BrewService:
         print(f"[BREW] save_pulse called: ui_point_name={ui_point_name}, pulse={pulse}")
 
         hold_area = ["cup1", "cup2", "cup3", "cup4", "ice1", "ice2"]
-        pick_area = ["coffee1","coffee2", "powder1", "powder2", "pic1", "pic2"]
+        pick_area = ["cof1","cof2", "pow1", "pow2", "pic1", "pic2"]
 
         if ui_point_name in hold_area:
             go_cmd = "hold_"
