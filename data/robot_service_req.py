@@ -87,8 +87,8 @@ class RobotServiceReqManager:
             cursor = conn.cursor()
 
             condition = {
-                "robot_command": command,
-                "no": no
+                "request_id": command,
+                "no": no-1
             }
 
             set_clause = "rail_pos = %s"

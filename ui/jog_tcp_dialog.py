@@ -10,18 +10,8 @@ class TCPDispenserName:
         "powder" : ["powder1", "powder2"],
         "ice" : ["ice1", "ice2"]
     }
-    RAIL_TARGET_PULSE = {
-        "cup1": 0,
-        "cup2": 0,
-        "ice1": 200000,
-        "ice2": 465000,
-        "cof":  705000,
-        "pow":  1026000,
-        "cup3": 1350000,
-        "cup4": 1350000,
-        "pic1": 1260000,
-        "pic2": 1260000,
-    }
+    sequence = None
+
 """
     TCP Jog Dialog
     로봇이 해당 버튼에 연결된 디스펜서로 이동한 뒤
@@ -44,7 +34,11 @@ class TCPJogDialog(QDialog):
         self.sequence = sequence
         self.target_name = target_name
         self.rail_msg = None
-        self.rail_position = TCPDispenserName.RAIL_TARGET_PULSE.get(target_name, 0)
+        self.dp_name_class = TCPDispenserName()
+        self.dp_name_class.sequence = sequence
+        print(type(self.dp_name_class.sequence))
+        self.rail_position = self.dp_name_class.sequence.RAIL_TARGET_PULSE.get(target_name, 0)
+        
         self.setWindowTitle(f"TCP Jog - {target_name}")
         self._build_ui()
 

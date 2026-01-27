@@ -273,8 +273,11 @@ class MainWindow(QDialog):
         group_specs = {"cup": [], "ice": [], "coffee": [], "powder": []}
         ice_index = 1
         cup_index = 1
+        coffee_index = 1
+        powder_index = 1
 
         for tty, row in rows_with_tty:
+            # TTY 라벨에 따라 Component 구분
             m = re.search(r"ttyS(\d+)", tty)
             s_label = f"S{m.group(1)}" if m else tty
 
@@ -319,20 +322,51 @@ class MainWindow(QDialog):
                     "component_cd": component_cd,
                 })
 
-            else:
-                # COF/POW만 포함
-                if comp not in ("cof", "pow"):
-                    continue
+            elif comp == "cof":
 
-                label = comp if num_i == 1 else f"{comp}{num_i}"
-                target_group = "coffee" if comp == "cof" else "powder"
+                if num is not None:
+                    label = f"coffee{int(num)}"
+                else:
+                    label = f"coffee{coffee_index}"
+                    coffee_index += 1
 
-                group_specs[target_group].append({
+                group_specs["coffee"].append({
                     "text": label,
-                    "object_name": f"btn_tty_{s_label}_{label}",
+                    "object_name": f"btn_tty_{s_label}_coffee{int(num)}",
                     "tooltip": tooltip,
                     "component_cd": component_cd,
                 })
+            elif comp == "pow":
+
+                if num is not None:
+                    label = f"powder{int(num)}"
+                else:
+                    label = f"powder{powder_index}"
+                    powder_index += 1
+
+                group_specs["powder"].append({
+                    "text": label,
+                    "object_name": f"btn_tty_{s_label}_powder{int(num)}",
+                    "tooltip": tooltip,
+                    "component_cd": component_cd,
+                })
+                powder_index += 1
+
+
+            # else:
+            #     # COF/POW만 포함
+            #     if comp not in ("cof", "pow"):
+            #         continue
+
+            #     label = comp if num_i == 1 else f"{comp}{num_i}"
+            #     target_group = "coffee" if comp == "cof" else "powder"
+
+            #     group_specs[target_group].append({
+            #         "text": label,
+            #         "object_name": f"btn_tty_{s_label}_{label}",
+            #         "tooltip": tooltip,
+            #         "component_cd": component_cd,
+            #     })
 
         # ✅ 레이아웃 clear
         self._clear_layout(self._cup_row_layout)

@@ -56,13 +56,17 @@ class BrewService:
             # self.rail.connect(do_init=True)
             print(f"[BREW][RAIL][INFO] connected+servo_on to {rail_ip}:{rail_port}")
 
+        # 디스펜서 별 레일 위치 맵
+        # -> DB 기반으로 변경 필요 (현재 DB에 저장된 값을 로드하도록)
         self.RAIL_TARGET_PULSE = {
             "cup1": 0,
             "cup2": 0,
             "ice1": 200000,
             "ice2": 465000,
-            "cof":  705000,
-            "pow":  1026000,
+            "cof1": 705000,
+            "cof2": 1000000,
+            "pow1": 1026000,
+            "pow2": 1300000,
             "cup3": 1350000,
             "cup4": 1350000,
             "pic1": 1260000,
@@ -459,6 +463,8 @@ class BrewService:
     def rail_move_async(self, target_name, rail_position, controller):
         
         self._move_rail_before_motion(target_name, rail_position)
+
+        # 프로그램이 돌고있다면 저장이 됨
         self.RAIL_TARGET_PULSE[target_name] = int(rail_position)
         
     def save_pulse(self, ui_point_name: str, pulse: str):
@@ -469,53 +475,45 @@ class BrewService:
         # Implement pulse saving logic here
         print(f"[BREW] save_pulse called: ui_point_name={ui_point_name}, pulse={pulse}")
 
-
-        dp_pos =  ui_point_name.lower().strip().replace(" ", "").replace("_", "")
-
         hold_area = ["cup1", "cup2", "cup3", "cup4", "ice1", "ice2"]
         pick_area = ["coffee1","coffee2", "powder1", "powder2", "pic1", "pic2"]
 
-        if dp_pos in hold_area:
+        if ui_point_name in hold_area:
             go_cmd = "hold_"
             back_cmd = "unhold_"
-        elif dp_pos in pick_area:
+        elif ui_point_name in pick_area:
             go_cmd = "place_"
             back_cmd = "pickup_"
 
-        dispenser_name = self.parse_command(dp_pos)[0]
-
-        dispenser_index = self.parse_command(dp_pos)[1]
-
-        go_cmd += dispenser_name
-        go_no = dispenser_index
-        back_cmd += dispenser_name
-        back_no = dispenser_index
-        print(ui_point_name, pulse, dispenser_name, dispenser_index)
-        
-        # self.robot_srv_manager.update_rail_pos(
-        #     command=go_cmd,
-        #     no=go_no,
-        #     rail_pos=pulse
-        # )
-        # self.robot_srv_manager.update_rail_pos(
-        #     command=go_cmd,
-        #     no=go_no,
-        #     rail_pos=pulse
-        # )
-        # DB에 저장하는 과정 추가
-    def parse_command(command: str):
-        # 문자 부분 추출
-        name = re.sub(r'\d+', '', command)
+        # 디스펜서 이름과 인덱스 분리
+        name = re.sub(r'\d+', '', ui_point_name)
         # 숫자 부분 추출
-        number = int(re.findall(r'\d+', command)[0])
-        return (name, number)
+        number = int(re.findall(r'\d+', ui_point_name)[0])
+        print(f"Seperate : {name}, {number}")
+        
+        go_cmd += name
+        go_no = number
+        back_cmd += name
+        back_no = number
+        print(ui_point_name, pulse, name, number)
+        
+        self.robot_srv_manager.update_rail_pos(
+            command=go_cmd,
+            no=go_no,
+            rail_pos=pulse
+        )
+        self.robot_srv_manager.update_rail_pos(
+            command=back_cmd,
+            no=back_no,
+            rail_pos=pulse
+        )
+        # DB에 저장하는 과정 추가
 
     
 
     def save_point(self, ui_point_name: str, controller=None):
         if controller is None:
             return
-
         saved_point_name = self._resolve_saved_point_name(ui_point_name)
         pose6 = self._tcp_cache.get(saved_point_name)
         if pose6 is None:
@@ -570,7 +568,7 @@ class BrewService:
         self._return_motion_after_save(saved_point_name, controller,
                                        vel=self.DEFAULT_RETURN_VEL,
                                        acc=self.DEFAULT_RETURN_ACC)
-        self.save_pulse(ui_point_name, self.RAIL_TARGET_PULSE[saved_point_name.lower().strip().replace(" ", "").replace("_", "")])
+        self.save_pulse(ui_point_name, self.RAIL_TARGET_PULSE[ui_point_name])
     def jog_tcp(self, ui_point_name: str, direction: str, step: float, controller=None):
         if controller is None:
             print("[BREW] jog_tcp ignored: controller is None")
@@ -617,6 +615,7 @@ class BrewService:
 # Rail low-level
 # -------------------------
 class _RailConst:
+
     SOCKET_RECV_BUFFER_SIZE = 1024
     STATUS_INDEX_FALLBACK = 5      # 원본: response[5]
     POS_START = 6
