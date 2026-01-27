@@ -249,8 +249,8 @@ class BrewService:
             self._move_joint(controller, app_j, vel=vel, acc=acc)
             return
 
-        if name.startswith("COF") and name.endswith("_Up_L"):
-            num = name.replace("COF", "").replace("_Up_L", "")
+        if name.startswith("COF") and name.endswith(("_Up_L", "_Place_L")):
+            num = name.replace("COF", "").replace("_Up_L", "").replace("_Place_L", "").strip()
             place = self._get_point(f"COF{num}_Place_L")
             up = self._get_point(f"COF{num}_Up_L")
             app_j = self._get_point("MAC_App_J")
@@ -270,8 +270,8 @@ class BrewService:
             self._move_joint(controller, app_j, vel=vel, acc=acc)
             return
 
-        if name.startswith("POW") and name.endswith("_Up_L"):
-            num = name.replace("POW", "").replace("_Up_L", "")
+        if name.startswith("POW") and name.endswith(("_Up_L", "_Place_L")):
+            num = name.replace("POW", "").replace("_Up_L", "").replace("_Place_L", "").strip()
             place = self._get_point(f"POW{num}_Place_L")
             up = self._get_point(f"POW{num}_Up_L")
             app_j = self._get_point("MAC_App_J")
@@ -291,8 +291,8 @@ class BrewService:
             self._move_joint(controller, app_j, vel=vel, acc=acc)
             return
 
-        if name.startswith("PIC_") and name.endswith("_Up_L"):
-            num = name.replace("PIC_", "").replace("_Up_L", "")
+        if name.startswith("PIC_") and name.endswith(("_Up_L", "_Place_L")):
+            num = name.replace("PIC_", "").replace("_Up_L", "").replace("_Place_L", "").strip()
             home = self._get_point("HOME_J")
 
             if num == "1":
