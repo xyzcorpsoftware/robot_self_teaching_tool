@@ -478,6 +478,8 @@ class BrewService:
         hold_area = ["cup1", "cup2", "cup3", "cup4", "ice1", "ice2"]
         pick_area = ["cof1","cof2", "pow1", "pow2", "pic1", "pic2"]
 
+        need_change_word = ["cof","pow"]
+
         if ui_point_name in hold_area:
             go_cmd = "hold_"
             back_cmd = "unhold_"
@@ -486,8 +488,15 @@ class BrewService:
             back_cmd = "pickup_"
 
         # 디스펜서 이름과 인덱스 분리
+
+
         name = re.sub(r'\d+', '', ui_point_name)
         # 숫자 부분 추출
+        if name in need_change_word:
+            if name == 'cof':
+                name.replace("cof","coffee")
+            elif name == 'pow':
+                name.replace("pow","powder")
         number = int(re.findall(r'\d+', ui_point_name)[0])
         print(f"Seperate : {name}, {number}")
         
