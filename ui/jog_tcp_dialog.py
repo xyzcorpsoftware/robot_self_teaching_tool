@@ -36,6 +36,7 @@ class TCPJogDialog(QDialog):
         self.rail_msg = None
         self.dp_name_class = TCPDispenserName()
         self.dp_name_class.sequence = sequence
+        
         print(type(self.dp_name_class.sequence))
         self.rail_position = self.dp_name_class.sequence.RAIL_TARGET_PULSE.get(target_name, 0)
         

@@ -56,22 +56,42 @@ class BrewService:
             # self.rail.connect(do_init=True)
             print(f"[BREW][RAIL][INFO] connected+servo_on to {rail_ip}:{rail_port}")
 
+        target_list = []
+        self.RAIL_TARGET_PULSE = dict()
+        
         # 디스펜서 별 레일 위치 맵
         # -> DB 기반으로 변경 필요 (현재 DB에 저장된 값을 로드하도록)
-        self.RAIL_TARGET_PULSE = {
-            "cup1": 0,
-            "cup2": 0,
-            "ice1": 200000,
-            "ice2": 465000,
-            "cof1": 705000,
-            "cof2": 1000000,
-            "pow1": 1026000,
-            "pow2": 1300000,
-            "cup3": 1350000,
-            "cup4": 1350000,
-            "pic1": 1260000,
-            "pic2": 1260000,
+        btn_map = {
+            "btn_ice1": "ice1",
+            "btn_ice2": "ice2",
+            "btn_powder1": "pow1",
+            "btn_powder2": "pow2",
+            "btn_coffee1": "cof1",
+            "btn_coffee2": "cof2",
+            "btn_cup1": "cup1",
+            "btn_cup2": "cup2",
+            "btn_cup3": "cup3",
+            "btn_cup4": "cup4",
+            "btn_pic12": "pic12",
+            "btn_pic61": "pic61",
+            "btn_home": "home",
         }
+        
+        self.RAIL_TARGET_PULSE = self._get_rail_pulse(list(btn_map.values()))
+        # self.RAIL_TARGET_PULSE = {
+        #     "cup1": 0,
+        #     "cup2": 0,
+        #     "ice1": 200000,
+        #     "ice2": 465000,
+        #     "cof1": 705000,
+        #     "cof2": 1000000,
+        #     "pow1": 1026000,
+        #     "pow2": 1300000,
+        #     "cup3": 1350000,
+        #     "cup4": 1350000,
+        #     "pic1": 1260000,
+        #     "pic2": 1260000,
+        # }
 
     def _move_rail_before_motion(self, label: str, target_pose: str = None):
         key = (label or "").lower().strip().replace(" ", "").replace("_", "")
@@ -326,6 +346,39 @@ class BrewService:
                 return
 
         print(f"[BREW][RETURN] no rule for {saved_point_name} (skip)")
+    def _get_rail_pulse(self, btn_value: list[str]):
+        try:
+            hold_area = ["cup1", "cup2", "cup3", "cup4", "ice1", "ice2"]
+            pick_area = ["cof1", "cof2", "pow1", "pow2", "pic1", "pic2"]
+            
+            pz_area = ["pic1","pic2"]
+            pulse_dict = {}
+            
+            for v in btn_value:
+                pulse = 0
+                if v not in pz_area:
+                    print(v)
+                    name = re.sub(r'\d+', '', v)
+                    number = int(re.findall(r'\d+', v)[0])
+                    if v in hold_area:
+                        cmd = 'hold_' + name
+                    if v in pick_area :
+                        cmd = 'place_' + name
+                    print(cmd, number)
+                    pulse = self.robot_srv_manager.get_rail_pos(cmd, number)
+
+                elif v in pz_area:
+                    place_cmd = "place_order"
+                    if v == "pic1" :
+                        pulse = int(self.robot_srv_manager.get_rail_pos(place_cmd,1))
+                    elif v == "pic2" :
+                        pulse = int(self.robot_srv_manager.get_rail_pos(place_cmd,0))
+                print(pulse)
+                pulse_dict[v] = int(pulse)
+        except Exception as error :
+            print(f"_Get Rail Pulse Error : {error}")
+        finally:
+            return pulse_dict
 
     # --- public entrypoints ---
     def run(self, component_cd: str, label: str, controller=None):
