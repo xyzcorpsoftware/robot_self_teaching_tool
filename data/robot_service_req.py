@@ -58,7 +58,7 @@ class RobotServiceReqManager:
             cursor = conn.cursor()
 
             condition = {
-                "robot_command": command,
+                "request_id": command,
                 "no": no
             }
 

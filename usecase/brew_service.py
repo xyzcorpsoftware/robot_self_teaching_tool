@@ -72,8 +72,8 @@ class BrewService:
             "btn_cup2": "cup2",
             "btn_cup3": "cup3",
             "btn_cup4": "cup4",
-            "btn_pic12": "pic12",
-            "btn_pic61": "pic61",
+            "btn_pic2": "pic2",
+            "btn_pic1": "pic1",
             "btn_home": "home",
         }
         
@@ -349,23 +349,25 @@ class BrewService:
     def _get_rail_pulse(self, btn_value: list[str]):
         try:
             hold_area = ["cup1", "cup2", "cup3", "cup4", "ice1", "ice2"]
-            pick_area = ["cof1", "cof2", "pow1", "pow2", "pic1", "pic2"]
+            pick_area = ["cof1", "cof2", "pow1", "pow2"]
             
-            pz_area = ["pic1","pic2"]
+            pz_area = ["pic2","pic1"]
             pulse_dict = {}
             
             for v in btn_value:
                 pulse = 0
                 if v not in pz_area:
-                    print(v)
                     name = re.sub(r'\d+', '', v)
                     number = int(re.findall(r'\d+', v)[0])
                     if v in hold_area:
                         cmd = 'hold_' + name
                     if v in pick_area :
+                        if name == 'cof':
+                            name = "coffee"
+                        elif name == 'pow':
+                            name = "powder"
                         cmd = 'place_' + name
-                    print(cmd, number)
-                    pulse = self.robot_srv_manager.get_rail_pos(cmd, number)
+                    pulse = self.robot_srv_manager.get_rail_pos(cmd, number-1)
 
                 elif v in pz_area:
                     place_cmd = "place_order"
@@ -373,7 +375,6 @@ class BrewService:
                         pulse = int(self.robot_srv_manager.get_rail_pos(place_cmd,1))
                     elif v == "pic2" :
                         pulse = int(self.robot_srv_manager.get_rail_pos(place_cmd,0))
-                print(pulse)
                 pulse_dict[v] = int(pulse)
         except Exception as error :
             print(f"_Get Rail Pulse Error : {error}")
