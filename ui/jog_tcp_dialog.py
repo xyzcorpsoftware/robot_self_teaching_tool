@@ -155,9 +155,9 @@ class TCPJogDialog(QDialog):
             else:
                 print("[WARN] No save handler. Implement sequence.save_point() or controller.save_current_tcp()")
             
-            if self.rail_position != self.rail_msg.text():
-                self.rail_position = self.rail_msg.text()
-                # self.sequence.save_pulse(self.target_name, self.rail_position)
+            self.sequence.save_pulse(self.target_name, self.rail_position)
+            self.dp_name_class.sequence.RAIL_TARGET_PULSE[self.target_name] = int(self.rail_position)
+    
         except Exception as e:
             print(f"[ERROR] save failed: {e}")
         finally:

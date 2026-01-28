@@ -476,7 +476,7 @@ class BrewService:
         print(f"[BREW] save_pulse called: ui_point_name={ui_point_name}, pulse={pulse}")
 
         hold_area = ["cup1", "cup2", "cup3", "cup4", "ice1", "ice2"]
-        pick_area = ["cof1","cof2", "pow1", "pow2", "pic1", "pic2"]
+        pick_area = ["cof1", "cof2", "pow1", "pow2", "pic1", "pic2"]
 
         need_change_word = ["cof","pow"]
 
@@ -494,9 +494,9 @@ class BrewService:
         # 숫자 부분 추출
         if name in need_change_word:
             if name == 'cof':
-                name.replace("cof","coffee")
+                name = name.replace("cof","coffee")
             elif name == 'pow':
-                name.replace("pow","powder")
+                name = name.replace("pow","powder")
         number = int(re.findall(r'\d+', ui_point_name)[0])
         print(f"Seperate : {name}, {number}")
         
@@ -577,7 +577,7 @@ class BrewService:
         self._return_motion_after_save(saved_point_name, controller,
                                        vel=self.DEFAULT_RETURN_VEL,
                                        acc=self.DEFAULT_RETURN_ACC)
-        self.save_pulse(ui_point_name, self.RAIL_TARGET_PULSE[ui_point_name])
+        
     def jog_tcp(self, ui_point_name: str, direction: str, step: float, controller=None):
         if controller is None:
             print("[BREW] jog_tcp ignored: controller is None")
