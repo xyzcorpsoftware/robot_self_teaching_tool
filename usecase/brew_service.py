@@ -388,13 +388,13 @@ class BrewService:
         컴포넌트/라벨 기준으로 모션을 실행하고 필요하면 jog를 엽니다.
         """
         if controller is None:
-            return {"open_jog": True, "jog_target": label}
+            return {"open_jog": False, "jog_target": label}
 
         n = (label or "").lower().strip()
         if n.startswith("cup"):
             par2 = n.replace("cup", "")
-            if par2 not in ("1", "2"):
-                return {"open_jog": True, "jog_target": label}
+            if par2 not in ("1", "2", "3", "4"):
+                return {"open_jog": False, "jog_target": label}
 
             app_j = self._get_point("MAC_App_J")
             app_cup = self._get_point("MAC_App_Cup_L")
@@ -410,7 +410,7 @@ class BrewService:
 
             if missing:
                 print(f"[BREW][CUP][WARN] missing points: {missing}")
-                return {"open_jog": True, "jog_target": label}
+                return {"open_jog": False, "jog_target": label}
             
             # Rail
             self._move_rail_before_motion(label)
@@ -426,7 +426,7 @@ class BrewService:
         if n.startswith("ice"):
             par2 = n.replace("ice", "")
             if par2 not in ("1", "2"):
-                return {"open_jog": True, "jog_target": label}
+                return {"open_jog": False, "jog_target": label}
 
             app_j = self._get_point("MAC_App_J")
             pre_hold = self._get_point(f"ICE{par2}_PreHold_L")
@@ -440,7 +440,7 @@ class BrewService:
 
             if missing:
                 print(f"[BREW][ICE][WARN] missing points: {missing}")
-                return {"open_jog": True, "jog_target": label}
+                return {"open_jog": False, "jog_target": label}
             
              # Rail
             self._move_rail_before_motion(label)
@@ -455,7 +455,7 @@ class BrewService:
             if not par2:
                 par2 = "1"
             if par2 not in ("1", "2"):
-                return {"open_jog": True, "jog_target": label}
+                return {"open_jog": False, "jog_target": label}
 
             app_j = self._get_point("MAC_App_J")
             up_l = self._get_point(f"COF{par2}_Up_L")
@@ -484,7 +484,7 @@ class BrewService:
             if not par2:
                 par2 = "1"
             if par2 not in ("1", "2"):
-                return {"open_jog": True, "jog_target": label}
+                return {"open_jog": False, "jog_target": label}
 
             app_j = self._get_point("MAC_App_J")
             up_l = self._get_point(f"POW{par2}_Up_L")
