@@ -53,7 +53,7 @@ class ConnectDialog(QDialog):
 
         # 체크박스: 실제 로봇 사용 여부
         self.check_box = QCheckBox("Use Real Robot")
-        self.check_box.setChecked(False)
+        self.check_box.setChecked(True)
 
         layout.addWidget(self.check_box)
 

@@ -417,21 +417,28 @@ class MainWindow(QDialog):
 
             btn_home = QPushButton("home")
             btn_home.setObjectName("btn_home_dynamic")
-            btn_home.setFixedHeight(40)
+            btn_home.setFixedHeight(60)
             btn_home.clicked.connect(lambda _: self.go_home())
             self._pic2_row_layout.addWidget(btn_home)
 
+            self._pic2_row_layout.addStretch(1)
+
             btn_grip_open = QPushButton("gripper_open")
             btn_grip_open.setObjectName("btn_gripper_open")
-            btn_grip_open.setFixedHeight(40)
+            btn_grip_open.setFixedHeight(30)
             btn_grip_open.clicked.connect(lambda _: self.open_gripper())
-            self._pic2_row_layout.addWidget(btn_grip_open)
 
             btn_grip_close = QPushButton("gripper_close")
             btn_grip_close.setObjectName("btn_gripper_close")
-            btn_grip_close.setFixedHeight(40)
+            btn_grip_close.setFixedHeight(30)
             btn_grip_close.clicked.connect(lambda _: self.close_gripper())
-            self._pic2_row_layout.addWidget(btn_grip_close)
+
+            grip_box = QVBoxLayout()
+            grip_box.setSpacing(6)
+            grip_box.addWidget(btn_grip_open)
+            grip_box.addWidget(btn_grip_close)
+
+            self._pic2_row_layout.addLayout(grip_box)
 
             self._pic2_row_layout.addStretch(1)
 
