@@ -20,7 +20,7 @@ is_init =False
 class ROBOT_AUX_STATE(Structure):
     _pack_ = 1
     _fields_ = [
-        ("servoId", c_uint8),         # 伺服驱动器ID号
+        ("servoId", c_byte),         # 伺服驱动器ID号
         ("servoErrCode", c_int),     # 伺服驱动器故障码
         ("servoState", c_int),       # 伺服驱动器状态
         ("servoPos", c_double),      # 伺服当前位置
@@ -34,15 +34,15 @@ class EXT_AXIS_STATUS(Structure):
         ("pos", c_double),        # 扩展轴位置
         ("vel", c_double),        # 扩展轴速度
         ("errorCode", c_int),     # 扩展轴故障码
-        ("ready", c_uint8),        # 伺服准备好
-        ("inPos", c_uint8),        # 伺服到位
-        ("alarm", c_uint8),        # 伺服报警
-        ("flerr", c_uint8),        # 跟随误差
-        ("nlimit", c_uint8),       # 到负限位
-        ("pLimit", c_uint8),       # 到正限位
-        ("mdbsOffLine", c_uint8),  # 驱动器485总线掉线
-        ("mdbsTimeout", c_uint8),  # 控制卡与控制箱485通信超时
-        ("homingStatus", c_uint8), # 扩展轴回零状态
+        ("ready", c_byte),        # 伺服准备好
+        ("inPos", c_byte),        # 伺服到位
+        ("alarm", c_byte),        # 伺服报警
+        ("flerr", c_byte),        # 跟随误差
+        ("nlimit", c_byte),       # 到负限位
+        ("pLimit", c_byte),       # 到正限位
+        ("mdbsOffLine", c_byte),  # 驱动器485总线掉线
+        ("mdbsTimeout", c_byte),  # 控制卡与控制箱485通信超时
+        ("homingStatus", c_byte), # 扩展轴回零状态
     ]
 
 class WELDING_BREAKOFF_STATE(Structure):
@@ -52,21 +52,18 @@ class WELDING_BREAKOFF_STATE(Structure):
         ("weldArcState", ctypes.c_uint8),        # 焊接电弧中断状态
     ]
 
-"""   
-@brief  机器人状态反馈数据包
-"""
 class RobotStatePkg(Structure):
     _pack_ = 1
     _fields_ = [
-        ("frame_head", ctypes.c_uint16),      # 帧头 0x5A5A
-        ("frame_cnt", ctypes.c_uint8),         # 帧计数
-        ("data_len", ctypes.c_uint16),        # 数据长度
-        ("program_state", ctypes.c_uint8),     # 程序运行状态，1-停止；2-运行；3-暂停
-        ("robot_state", ctypes.c_uint8),       # 机器人运动状态，1-停止；2-运行；3-暂停；4-拖动
-        ("main_code", ctypes.c_int),          # 主故障码
-        ("sub_code", ctypes.c_int),           # 子故障码
-        ("robot_mode", ctypes.c_uint8),        # 机器人模式，0-自动模式；1-手动模式
-        ("jt_cur_pos", ctypes.c_double * 6),  # 机器人当前关节位置，假设有6个关节
+        ("frame_head", c_uint16),      # 帧头 0x5A5A
+        ("frame_cnt", c_byte),         # 帧计数
+        ("data_len", c_uint16),        # 数据长度
+        ("program_state", c_byte),     # 程序运行状态，1-停止；2-运行；3-暂停
+        ("robot_state", c_byte),       # 机器人运动状态，1-停止；2-运行；3-暂停；4-拖动
+        ("main_code", c_int),          # 主故障码
+        ("sub_code", c_int),           # 子故障码
+        ("robot_mode", c_byte),        # 机器人模式，0-自动模式；1-手动模式
+        ("jt_cur_pos", c_double * 6),  # 机器人当前关节位置，假设有6个关节
         ("tl_cur_pos", ctypes.c_double * 6),  # 工具当前位姿
         ("flange_cur_pos", ctypes.c_double * 6),  # 末端法兰当前位姿
         ("actual_qd", ctypes.c_double * 6),  # 机器人当前关节速度
@@ -78,39 +75,39 @@ class RobotStatePkg(Structure):
         ("jt_cur_tor", ctypes.c_double * 6),  # 当前扭矩
         ("tool", ctypes.c_int),  # 工具号
         ("user", ctypes.c_int),  # 工件号
-        ("cl_dgt_output_h", ctypes.c_uint8),  # 数字输出15-8
-        ("cl_dgt_output_l", ctypes.c_uint8),  # 数字输出7-0
-        ("tl_dgt_output_l", ctypes.c_uint8),  # 工具数字输出7-0(仅bit0-bit1有效)
-        ("cl_dgt_input_h", ctypes.c_uint8),  # 数字输入15-8
-        ("cl_dgt_input_l", ctypes.c_uint8),  # 数字输入7-0
-        ("tl_dgt_input_l", ctypes.c_uint8),  # 工具数字输入7-0(仅bit0-bit1有效)
+        ("cl_dgt_output_h", ctypes.c_byte),  # 数字输出15-8
+        ("cl_dgt_output_l", ctypes.c_byte),  # 数字输出7-0
+        ("tl_dgt_output_l", ctypes.c_byte),  # 工具数字输出7-0(仅bit0-bit1有效)
+        ("cl_dgt_input_h", ctypes.c_byte),  # 数字输入15-8
+        ("cl_dgt_input_l", ctypes.c_byte),  # 数字输入7-0
+        ("tl_dgt_input_l", ctypes.c_byte),  # 工具数字输入7-0(仅bit0-bit1有效)
         ("cl_analog_input", ctypes.c_uint16 * 2),  # 控制箱模拟量输入
         ("tl_anglog_input", ctypes.c_uint16),  # 工具模拟量输入
         ("ft_sensor_raw_data", ctypes.c_double * 6),  # 力/扭矩传感器原始数据
         ("ft_sensor_data", ctypes.c_double * 6),  # 力/扭矩传感器数据
-        ("ft_sensor_active", ctypes.c_uint8),  # 力/扭矩传感器激活状态， 0-复位，1-激活
-        ("EmergencyStop", ctypes.c_uint8),  # 急停标志
+        ("ft_sensor_active", ctypes.c_byte),  # 力/扭矩传感器激活状态， 0-复位，1-激活
+        ("EmergencyStop", ctypes.c_byte),  # 急停标志
         ("motion_done", ctypes.c_int),  # 到位信号
-        ("gripper_motiondone", ctypes.c_uint8),  # 夹爪运动完成信号
+        ("gripper_motiondone", ctypes.c_byte),  # 夹爪运动完成信号
         ("mc_queue_len", ctypes.c_int),  # 运动队列长度
-        ("collisionState", ctypes.c_uint8),  # 碰撞检测，1-碰撞；0-无碰撞
+        ("collisionState", ctypes.c_byte),  # 碰撞检测，1-碰撞；0-无碰撞
         ("trajectory_pnum", ctypes.c_int),  # 轨迹点编号
-        ("safety_stop0_state", ctypes.c_uint8),  # 安全停止信号SI0
-        ("safety_stop1_state", ctypes.c_uint8),  # 安全停止信号SI1
-        ("gripper_fault_id", ctypes.c_uint8),  # 错误夹爪号
+        ("safety_stop0_state", ctypes.c_byte),  # 安全停止信号SI0
+        ("safety_stop1_state", ctypes.c_byte),  # 安全停止信号SI1
+        ("gripper_fault_id", ctypes.c_byte),  # 错误夹爪号
         ("gripper_fault", ctypes.c_uint16),  # 夹爪故障
         ("gripper_active", ctypes.c_uint16),  # 夹爪激活状态
-        ("gripper_position", ctypes.c_uint8),  # 夹爪位置
-        ("gripper_speed", ctypes.c_int8),  # 夹爪速度
-        ("gripper_current", ctypes.c_int8),  # 夹爪电流
+        ("gripper_position", ctypes.c_byte),  # 夹爪位置
+        ("gripper_speed", ctypes.c_byte),  # 夹爪速度
+        ("gripper_current", ctypes.c_byte),  # 夹爪电流
         ("gripper_tmp", ctypes.c_int),  # 夹爪温度
         ("gripper_voltage", ctypes.c_int),  # 夹爪电压
         ("auxState", ROBOT_AUX_STATE),  # 485扩展轴状态
         ("extAxisStatus", EXT_AXIS_STATUS*4),  # UDP扩展轴状态
-        ("extDIState", ctypes.c_uint16*8),  # 扩展DI输入
-        ("extDOState", ctypes.c_uint16*8),  # 扩展DO输出
-        ("extAIState", ctypes.c_uint16*4),  # 扩展AI输入
-        ("extAOState", ctypes.c_uint16*4),  # 扩展AO输出
+        ("extDIState", c_uint16*8),  # 扩展DI输入
+        ("extDOState", c_uint16*8),  # 扩展DO输出
+        ("extAIState", c_uint16*4),  # 扩展AI输入
+        ("extAOState", c_uint16*4),  # 扩展AO输出
         ("rbtEnableState", ctypes.c_int),  # 机器人使能状态
         ("jointDriverTorque", ctypes.c_double * 6),  # 关节驱动器当前扭矩
         ("jointDriverTemperature", ctypes.c_double * 6),  # 关节驱动器当前温度
@@ -129,19 +126,7 @@ class RobotStatePkg(Structure):
         ("gripperRotSpeed", ctypes.c_uint8),  # 旋转夹爪当前旋转速度百分比
         ("gripperRotTorque", ctypes.c_uint8),  # 旋转夹爪当前旋转力矩百分比
         ("weldingBreakOffState", WELDING_BREAKOFF_STATE), # 焊接中断状态
-        ("jt_tgt_tor", ctypes.c_double * 6),  # 关节指令力矩
-        ("smartToolState", ctypes.c_int),  # SmartTool手柄按钮状态
-        ("wideVoltageCtrlBoxTemp", ctypes.c_float),  # 宽电压控制箱温度
-        ("wideVoltageCtrlBoxFanCurrent", ctypes.c_uint16),  # 宽电压控制箱风扇电流(ma)
-        ("toolCoord", ctypes.c_double * 6),  # 工具坐标系                                                                2025.09.17---3.8.6
-        ("wobjCoord", ctypes.c_double * 6),  # 工件坐标系
-        ("extoolCoord", ctypes.c_double * 6),  # 外部工具坐标系
-        ("exAxisCoord", ctypes.c_double * 6),  # 扩展轴坐标系
-        ("load", ctypes.c_double),  # 负载质量
-        ("loadCog", ctypes.c_double * 3),  # 负载质心
-        ("lastServoTarget", ctypes.c_double * 6),  # 队列中最后一个ServoJ目标位置                                          2025.10.15---3.8.7
-        ("servoJCmdNum", ctypes.c_int),  # ServoJ指令计数
-        ("check_sum", ctypes.c_uint16)]  # 校验和
+        ("check_sum", c_ushort)]  # 校验和
 
 
 class BufferedFileHandler(RotatingFileHandler):
@@ -204,23 +189,12 @@ def xmlrpc_timeout(func):
 class RobotError:
     ERR_SUCCESS = 0
     ERR_POINTTABLE_NOTFOUND = -7  # 上传文件不存在
-    # ERR_SAVE_FILE_PATH_NOT_FOUND = -6  # 保存文件路径不存在
+    ERR_SAVE_FILE_PATH_NOT_FOUND = -6  # 保存文件路径不存在
     ERR_NOT_FOUND_LUA_FILE = -5  # lua文件不存在
     ERR_RPC_ERROR = -4
     ERR_SOCKET_COM_FAILED = -2
     ERR_OTHER = -1
     ERROR_RECONN = -8
-    ERR_SOCKET_RECV_FAILED=-16    #/* socket接收失败 */
-    ERR_SOCKET_SEND_FAILED=-15    #/* socket发送失败 */
-    ERR_FILE_OPEN_FAILED=-14    #/* 文件打开失败 */
-    ERR_FILE_TOO_LARGE=-13    #/* 文件大小超限 */
-    ERR_UPLOAD_FILE_ERROR=-12    #/* 上传文件异常 */
-    ERR_FILE_NAME=-11    #/* 文件名称异常 */
-    ERR_DOWN_LOAD_FILE_WRITE_FAILED=-10    #/* 下载文件写入失败 */
-    ERR_DOWN_LOAD_FILE_CHECK_FAILED=-9     #/* 文件下载校验失败 */
-    ERR_DOWN_LOAD_FILE_FAILED=-8     #/* 文件下载失败 */
-    ERR_UPLOAD_FILE_NOT_FOUND=-7     #/* 上传文件存在 */
-    ERR_SAVE_FILE_PATH_NOT_FOUND=-6     #/* 保存文件路径不存在 */
 
 
 class RPC():
@@ -232,7 +206,7 @@ class RPC():
     logging_thread = None
     is_conect = True
     ROBOT_REALTIME_PORT = 20004
-    # BUFFER_SIZE = 1024 * 2
+    # BUFFER_SIZE = 1024 * 8
     BUFFER_SIZE = 1024 * 1024
     thread=  threading.Thread()
     SDK_state=True
@@ -287,12 +261,12 @@ class RPC():
         """连接到机器人的实时端口"""
         # print("SDK连接机器人")
         self.sock_cli_state = socket.socket(socket.AF_INET, socket.SOCK_STREAM)#套接字连接机器人20004端口，用于实时更新机器人状态数据
-        self.sock_cli_state.settimeout(0.3)  # 设置超时时间为 0.05 秒
+        self.sock_cli_state.settimeout(0.03)  # 设置超时时间为 0.05 秒
         try:
             self.sock_cli_state.connect((self.ip_address, self.ROBOT_REALTIME_PORT))
             self.sock_cli_state_state = True
         except socket.timeout:
-            # print("连接超时，请检查网络连接。")
+            print("连接超时，请检查网络连接。")
             self.sock_cli_state_state = False
             return False
         except Exception as ex:
@@ -303,15 +277,14 @@ class RPC():
 
     def reconnect(self):
         """自动重连"""
-        max_retries = 1000
+        max_retries = 20
         retry_interval = 2  # 2秒
         # with self.lock:  # 加锁
         # RPC.is_conect = False
-        # print("断联")
+        print("断联")
         self.reconnect_flag = True
         for attempt in range(max_retries):
-            # print(f"尝试重新连接，第 {attempt + 1} 次")
-            # print(f"尝试重新连接")
+            print(f"尝试重新连接，第 {attempt + 1} 次")
             # 确保 self.sock_cli_state 是新的 socket 对象
             if self.sock_cli_state:
                 self.sock_cli_state.close()  # 关闭旧的 socket
@@ -323,7 +296,7 @@ class RPC():
             # 尝试连接
 
             if self.connect_to_robot():
-                # print("重新连接成功")
+                print("重新连接成功")
                 self.SDK_state = True
                 self.reconnect_flag = False
                 return True
@@ -347,7 +320,7 @@ class RPC():
                 #     print("XML-RPC 连接验证失败:", ex)
                 #     self.SDK_state = False
             else:
-                # print(f"重新连接失败，等待 {retry_interval} 秒后重试...")
+                print(f"重新连接失败，等待 {retry_interval} 秒后重试...")
                 time.sleep(retry_interval)
 
         print("已达到最大重连次数，连接失败")
@@ -370,7 +343,7 @@ class RPC():
         #         return
 
 
-    def robot_state_routine_thread_old(self):
+    def robot_state_routine_thread(self):
         """处理机器人状态数据包的线程例程"""
 
         while not self.closeRPC_state:
@@ -461,259 +434,9 @@ class RPC():
                     self.sock_cli_state_state = False
                     self.SDK_state=False
                     # self.reconnect()
-                    # print("SDK读取机器人实时数据失败", ex)
+                    print("SDK读取机器人实时数据失败", ex)
                     self.reconnect()
 
-    def robot_state_routine_thread(self):
-        """处理机器人状态数据包的线程例程"""
-
-        while not self.closeRPC_state:
-            recvbuf = bytearray(self.BUFFER_SIZE)
-            tmp_recvbuf = bytearray(self.BUFFER_SIZE)
-            state_pkg = bytearray(self.BUFFER_SIZE)
-            find_head_flag = False
-            index = 0
-            length = 0
-            tmp_len = 0
-            expected_length = self.BUFFER_SIZE  # 初始期望接收长度
-
-            try:
-                while not self.robot_realstate_exit and not self.stop_event.is_set():
-                    recvbyte = self.sock_cli_state.recv_into(recvbuf)
-                    # print(f"接收机器人状态字节 {recvbyte}")
-                    # print("Python 结构体大小:", sizeof(self.robot_state_pkg))
-                    if recvbyte <= 0:
-                        self.sock_cli_state.close()
-                        print("接收机器人状态字节 -1")
-                        if not self.reconnect():
-                            return
-                        continue
-
-                    # 处理临时缓冲区数据
-                    if tmp_len > 0:
-                        if tmp_len + recvbyte <= self.BUFFER_SIZE:
-                            recvbuf[:tmp_len + recvbyte] = tmp_recvbuf[:tmp_len] + recvbuf[:recvbyte]
-                            recvbyte += tmp_len
-                            tmp_len = 0
-                        else:
-                            tmp_len = 0
-
-                    i = 0
-                    while i < recvbyte:
-                        # 查找包头
-                        if format(recvbuf[i], '02X') == "5A" and not find_head_flag:
-                            if i + 4 < recvbyte and format(recvbuf[i + 1], '02X') == "5A":
-                                find_head_flag = True
-                                state_pkg[0] = recvbuf[i]
-                                index = 1
-                                length = (recvbuf[i + 4] << 8) | recvbuf[i + 3]
-
-                                #检查长度是否超过预期
-                                if length + 7 > expected_length:
-                                    expected_length = length + 7
-                                    # 需要接收更多数据
-                                    tmp_recvbuf[:recvbyte - i] = recvbuf[i:recvbyte]
-                                    tmp_len = recvbyte - i
-                                    find_head_flag = False
-                                    break
-
-                                i += 1
-                            else:
-                                i += 1
-                                continue
-
-                        # 已找到包头，收集数据
-                        elif find_head_flag and index < length + 5:
-                            if i >= recvbyte:
-                                break
-
-                            state_pkg[index] = recvbuf[i]
-                            index += 1
-                            i += 1
-
-                        # 检查校验和
-                        elif find_head_flag and index >= length + 5:
-                            if i + 1 < recvbyte:
-                                checksum = sum(state_pkg[:index])
-                                checkdata = (recvbuf[i + 1] << 8) | recvbuf[i]
-
-                                if checksum == checkdata:
-                                    self.robot_state_pkg = RobotStatePkg.from_buffer_copy(state_pkg[:sizeof(self.robot_state_pkg)])
-
-                                    # print(f"@@@@@@{self.robot_state_pkg.toolCoord[0]}")
-                                    find_head_flag = False
-                                    index = 0
-                                    length = 0
-                                    expected_length = self.BUFFER_SIZE  # 重置期望长度
-                                    i += 2
-                                else:
-                                    # 校验失败处理
-                                    self.robot_state_pkg.jt_cur_pos[0] = 0
-                                    self.robot_state_pkg.jt_cur_pos[1] = 0
-                                    self.robot_state_pkg.jt_cur_pos[2] = 0
-                                    find_head_flag = False
-                                    index = 0
-                                    length = 0
-                                    i += 2
-                            else:
-                                # 数据不足，保存到临时缓冲区
-                                tmp_recvbuf[:recvbyte - i] = recvbuf[i:recvbyte]
-                                tmp_len = recvbyte - i
-                                break
-                        else:
-                            i += 1
-
-            except Exception as ex:
-                if not self.closeRPC_state:
-                    self.sock_cli_state.close()
-                    self.sock_cli_state_state = False
-                    self.SDK_state = False
-                    # print("SDK读取机器人实时数据失败", ex)
-                    self.reconnect()
-
-    def robot_state_routine_thread_new(self):
-        """处理机器人状态数据包的线程例程"""
-
-        while not self.closeRPC_state:
-            # 使用动态缓冲区大小，初始为 self.BUFFER_SIZE
-            current_buffer_size = self.BUFFER_SIZE
-            recvbuf = bytearray(current_buffer_size)
-            tmp_recvbuf = bytearray(current_buffer_size)
-            state_pkg = bytearray(current_buffer_size)
-            find_head_flag = False
-            index = 0
-            length = 0
-            tmp_len = 0
-
-            try:
-                while not self.robot_realstate_exit and not self.stop_event.is_set():
-                    recvbyte = self.sock_cli_state.recv_into(recvbuf)
-
-                    if recvbyte <= 0:
-                        self.sock_cli_state.close()
-                        print("接收机器人状态字节 -1")
-                        if not self.reconnect():
-                            return
-                        continue
-
-                    # 处理临时缓冲区数据
-                    if tmp_len > 0:
-                        if tmp_len + recvbyte <= current_buffer_size:
-                            recvbuf[:tmp_len + recvbyte] = tmp_recvbuf[:tmp_len] + recvbuf[:recvbyte]
-                            recvbyte += tmp_len
-                            tmp_len = 0
-                        else:
-                            # 需要扩大接收缓冲区
-                            new_buffer_size = tmp_len + recvbyte
-                            new_recvbuf = bytearray(new_buffer_size)
-                            new_recvbuf[:tmp_len] = tmp_recvbuf[:tmp_len]
-                            new_recvbuf[tmp_len:tmp_len + recvbyte] = recvbuf[:recvbyte]
-                            recvbuf = new_recvbuf
-                            current_buffer_size = new_buffer_size
-                            recvbyte += tmp_len
-                            tmp_len = 0
-
-                    i = 0
-                    while i < recvbyte:
-                        # 查找包头
-                        if format(recvbuf[i], '02X') == "5A" and not find_head_flag:
-                            if i + 4 < recvbyte and format(recvbuf[i + 1], '02X') == "5A":
-                                find_head_flag = True
-                                state_pkg[0] = recvbuf[i]
-                                index = 1
-                                length = (recvbuf[i + 4] << 8) | recvbuf[i + 3]
-
-                                # 检查长度是否超过当前缓冲区
-                                if length + 7 > current_buffer_size:
-                                    # 需要扩大缓冲区
-                                    new_buffer_size = length + 7 + 100  # 加一些额外空间
-                                    # 扩大所有相关缓冲区
-                                    new_recvbuf = bytearray(new_buffer_size)
-                                    new_state_pkg = bytearray(new_buffer_size)
-                                    new_tmp_recvbuf = bytearray(new_buffer_size)
-
-                                    # 复制现有数据
-                                    if recvbyte - i > 0:
-                                        new_recvbuf[:recvbyte - i] = recvbuf[i:recvbyte]
-                                    tmp_len = recvbyte - i
-                                    tmp_recvbuf = new_tmp_recvbuf
-
-                                    recvbuf = new_recvbuf
-                                    state_pkg = new_state_pkg
-                                    current_buffer_size = new_buffer_size
-
-                                    find_head_flag = False
-                                    break  # 跳出内层循环，重新接收数据
-
-                                i += 1
-                            else:
-                                i += 1
-                                continue
-
-                        # 已找到包头，收集数据
-                        elif find_head_flag and index < length + 5:
-                            if i >= recvbyte:
-                                break
-
-                            # 检查索引是否越界
-                            if index >= len(state_pkg):
-                                # 需要扩大 state_pkg 缓冲区
-                                new_size = index + 100
-                                new_state_pkg = bytearray(new_size)
-                                new_state_pkg[:len(state_pkg)] = state_pkg
-                                state_pkg = new_state_pkg
-
-                            state_pkg[index] = recvbuf[i]
-                            index += 1
-                            i += 1
-
-                        # 检查校验和
-                        elif find_head_flag and index >= length + 5:
-                            if i + 1 < recvbyte:
-                                checksum = sum(state_pkg[:index])
-                                checkdata = (recvbuf[i + 1] << 8) | recvbuf[i]
-
-                                if checksum == checkdata:
-                                    # 确保有足够的数据来解析
-                                    if index >= 1184:  # 根据错误信息，至少需要1184字节
-                                        try:
-                                            self.robot_state_pkg = RobotStatePkg.from_buffer_copy(state_pkg[:index])
-                                            print(f"@@@@@@{self.robot_state_pkg.toolCoord[0]}")
-                                        except Exception as e:
-                                            print(f"解析数据包失败: {e}")
-                                    else:
-                                        print(f"数据包大小不足: {index} < 1184")
-
-                                    find_head_flag = False
-                                    index = 0
-                                    length = 0
-                                    i += 2
-                                else:
-                                    # 校验失败处理
-                                    print(f"校验和失败: {checksum} != {checkdata}")
-                                    self.robot_state_pkg.jt_cur_pos[0] = 0
-                                    self.robot_state_pkg.jt_cur_pos[1] = 0
-                                    self.robot_state_pkg.jt_cur_pos[2] = 0
-                                    find_head_flag = False
-                                    index = 0
-                                    length = 0
-                                    i += 2
-                            else:
-                                # 数据不足，保存到临时缓冲区
-                                if recvbyte - i > 0:
-                                    tmp_recvbuf[:recvbyte - i] = recvbuf[i:recvbyte]
-                                    tmp_len = recvbyte - i
-                                break
-                        else:
-                            i += 1
-
-            except Exception as ex:
-                if not self.closeRPC_state:
-                    self.sock_cli_state.close()
-                    self.sock_cli_state_state = False
-                    self.SDK_state = False
-                    # print("SDK读取机器人实时数据失败", ex)
-                    self.reconnect()
 
     def setup_logging(self, output_model=1, file_path="", file_num=5):
         """用于处理日志"""
@@ -880,7 +603,7 @@ class RPC():
     @xmlrpc_timeout
     def GetSDKVersion(self):
         error = 0
-        sdk = ["SDK:V2.2.2", "Robot:V3.9.2"]
+        sdk = ["SDK:V2.0.8", "Robot:V3.7.8"]
         return error, sdk
 
     """   
@@ -893,20 +616,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetControllerIP(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetControllerIP()
-                flag = False
-            except socket.error as e:
-                flag = True
+        _error = self.robot.GetControllerIP()
         error = _error[0]
         if _error[0] == 0:
             return error, _error[1]
         else:
-            return error,0
+            return error
 
     """   
     @brief  控制机器人手自动模式切换
@@ -917,9 +632,22 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def Mode(self, state):
+        # with self.lock:  # 加锁
+        # flag = True
+        # while flag == True:
         flag = True
         while self.reconnect_flag:
             time.sleep(0.1)
+            # try:
+            #     # 尝试发送空数据包
+            #     self.sock_cli_state.recv_into(bytearray(1024 * 1024))
+            #     flag = False
+            # except socket.error as e:
+            #     flag = True
+            #     # self.reconnect()
+
+        # while self.reconnect_flag:
+        #     time.sleep(0.1)
 
         state = int(state)
         flag = True
@@ -941,16 +669,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def DragTeachSwitch(self, state):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         state = int(state)  # 强制转换为int型
-        flag = True
-        while flag:
-            try:
-                error = self.robot.DragTeachSwitch(state)
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.DragTeachSwitch(state)
         return error
 
     """   
@@ -963,20 +683,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def IsInDragTeach(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.IsInDragTeach()
-                flag = False
-            except socket.error as e:
-                flag = True
+        _error = self.robot.IsInDragTeach()
         error = _error[0]
         if _error[0] == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  控制机器人上使能或下使能
@@ -987,16 +699,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def RobotEnable(self, state):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         state = int(state)  # 强制转换为int型
-        flag = True
-        while flag:
-            try:
-                error = self.robot.RobotEnable(state)
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.RobotEnable(state)
         return error
 
     """   
@@ -1017,8 +721,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def StartJOG(self, ref, nb, dir, max_dis, vel=20.0, acc=100.0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         ref = int(ref)  # 强制转换为int型
@@ -1027,13 +729,7 @@ class RPC():
         max_dis = float(max_dis)  # 强制转换为float型
         vel = float(vel)  # 强制转换为float型
         acc = float(acc)  # 强制转换为float型
-        flag = True
-        while flag:
-            try:
-                error = self.robot.StartJOG(ref, nb, dir, vel, acc, max_dis)
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.StartJOG(ref, nb, dir, vel, acc, max_dis)
         return error
 
     """   
@@ -1045,16 +741,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def StopJOG(self, ref):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ref = int(ref)  # 强制转换为int型
-        flag = True
-        while flag:
-            try:
-                error = self.robot.StopJOG(ref)
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.StopJOG(ref)
         return error
 
     """   
@@ -1066,19 +754,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ImmStopJOG(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ImmStopJOG()
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.ImmStopJOG()
         return error
 
     """   
-    @brief  关节空间运动(自动正/逆运动学计算)
+    @brief  关节空间运动
     @param  [in] 必选参数 joint_pos: 目标关节位置，单位 [°]
     @param  [in] 必选参数 tool: 工具号，[0~14]
     @param  [in] 必选参数 user: 工件号，[0~14]
@@ -1131,23 +811,19 @@ class RPC():
         return error
 
     """   
-    @brief  笛卡尔空间直线运动(自动正/逆运动学计算)
+    @brief  笛卡尔空间直线运动
     @param  [in] 必选参数 desc_pos: 目标笛卡尔位姿，单位 [mm][°]
     @param  [in] 必选参数 tool: 工具号，[0~14]
     @param  [in] 必选参数 user: 工件号，[0~14]
     @param  [in] 默认参数 joint_pos: 目标关节位置，单位 [°] 默认初值为[0.0,0.0,0.0,0.0,0.0,0.0]，默认值调用逆运动学求解返回值
     @param  [in] 默认参数 vel：速度百分比，[0~100] 默认20.0
     @param  [in] 默认参数 acc：加速度百分比，[0~100] 暂不开放 默认0.0
-    @param  [in] 默认参数 ovl: 速度缩放因子[0~100]/物理速度（mm/s） 默认100.0
+    @param  [in] 默认参数 ovl: 速度缩放因子，[0~100] 默认100.0
     @param  [in] 默认参数 blendR:[-1.0]-运动到位 (阻塞)，[0~1000]-平滑半径 (非阻塞)，单位 [mm] 默认-1.0
-    @param  [in] 默认参数 blendMode 过渡方式；0-内切过渡；1-角点过渡
     @param  [in] 默认参数 exaxis_pos: 外部轴 1 位置 ~ 外部轴 4 位置 默认[0.0,0.0,0.0,0.0]
     @param  [in] 默认参数 search:[0]-不焊丝寻位，[1]-焊丝寻位
     @param  [in] 默认参数 offset_flag:[0]-不偏移，[1]-工件/基坐标系下偏移，[2]-工具坐标系下偏移 默认 0
     @param  [in] 默认参数 offset_pos: 位姿偏移量，单位 [mm][°] 默认[0.0,0.0,0.0,0.0,0.0,0.0]
-    @param  [in] 默认参数 oacc 加速度缩放因子[0-100]/物理加速度(mm/s2) 默认 100
-    @param  [in] 默认参数 config 逆解关节空间配置，[-1]-参考当前关节位置解算，[0~7]-依据特定关节空间配置求解，默认-1
-    @param  [in] 默认参数 velAccParamMode 速度加速度参数模式；0-百分比；1-物理速度(mm/s)加速度(mm/s2) 默认0
     @param  [in] 默认参数 overSpeedStrategy  超速处理策略，0-策略关闭；1-标准；2-超速时报错停止；3-自适应降速，默认为0
     @param  [in] 默认参数 speedPercent  允许降速阈值百分比[0-100]，默认10%
     @return 错误码 成功-0  失败-错误码
@@ -1156,8 +832,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def MoveL(self, desc_pos, tool, user, joint_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], vel=20.0, acc=0.0, ovl=100.0,
-              blendR=-1.0, blendMode = 0,exaxis_pos=[0.0, 0.0, 0.0, 0.0], search=0, offset_flag=0,
-              offset_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],oacc = 100.0,config=-1,velAccParamMode=0,overSpeedStrategy=0,speedPercent=10):
+              blendR=-1.0,exaxis_pos=[0.0, 0.0, 0.0, 0.0], search=0, offset_flag=0,
+              offset_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],overSpeedStrategy=0,speedPercent=10):
         while self.reconnect_flag:
             time.sleep(0.1)
         if self.GetSafetyCode() != 0:
@@ -1170,14 +846,10 @@ class RPC():
         acc = float(acc)
         ovl = float(ovl)
         blendR = float(blendR)
-        blendMode = int(blendMode)
         exaxis_pos = list(map(float, exaxis_pos))
         search = int(search)
         offset_flag = int(offset_flag)
         offset_pos = list(map(float, offset_pos))
-        oacc = float(oacc)
-        config = int(config)
-        velAccParamMode = int(velAccParamMode)
         overSpeedStrategy = int(overSpeedStrategy)
         speedPercent = int(speedPercent)
         if (overSpeedStrategy > 0):
@@ -1186,7 +858,7 @@ class RPC():
                 return error
         if ((joint_pos[0] == 0.0) and (joint_pos[1] == 0.0) and (joint_pos[2] == 0.0) and (joint_pos[3] == 0.0)
                 and (joint_pos[4] == 0.0) and (joint_pos[5] == 0.0)):  # 若未输入参数则调用逆运动学求解
-            ret = self.robot.GetInverseKin(0, desc_pos, config)  # 逆运动学求解
+            ret = self.robot.GetInverseKin(0, desc_pos, -1)  # 逆运动学求解
             if ret[0] == 0:
                 joint_pos = [ret[1], ret[2], ret[3], ret[4], ret[5], ret[6]]
             else:
@@ -1196,7 +868,8 @@ class RPC():
         flag = True
         while flag:
             try:
-                error1 = self.robot.MoveL([joint_pos[0],joint_pos[1],joint_pos[2],joint_pos[3],joint_pos[4],joint_pos[5], desc_pos[0],desc_pos[1],desc_pos[2],desc_pos[3],desc_pos[4],desc_pos[5], tool, user, vel, acc, ovl, blendR, blendMode, exaxis_pos[0],exaxis_pos[1],exaxis_pos[2],exaxis_pos[3], search,offset_flag, offset_pos[0],offset_pos[1],offset_pos[2],offset_pos[3],offset_pos[4],offset_pos[5],oacc,velAccParamMode])
+                error1 = self.robot.MoveL(joint_pos, desc_pos, tool, user, vel, acc, ovl, blendR, exaxis_pos, search,
+                                 offset_flag, offset_pos)
                 flag = False
             except socket.error as e:
                 flag = True
@@ -1209,7 +882,7 @@ class RPC():
         return error1
 
     """   
-    @brief  笛卡尔空间圆弧运动(自动正/逆运动学计算)
+    @brief  笛卡尔空间圆弧运动
     @param  [in] 必选参数 desc_pos_p: 路径点笛卡尔位姿，单位 [mm][°]
     @param  [in] 必选参数 tool_p: 路径点工具号，[0~14]
     @param  [in] 必选参数 user_p: 路径点工件号，[0~14]
@@ -1228,11 +901,8 @@ class RPC():
     @param  [in] 默认参数 exaxis_pos_t: 目标点外部轴 1 位置 ~ 外部轴 4 位置 默认[0.0,0.0,0.0,0.0]
     @param  [in] 默认参数 offset_flag_t: 目标点是否偏移[0]-不偏移，[1]-工件/基坐标系下偏移，[2]-工具坐标系下偏移 默认 0
     @param  [in] 默认参数 offset_pos_t: 目标点位姿偏移量，单位 [mm][°] 默认[0.0,0.0,0.0,0.0,0.0,0.0]
-    @param  [in] 默认参数 ovl: 速度缩放因子[0~100]/物理速度（mm/s） 默认100.0
+    @param  [in] 默认参数 ovl: 速度缩放因子，[0~100] 默认100.0
     @param  [in] 默认参数 blendR:[-1.0]-运动到位 (阻塞)，[0~1000]-平滑半径 (非阻塞)，单位 [mm] 默认-1.0
-    @param  [in] 默认参数 oacc 加速度缩放因子[0-100]/物理加速度(mm/s2) 默认 100
-    @param  [in] 默认参数 config 逆解关节空间配置，[-1]-参考当前关节位置解算，[0~7]-依据特定关节空间配置求解，默认-1
-    @param  [in] 默认参数 velAccParamMode 速度加速度参数模式；0-百分比；1-物理速度(mm/s)加速度(mm/s2) 默认0
     @return 错误码 成功-0  失败-错误码
     """
 
@@ -1244,14 +914,12 @@ class RPC():
               offset_pos_p=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
               vel_t=20.0, acc_t=100.0, exaxis_pos_t=[0.0, 0.0, 0.0, 0.0], offset_flag_t=0,
               offset_pos_t=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-              ovl=100.0, blendR=-1.0,oacc=100.0,config=-1,velAccParamMode=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+              ovl=100.0, blendR=-1.0):
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         desc_pos_p = list(map(float, desc_pos_p))
-        tool_p = int(tool_p)
-        user_p = int(user_p)
+        tool_p = float(int(tool_p))
+        user_p = float(int(user_p))
         joint_pos_p = list(map(float, joint_pos_p))
         vel_p = float(vel_p)
         acc_p = float(acc_p)
@@ -1260,8 +928,8 @@ class RPC():
         offset_pos_p = list(map(float, offset_pos_p))
 
         desc_pos_t = list(map(float, desc_pos_t))
-        tool_t = int(tool_t)
-        user_t = int(user_t)
+        tool_t = float(int(tool_t))
+        user_t = float(int(user_t))
         joint_pos_t = list(map(float, joint_pos_t))
         vel_t = float(vel_t)
         acc_t = float(acc_t)
@@ -1271,13 +939,10 @@ class RPC():
 
         ovl = float(ovl)
         blendR = float(blendR)
-        oacc = float(oacc)
-        config = int(config)
-        velAccParamMode = int(velAccParamMode)
 
         if ((joint_pos_p[0] == 0.0) and (joint_pos_p[1] == 0.0) and (joint_pos_p[2] == 0.0) and (joint_pos_p[3] == 0.0)
                 and (joint_pos_p[4] == 0.0) and (joint_pos_p[5] == 0.0)):  # 若未输入参数则调用逆运动学求解
-            retp = self.robot.GetInverseKin(0, desc_pos_p, config)  # 逆运动学求解
+            retp = self.robot.GetInverseKin(0, desc_pos_p, -1)  # 逆运动学求解
             if retp[0] == 0:
                 joint_pos_p = [retp[1], retp[2], retp[3], retp[4], retp[5], retp[6]]
             else:
@@ -1286,25 +951,19 @@ class RPC():
 
         if ((joint_pos_t[0] == 0.0) and (joint_pos_t[1] == 0.0) and (joint_pos_t[2] == 0.0) and (joint_pos_t[3] == 0.0)
                 and (joint_pos_t[4] == 0.0) and (joint_pos_t[5] == 0.0)):  # 若未输入参数则调用逆运动学求解
-            rett = self.robot.GetInverseKin(0, desc_pos_t, config)  # 逆运动学求解
+            rett = self.robot.GetInverseKin(0, desc_pos_t, -1)  # 逆运动学求解
             if rett[0] == 0:
                 joint_pos_t = [rett[1], rett[2], rett[3], rett[4], rett[5], rett[6]]
             else:
                 error = rett[0]
                 return error
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveC([joint_pos_p[0],joint_pos_p[1],joint_pos_p[2],joint_pos_p[3],joint_pos_p[4],joint_pos_p[5], desc_pos_p[0],desc_pos_p[1],desc_pos_p[2],desc_pos_p[3],desc_pos_p[4],desc_pos_p[5], tool_p, user_p, vel_p, acc_p, exaxis_pos_p[0],exaxis_pos_p[1],exaxis_pos_p[2],exaxis_pos_p[3], offset_flag_p,
-                                         offset_pos_p[0],offset_pos_p[1],offset_pos_p[2],offset_pos_p[3],offset_pos_p[4],offset_pos_p[5], joint_pos_t[0],joint_pos_t[1],joint_pos_t[2],joint_pos_t[3],joint_pos_t[4],joint_pos_t[5], desc_pos_t[0],desc_pos_t[1],desc_pos_t[2],desc_pos_t[3],desc_pos_t[4],desc_pos_t[5], tool_t, user_t, vel_t, acc_t, exaxis_pos_t[0],exaxis_pos_t[1],exaxis_pos_t[2],exaxis_pos_t[3],
-                                         offset_flag_t, offset_pos_t[0],offset_pos_t[1],offset_pos_t[2],offset_pos_t[3],offset_pos_t[4],offset_pos_t[5], ovl, blendR,oacc,velAccParamMode])
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.MoveC(joint_pos_p, desc_pos_p, [tool_p, user_p, vel_p, acc_p], exaxis_pos_p, offset_flag_p,
+                                 offset_pos_p, joint_pos_t, desc_pos_t, [tool_t, user_t, vel_t, acc_t], exaxis_pos_t,
+                                 offset_flag_t, offset_pos_t, ovl, blendR)
         return error
 
     """   
-    @brief  笛卡尔空间整圆运动(自动正/逆运动学计算)
+    @brief  笛卡尔空间整圆运动
     @param  [in] 必选参数 desc_pos_p: 路径点笛卡尔位姿，单位 [mm][°]
     @param  [in] 必选参数 tool_p: 路径点工具号，[0~14]
     @param  [in] 必选参数 user_p: 路径点工件号，[0~14]
@@ -1319,13 +978,9 @@ class RPC():
     @param  [in] 默认参数 vel_t: 目标点速度百分比，[0~100] 默认20.0
     @param  [in] 默认参数 acc_t: 目标点加速度百分比，[0~100] 暂不开放 默认0.0
     @param  [in] 默认参数 exaxis_pos_t: 目标点外部轴 1 位置 ~ 外部轴 4 位置 默认[0.0,0.0,0.0,0.0]
-    @param  [in] 默认参数 ovl: 速度缩放因子[0~100]/物理速度（mm/s） 默认100.0
+    @param  [in] 默认参数 ovl: 速度缩放因子，[0~100] 默认100.0
     @param  [in] 默认参数 offset_flag: 是否偏移[0]-不偏移，[1]-工件/基坐标系下偏移，[2]-工具坐标系下偏移 默认 0
     @param  [in] 默认参数 offset_pos: 位姿偏移量，单位 [mm][°] 默认[0.0,0.0,0.0,0.0,0.0,0.0]
-    @param  [in] 默认参数 oacc: 加速度缩放因子[0-100]/物理加速度(mm/s2)，默认：100
-    @param  [in] 默认参数 blendR: -1：阻塞；0~1000：平滑半径 默认：-1
-    @param  [in] 默认参数 config 逆解关节空间配置，[-1]-参考当前关节位置解算，[0~7]-依据特定关节空间配置求解，默认-1
-    @param  [in] 默认参数 velAccParamMode 速度加速度参数模式；0-百分比；1-物理速度(mm/s)加速度(mm/s2) 默认0
     @return 错误码 成功-0  失败-错误码
     """
 
@@ -1335,22 +990,20 @@ class RPC():
                joint_pos_t=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                vel_p=20.0, acc_p=0.0, exaxis_pos_p=[0.0, 0.0, 0.0, 0.0], vel_t=20.0, acc_t=0.0,
                exaxis_pos_t=[0.0, 0.0, 0.0, 0.0],
-               ovl=100.0, offset_flag=0, offset_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], oacc=100.0, blendR=-1,config=-1,velAccParamMode=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+               ovl=100.0, offset_flag=0, offset_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]):
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         desc_pos_p = list(map(float, desc_pos_p))
-        tool_p = int(tool_p)
-        user_p = int(user_p)
+        tool_p = float(int(tool_p))
+        user_p = float(int(user_p))
         joint_pos_p = list(map(float, joint_pos_p))
         vel_p = float(vel_p)
         acc_p = float(acc_p)
         exaxis_pos_p = list(map(float, exaxis_pos_p))
 
         desc_pos_t = list(map(float, desc_pos_t))
-        tool_t = int(tool_t)
-        user_t = int(user_t)
+        tool_t = float(int(tool_t))
+        user_t = float(int(user_t))
         joint_pos_t = list(map(float, joint_pos_t))
         vel_t = float(vel_t)
         acc_t = float(acc_t)
@@ -1360,14 +1013,9 @@ class RPC():
         offset_flag = int(offset_flag)
         offset_pos = list(map(float, offset_pos))
 
-        oacc = float(oacc)
-        blendR = float(blendR)
-        config = int(config)
-        velAccParamMode = int(velAccParamMode)
-
         if ((joint_pos_p[0] == 0.0) and (joint_pos_p[1] == 0.0) and (joint_pos_p[2] == 0.0) and (joint_pos_p[3] == 0.0)
                 and (joint_pos_p[4] == 0.0) and (joint_pos_p[5] == 0.0)):  # 若未输入参数则调用逆运动学求解
-            retp = self.robot.GetInverseKin(0, desc_pos_p, config)  # 逆运动学求解
+            retp = self.robot.GetInverseKin(0, desc_pos_p, -1)  # 逆运动学求解
             if retp[0] == 0:
                 joint_pos_p = [retp[1], retp[2], retp[3], retp[4], retp[5], retp[6]]
             else:
@@ -1376,92 +1024,25 @@ class RPC():
 
         if ((joint_pos_t[0] == 0.0) and (joint_pos_t[1] == 0.0) and (joint_pos_t[2] == 0.0) and (joint_pos_t[3] == 0.0)
                 and (joint_pos_t[4] == 0.0) and (joint_pos_t[5] == 0.0)):  # 若未输入参数则调用逆运动学求解
-            rett = self.robot.GetInverseKin(0, desc_pos_t, config)  # 逆运动学求解
+            rett = self.robot.GetInverseKin(0, desc_pos_t, -1)  # 逆运动学求解
             if rett[0] == 0:
                 joint_pos_t = [rett[1], rett[2], rett[3], rett[4], rett[5], rett[6]]
             else:
                 error = rett[0]
                 return error
 
-        flag = True
-        while flag:
-            try:
-                error = self.robot.Circle([joint_pos_p[0],joint_pos_p[1],joint_pos_p[2],joint_pos_p[3],joint_pos_p[4],joint_pos_p[5], desc_pos_p[0],desc_pos_p[1],desc_pos_p[2],desc_pos_p[3],desc_pos_p[4],desc_pos_p[5], tool_p, user_p, vel_p, acc_p, exaxis_pos_p[0],exaxis_pos_p[1],exaxis_pos_p[2],exaxis_pos_p[3],
-                                           joint_pos_t[0],joint_pos_t[1],joint_pos_t[2],joint_pos_t[3],joint_pos_t[4],joint_pos_t[5], desc_pos_t[0],desc_pos_t[1],desc_pos_t[2],desc_pos_t[3],desc_pos_t[4],desc_pos_t[5],
-                                          tool_t, user_t, vel_t, acc_t, exaxis_pos_t[0],exaxis_pos_t[1],exaxis_pos_t[2],exaxis_pos_t[3], ovl, offset_flag, offset_pos[0],offset_pos[1],offset_pos[2],offset_pos[3],offset_pos[4],offset_pos[5], oacc, blendR,velAccParamMode])
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.Circle(joint_pos_p, desc_pos_p, [tool_p, user_p, vel_p, acc_p], exaxis_pos_p, joint_pos_t,
+                                  desc_pos_t,
+                                  [tool_t, user_t, vel_t, acc_t], exaxis_pos_t, ovl, offset_flag, offset_pos)
         return error
 
-    # @log_call
-    # @xmlrpc_timeout
-    # def Circle(self, desc_pos_p, tool_p, user_p, desc_pos_t, tool_t, user_t, joint_pos_p=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    #            joint_pos_t=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    #            vel_p=20.0, acc_p=0.0, exaxis_pos_p=[0.0, 0.0, 0.0, 0.0], vel_t=20.0, acc_t=0.0,
-    #            exaxis_pos_t=[0.0, 0.0, 0.0, 0.0],
-    #            ovl=100.0, offset_flag=0, offset_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]):
-    #     while self.reconnect_flag:
-    #         time.sleep(0.1)
-    #     if self.GetSafetyCode() != 0:
-    #         return self.GetSafetyCode()
-    #     desc_pos_p = list(map(float, desc_pos_p))
-    #     tool_p = float(int(tool_p))
-    #     user_p = float(int(user_p))
-    #     joint_pos_p = list(map(float, joint_pos_p))
-    #     vel_p = float(vel_p)
-    #     acc_p = float(acc_p)
-    #     exaxis_pos_p = list(map(float, exaxis_pos_p))
-    #
-    #     desc_pos_t = list(map(float, desc_pos_t))
-    #     tool_t = float(int(tool_t))
-    #     user_t = float(int(user_t))
-    #     joint_pos_t = list(map(float, joint_pos_t))
-    #     vel_t = float(vel_t)
-    #     acc_t = float(acc_t)
-    #     exaxis_pos_t = list(map(float, exaxis_pos_t))
-    #
-    #     ovl = float(ovl)
-    #     offset_flag = int(offset_flag)
-    #     offset_pos = list(map(float, offset_pos))
-    #
-    #     if ((joint_pos_p[0] == 0.0) and (joint_pos_p[1] == 0.0) and (joint_pos_p[2] == 0.0) and (joint_pos_p[3] == 0.0)
-    #             and (joint_pos_p[4] == 0.0) and (joint_pos_p[5] == 0.0)):  # 若未输入参数则调用逆运动学求解
-    #         retp = self.robot.GetInverseKin(0, desc_pos_p, -1)  # 逆运动学求解
-    #         if retp[0] == 0:
-    #             joint_pos_p = [retp[1], retp[2], retp[3], retp[4], retp[5], retp[6]]
-    #         else:
-    #             error = retp[0]
-    #             return error
-    #
-    #     if ((joint_pos_t[0] == 0.0) and (joint_pos_t[1] == 0.0) and (joint_pos_t[2] == 0.0) and (joint_pos_t[3] == 0.0)
-    #             and (joint_pos_t[4] == 0.0) and (joint_pos_t[5] == 0.0)):  # 若未输入参数则调用逆运动学求解
-    #         rett = self.robot.GetInverseKin(0, desc_pos_t, -1)  # 逆运动学求解
-    #         if rett[0] == 0:
-    #             joint_pos_t = [rett[1], rett[2], rett[3], rett[4], rett[5], rett[6]]
-    #         else:
-    #             error = rett[0]
-    #             return error
-    #
-    #     flag = True
-    #     while flag:
-    #         try:
-    #             error = self.robot.Circle(joint_pos_p, desc_pos_p, [tool_p, user_p, vel_p, acc_p], exaxis_pos_p,
-    #                                       joint_pos_t,
-    #                                       desc_pos_t,
-    #                                       [tool_t, user_t, vel_t, acc_t], exaxis_pos_t, ovl, offset_flag, offset_pos)
-    #             flag = False
-    #         except socket.error as e:
-    #             flag = True
-    #     return error
-
     """   
-    @brief  笛卡尔空间螺旋线运动(自动正/逆运动学计算)
+    @brief  笛卡尔空间螺旋线运动
     @param  [in] 必选参数 desc_pos: 目标笛卡尔位姿，单位 [mm][°]
     @param  [in] 必选参数 tool: 工具号，[0~14]
     @param  [in] 必选参数 user: 工件号，[0~14]
-    @param  [in] 必选参数 param:[circle_num, circle_angle, rad_init, rad_add, rotaxis_add, rot_direction, velAccMode]circle_num: 螺旋圈数，circle_angle: 螺旋倾角，
-    rad_init: 螺旋初始半径，rad_add: 半径增量，rotaxis_add: 转轴方向增量，rot_direction: 旋转方向，0-顺时针，1-逆时针, velAccMode速度加速度参数模式：0-角速度恒定，1-线速度恒定
+    @param  [in] 必选参数 param:[circle_num, circle_angle, rad_init, rad_add, rotaxis_add, rot_direction]circle_num: 螺旋圈数，circle_angle: 螺旋倾角，
+    rad_init: 螺旋初始半径，rad_add: 半径增量，rotaxis_add: 转轴方向增量，rot_direction: 旋转方向，0-顺时针，1-逆时针
     @param  [in] 默认参数 joint_pos: 目标关节位置，单位 [°] 默认初值为[0.0,0.0,0.0,0.0,0.0,0.0]，默认值调用逆运动学求解返回值
     @param  [in] 默认参数 vel：速度百分比，[0~100] 默认20.0
     @param  [in] 默认参数 acc：加速度百分比，[0~100] 默认100.0
@@ -1469,7 +1050,6 @@ class RPC():
     @param  [in] 默认参数 ovl: 速度缩放因子，[0~100] 默认100.0
     @param  [in] 默认参数 offset_flag:[0]-不偏移，[1]-工件/基坐标系下偏移，[2]-工具坐标系下偏移 默认 0
     @param  [in] 默认参数 offset_pos: 位姿偏移量，单位 [mm][°] 默认[0.0,0.0,0.0,0.0,0.0,0.0]
-    @param  [in] 默认参数 config 逆解关节空间配置，[-1]-参考当前关节位置解算，[0~7]-依据特定关节空间配置求解，默认-1
     @return 错误码 成功-0  失败-错误码
     """
 
@@ -1477,21 +1057,18 @@ class RPC():
     @xmlrpc_timeout
     def NewSpiral(self, desc_pos, tool, user, param, joint_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], vel=20.0, acc=0.0,
                   exaxis_pos=[0.0, 0.0, 0.0, 0.0],
-                  ovl=100.0, offset_flag=0, offset_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],config=-1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+                  ovl=100.0, offset_flag=0, offset_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]):
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         desc_pos = list(map(float, desc_pos))
         tool = int(tool)
         user = int(user)
-        param[0] = int(param[0])
+        param[0] = float(param[0])
         param[1] = float(param[1])
         param[2] = float(param[2])
         param[3] = float(param[3])
         param[4] = float(param[4])
-        param[5] = int(param[5])
-        param[6] = int(param[6])
+        param[5] = float(param[5])
         joint_pos = list(map(float, joint_pos))
         vel = float(vel)
         acc = float(acc)
@@ -1499,28 +1076,17 @@ class RPC():
         ovl = float(ovl)
         offset_flag = int(offset_flag)
         offset_pos = list(map(float, offset_pos))
-        config = int(config)
 
         if ((joint_pos[0] == 0.0) and (joint_pos[1] == 0.0) and (joint_pos[2] == 0.0) and (joint_pos[3] == 0.0)
                 and (joint_pos[4] == 0.0) and (joint_pos[5] == 0.0)):  # 若未输入参数则调用逆运动学求解
-            ret = self.robot.GetInverseKin(0, desc_pos, config)  # 逆运动学求解
+            ret = self.robot.GetInverseKin(0, desc_pos, -1)  # 逆运动学求解
             if ret[0] == 0:
                 joint_pos = [ret[1], ret[2], ret[3], ret[4], ret[5], ret[6]]
             else:
                 error = ret[0]
                 return error
-        flag = True
-        while flag:
-            try:
-                error = self.robot.NewSpiral([joint_pos[0],joint_pos[1],joint_pos[2],joint_pos[3],joint_pos[4],joint_pos[5],
-                                              desc_pos[0],desc_pos[1],desc_pos[2],desc_pos[3],desc_pos[4],desc_pos[5],
-                                              tool, user, vel, acc, exaxis_pos[0],exaxis_pos[1],exaxis_pos[2],exaxis_pos[3],
-                                              ovl, offset_flag,
-                                             offset_pos[0],offset_pos[1],offset_pos[2],offset_pos[3],offset_pos[4],offset_pos[5],
-                                              float(param[0]),param[1],param[2],param[3],param[4],int(param[5]),param[6]])
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.NewSpiral(joint_pos, desc_pos, tool, user, vel, acc, exaxis_pos, ovl, offset_flag,
+                                     offset_pos, param)
         return error
 
     """   
@@ -1532,15 +1098,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ServoMoveStart(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ServoMoveStart()
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.ServoMoveStart()
         return error
 
     """   
@@ -1552,15 +1110,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ServoMoveEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ServoMoveEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.ServoMoveEnd()
         return error
 
     """   
@@ -1572,15 +1122,12 @@ class RPC():
     @param  [in] 默认参数 cmdT: 指令下发周期，单位s，建议范围[0.001~0.0016], 默认为0.008
     @param  [in] 默认参数 filterT: 滤波时间，单位 [s]，暂不开放， 默认为0.0
     @param  [in] 默认参数 gain: 目标位置的比例放大器，暂不开放， 默认为0.0
-    @param  [in] 默认参数 id: servoJ指令ID,默认为0
     @return 错误码 成功-0  失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
-    def ServoJ(self, joint_pos,axisPos, acc=0.0, vel=0.0, cmdT=0.008, filterT=0.0, gain=0.0, id=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def ServoJ(self, joint_pos,axisPos, acc=0.0, vel=0.0, cmdT=0.008, filterT=0.0, gain=0.0):
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         joint_pos = list(map(float, joint_pos))
@@ -1590,14 +1137,7 @@ class RPC():
         cmdT = float(cmdT)
         filterT = float(filterT)
         gain = float(gain)
-        id = int(id)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ServoJ(joint_pos,axisPos,acc, vel, cmdT, filterT, gain, id)
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.ServoJ(joint_pos,axisPos,acc, vel, cmdT, filterT, gain)
         return error
 
     """   
@@ -1617,8 +1157,6 @@ class RPC():
     @xmlrpc_timeout
     def ServoCart(self, mode, desc_pos, pos_gain=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0], acc=0.0, vel=0.0, cmdT=0.008,
                   filterT=0.0, gain=0.0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         mode = int(mode)
@@ -1629,13 +1167,7 @@ class RPC():
         cmdT = float(cmdT)
         filterT = float(filterT)
         gain = float(gain)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ServoCart(mode, desc_pos, pos_gain, acc, vel, cmdT, filterT, gain)
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.ServoCart(mode, desc_pos, pos_gain, acc, vel, cmdT, filterT, gain)
         return error
 
     """   
@@ -1647,49 +1179,24 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ServoJTStart(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ServoJTStart()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ServoJTStart()
         return error
 
     """   
     @brief  关节扭矩控制
     @param  [in] 必选参数 torque j1~j6关节扭矩，单位Nm
     @param  [in] 必选参数 interval 指令周期，单位s，范围[0.001~0.008]
-    @param  [in] 默认参数 checkFlag 检测策略 0-不限制；1-限制功率；2-限制速度；3-功率和速度同时限制,默认0
-    @param  [in] 默认参数 jPowerLimit 关节最大功率限制(W)，默认[0.0,0.0,0.0,0.0,0.0,0.0]
-    @param  [in] 默认参数 jVelLimit 关节最大速度(°/s)，默认[0.0,0.0,0.0,0.0,0.0,0.0]
     @return 错误码 成功-0  失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
-    def ServoJT(self, torque, interval, checkFlag=0, jPowerLimit=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                jVelLimit=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def ServoJT(self, torque, interval):
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         torque = list(map(float, torque))
         interval = float(interval)
-        checkFlag = int(checkFlag)
-        jPowerLimit = list(map(float, jPowerLimit))
-        jVelLimit = list(map(float, jVelLimit))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ServoJT(torque, interval, checkFlag, jPowerLimit, jVelLimit)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ServoJT(torque, interval)
         return error
 
     """   
@@ -1701,16 +1208,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ServoJTEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ServoJTEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ServoJTEnd()
         return error
 
     """   
@@ -1729,8 +1227,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def MoveCart(self, desc_pos, tool, user, vel=20.0, acc=0.0, ovl=100.0, blendT=-1.0, config=-1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         desc_pos = list(map(float, desc_pos))
@@ -1741,14 +1237,7 @@ class RPC():
         ovl = float(ovl)
         blendT = float(blendT)
         config = int(config)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveCart(desc_pos, tool, user, vel, acc, ovl, blendT, config)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.MoveCart(desc_pos, tool, user, vel, acc, ovl, blendT, config)
         return error
 
     """   
@@ -1760,20 +1249,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SplineStart(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SplineStart()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SplineStart()
         return error
 
     """   
-    @brief  样条运动 PTP(自动正/逆运动学计算)
+    @brief  样条运动 PTP
     @param  [in] 必选参数 joint_pos: 目标关节位置，单位 [°]
     @param  [in] 必选参数 tool: 工具号，[0~14]
     @param  [in] 必选参数 user: 工件号，[0~14]
@@ -1787,8 +1267,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SplinePTP(self, joint_pos, tool, user, desc_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], vel=20.0, acc=100.0, ovl=100.0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         joint_pos = list(map(float, joint_pos))
@@ -1806,14 +1284,7 @@ class RPC():
             else:
                 error = ret[0]
                 return error
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SplinePTP(joint_pos, desc_pos, tool, user, vel, acc, ovl)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SplinePTP(joint_pos, desc_pos, tool, user, vel, acc, ovl)
         return error
 
     """   
@@ -1825,16 +1296,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SplineEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SplineEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SplineEnd()
         return error
 
     """   
@@ -1847,22 +1309,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def NewSplineStart(self, type, averageTime=2000):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         type = int(type)
         averageTime = int(averageTime)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.NewSplineStart(type, averageTime)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.NewSplineStart(type, averageTime)
         return error
 
     """   
-    @brief  新样条指令点(自动正/逆运动学计算)
+    @brief  新样条指令点
     @param  [in] 必选参数 desc_pos: 目标笛卡尔位姿，单位 [mm][°]
     @param  [in] 必选参数 tool: 工具号，[0~14]
     @param  [in] 必选参数 user: 工件号，[0~14]
@@ -1872,16 +1325,13 @@ class RPC():
     @param  [in] 默认参数 acc: 加速度，范围 [0~100]，暂不开放，默认为 0.0
     @param  [in] 默认参数 ovl: 速度缩放因子，[0~100] 默认为 100.0
     @param  [in] 默认参数 blendR: [0~1000]-平滑半径，单位 [mm] 默认0.0
-    @param  [in] 默认参数 config: 逆解关节空间配置，[-1]-参考当前关节位置解算，[0~7]-依据特定关节空间配置求解,默认-1
     @return 错误码 成功-0  失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
     def NewSplinePoint(self, desc_pos, tool, user, lastFlag, joint_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], vel=0.0,
-                       acc=0.0, ovl=100.0, blendR=0.0, config=-1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+                       acc=0.0, ovl=100.0, blendR=0.0):
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         desc_pos = list(map(float, desc_pos))
@@ -1893,23 +1343,15 @@ class RPC():
         acc = float(acc)
         ovl = float(ovl)
         blendR = float(blendR)
-        config = int(config)
         if ((joint_pos[0] == 0.0) and (joint_pos[1] == 0.0) and (joint_pos[2] == 0.0) and (joint_pos[3] == 0.0)
                 and (joint_pos[4] == 0.0) and (joint_pos[5] == 0.0)):  # 若未输入参数则调用逆运动学求解
-            ret = self.robot.GetInverseKin(0, desc_pos, config)  # 逆运动学求解
+            ret = self.robot.GetInverseKin(0, desc_pos, -1)  # 逆运动学求解
             if ret[0] == 0:
                 joint_pos = [ret[1], ret[2], ret[3], ret[4], ret[5], ret[6]]
             else:
                 error = ret[0]
                 return error
-        flag = True
-        while flag:
-            try:
-                error = self.robot.NewSplinePoint(joint_pos, desc_pos, tool, user, vel, acc, ovl, blendR, lastFlag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.NewSplinePoint(joint_pos, desc_pos, tool, user, vel, acc, ovl, blendR, lastFlag)
         return error
 
     """   
@@ -1921,16 +1363,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def NewSplineEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.NewSplineEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.NewSplineEnd()
         return error
 
     """   
@@ -1942,16 +1375,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def StopMotion(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.StopMotion()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.StopMotion()
         return error
 
     """   
@@ -1994,18 +1418,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def PointsOffsetEnable(self, flag, offset_pos):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         flag = int(flag)
         offset_pos = list(map(float, offset_pos))
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                error = self.robot.PointsOffsetEnable(flag, offset_pos)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        error = self.robot.PointsOffsetEnable(flag, offset_pos)
         return error
 
     """   
@@ -2017,16 +1432,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def PointsOffsetDisable(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.PointsOffsetDisable()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.PointsOffsetDisable()
         return error
 
     """   
@@ -2045,20 +1451,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetDO(self, id, status, smooth=0, block=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         status = int(status)
         smooth = int(smooth)
         block = int(block)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetDO(id, status, smooth, block)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetDO(id, status, smooth, block)
         return error
 
     """   
@@ -2073,20 +1470,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetToolDO(self, id, status, smooth=0, block=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         status = int(status)
         smooth = int(smooth)
         block = int(block)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetToolDO(id, status, smooth, block)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetToolDO(id, status, smooth, block)
         return error
 
     """   
@@ -2100,19 +1488,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAO(self, id, value, block=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         value = float(value)
         block = int(block)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAO(id, value * 40.95, block)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetAO(id, value * 40.95, block)
         return error
 
     """   
@@ -2126,19 +1505,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetToolAO(self, id, value, block=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         value = float(value)
         block = int(block)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetToolAO(id, value * 40.95, block)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetToolAO(id, value * 40.95, block)
         return error
 
     """   
@@ -2170,7 +1540,7 @@ class RPC():
             level = (self.robot_state_pkg.cl_dgt_input_h & (0x01 << id)) >> id
             return 0, level
         else:
-            return -1,None
+            return -1
 
 
     """   
@@ -2198,7 +1568,7 @@ class RPC():
             level = (self.robot_state_pkg.tl_dgt_input_l & (0x01 << id)) >> id
             return 0,level
         else:
-            return -1,None
+            return -1
 
     """   
     @brief  等待控制箱数字量输入
@@ -2212,20 +1582,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WaitDI(self, id, status, maxtime, opt):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         status = int(status)
         maxtime = int(maxtime)
         opt = int(opt)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WaitDI(id, status, maxtime, opt)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WaitDI(id, status, maxtime, opt)
         return error
 
     """   
@@ -2241,21 +1602,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WaitMultiDI(self, mode, id, status, maxtime, opt):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         mode = int(mode)
         id = int(id)
         status = int(status)
         maxtime = int(maxtime)
         opt = int(opt)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WaitMultiDI(mode, id, status, maxtime, opt)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WaitMultiDI(mode, id, status, maxtime, opt)
         return error
 
     """   
@@ -2270,21 +1622,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WaitToolDI(self, id, status, maxtime, opt):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         id = id+1 #控制器内部1对应di0,2对应di1
         status = int(status)
         maxtime = int(maxtime)
         opt = int(opt)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WaitToolDI(id, status, maxtime, opt)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WaitToolDI(id, status, maxtime, opt)
         return error
 
     """   
@@ -2345,23 +1688,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetAxlePointRecordBtnState(self):
-        # while self.reconnect_flag:
-        #     time.sleep(0.1)
-        # flag = True
-        # while flag:
-        #     try:
-        #         _error = self.robot.GetAxlePointRecordBtnState()
-        #         flag = False
-        #     except socket.error as e:
-        #         flag = True
-        #
-        # error = _error[0]
-        # if _error[0] == 0:
-        #     value = _error[1]
-        #     return error, value
-        # else:
-        #     return error,None
-        return 0,(self.robot_state_pkg.tl_dgt_input_l & 0x10) >> 4
+        _error = self.robot.GetAxlePointRecordBtnState()
+        error = _error[0]
+        if _error[0] == 0:
+            value = _error[1]
+            return error, value
+        else:
+            return error
 
 
     """   
@@ -2416,21 +1749,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WaitAI(self, id, sign, value, maxtime, opt):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         sign = int(sign)
         value = float(value)
         maxtime = int(maxtime)
         opt = int(opt)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WaitAI(id, sign, value*40.95, maxtime, opt)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WaitAI(id, sign, value*40.95, maxtime, opt)
         return error
 
     """   
@@ -2446,21 +1770,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WaitToolAI(self, id, sign, value, maxtime, opt):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         sign = int(sign)
         value = float(value)
         maxtime = int(maxtime)
         opt = int(opt)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WaitToolAI(id, sign, value*40.95, maxtime, opt)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WaitToolAI(id, sign, value*40.95, maxtime, opt)
         return error
 
     """   
@@ -2476,17 +1791,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetSpeed(self, vel):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         vel = int(vel)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetSpeed(vel)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetSpeed(vel)
         return error
 
     """   
@@ -2499,18 +1805,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetSysVarValue(self, id, value):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         value = float(value)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetSysVarValue(id, value)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetSysVarValue(id, value)
         return error
 
     """   
@@ -2522,17 +1819,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetToolPoint(self, point_num):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         point_num = int(point_num)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetToolPoint(point_num)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetToolPoint(point_num)
         return error
 
     """   
@@ -2545,21 +1833,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ComputeTool(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ComputeTool()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.ComputeTool()
         error = _error[0]
         if _error[0] == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  设置工具参考点-四点法
@@ -2570,17 +1849,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetTcp4RefPoint(self, point_num):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         point_num = int(point_num)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetTcp4RefPoint(point_num)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetTcp4RefPoint(point_num)
         return error
 
     """   
@@ -2593,21 +1863,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ComputeTcp4(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ComputeTcp4()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.ComputeTcp4()
         error = _error[0]
         if _error[0] == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  设置工具坐标系
@@ -2623,22 +1884,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetToolCoord(self, id, t_coord, type, install, toolID, loadNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         t_coord = list(map(float, t_coord))
         type = int(type)
         install = int(install)
         toolID = int(toolID)
         loadNum = int(loadNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetToolCoord(id, t_coord, type, install, toolID, loadNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetToolCoord(id, t_coord, type, install, toolID, loadNum)
         return error
 
     """   
@@ -2654,21 +1906,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetToolList(self, id, t_coord, type, install , loadNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         t_coord = list(map(float, t_coord))
         type = int(type)
         install = int(install)
         loadNum = int(loadNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetToolList(id, t_coord, type, install, loadNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetToolList(id, t_coord, type, install, loadNum)
         return error
 
     """   
@@ -2680,17 +1923,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetExTCPPoint(self, point_num):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         point_num = int(point_num)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetExTCPPoint(point_num)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetExTCPPoint(point_num)
         return error
 
     """   
@@ -2703,21 +1937,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ComputeExTCF(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ComputeExTCF()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.ComputeExTCF()
         error = _error[0]
         if _error[0] == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  设置外部工具坐标系
@@ -2730,19 +1955,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetExToolCoord(self, id, etcp, etool):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         etcp = list(map(float, etcp))
         etool = list(map(float, etool))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetExToolCoord(id, etcp, etool)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetExToolCoord(id, etcp, etool)
         return error
 
     """   
@@ -2756,19 +1972,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetExToolList(self, id, etcp, etool):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         etcp = list(map(float, etcp))
         etool = list(map(float, etool))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetExToolList(id, etcp, etool)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetExToolList(id, etcp, etool)
         return error
 
     """   
@@ -2780,17 +1987,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetWObjCoordPoint(self, point_num):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         point_num = int(point_num)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetWObjCoordPoint(point_num)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetWObjCoordPoint(point_num)
         return error
 
     """   
@@ -2804,23 +2002,14 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ComputeWObjCoord(self, method, refFrame):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         method = int(method)
         refFrame = int(refFrame)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ComputeWObjCoord(method, refFrame)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.ComputeWObjCoord(method, refFrame)
         error = _error[0]
         if _error[0] == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  设置工件坐标系
@@ -2833,19 +2022,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetWObjCoord(self, id, coord, refFrame):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         coord = list(map(float, coord))
         refFrame = int(refFrame)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetWObjCoord(id, coord, refFrame)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetWObjCoord(id, coord, refFrame)
         return error
 
     """   
@@ -2859,19 +2039,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetWObjList(self, id, coord, refFrame):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         coord = list(map(float, coord))
         refFrame = int(refFrame)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetWObjList(id, coord, refFrame)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetWObjList(id, coord, refFrame)
         return error
 
     """   
@@ -2884,18 +2055,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetLoadWeight(self, loadNum, weight):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         loadNum = int(loadNum)
         weight = float(weight)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetLoadWeight(loadNum,weight)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetLoadWeight(loadNum,weight)
         return error
 
     """   
@@ -2907,17 +2069,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetRobotInstallPos(self, method):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         method = int(method)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetRobotInstallPos(method)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetRobotInstallPos(method)
         return error
 
     """   
@@ -2930,18 +2083,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetRobotInstallAngle(self, yangle, zangle):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         yangle = float(yangle)
         zangle = float(zangle)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetRobotInstallAngle(yangle, zangle)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetRobotInstallAngle(yangle, zangle)
         return error
 
     """   
@@ -2949,27 +2093,16 @@ class RPC():
     @param  [in] 必选参数 x: 质心坐标，单位 [mm]
     @param  [in] 必选参数 y: 质心坐标，单位 [mm]
     @param  [in] 必选参数 z: 质心坐标，单位 [mm]
-    @param  [in] 默认参数 loadNum 负载编号，默认0
     @return 错误码 成功-0  失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
-    def SetLoadCoord(self, x, y, z, loadNum = 0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def SetLoadCoord(self, x, y, z):
         x = float(x)
         y = float(y)
         z = float(z)
-        loadNum = int(loadNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetLoadCoord(x, y, z, loadNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetLoadCoord(x, y, z)
         return error
 
     """   
@@ -2981,17 +2114,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WaitMs(self, t_ms):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         t_ms = int(t_ms)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WaitMs(t_ms)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WaitMs(t_ms)
         return error
 
     """   
@@ -3009,19 +2133,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAnticollision(self, mode, level, config):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         mode = int(mode)
         level = list(map(float, level))
         config = int(config)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAnticollision(mode, level, config)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetAnticollision(mode, level, config)
         return error
 
     """   
@@ -3037,21 +2152,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetCollisionStrategy(self, strategy,safeTime=1000,safeDistance=100,safeVel=250,safetyMargin=[10,10,10,10,10,10]):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         strategy = int(strategy)
         safeTime = int(safeTime)
         safeDistance = int(safeDistance)
         safeVel = int(safeVel)
         safetyMargin = list(map(int, safetyMargin))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetCollisionStrategy(strategy,safeTime,safeDistance,safeVel,safetyMargin)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetCollisionStrategy(strategy,safeTime,safeDistance,safeVel,safetyMargin)
         return error
 
     """   
@@ -3063,17 +2169,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetLimitPositive(self, p_limit):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         p_limit = list(map(float, p_limit))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetLimitPositive(p_limit)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetLimitPositive(p_limit)
         return error
 
     """   
@@ -3085,17 +2182,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetLimitNegative(self, n_limit):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         n_limit = list(map(float, n_limit))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetLimitNegative(n_limit)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetLimitNegative(n_limit)
         return error
 
     """   
@@ -3107,16 +2195,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ResetAllError(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ResetAllError()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ResetAllError()
         return error
 
     """   
@@ -3128,17 +2207,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FrictionCompensationOnOff(self, state):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         state = int(state)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FrictionCompensationOnOff(state)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FrictionCompensationOnOff(state)
         return error
 
     """   
@@ -3150,17 +2220,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetFrictionValue_level(self, coeff):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         coeff = list(map(float, coeff))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetFrictionValue_level(coeff)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetFrictionValue_level(coeff)
         return error
 
     """   
@@ -3172,17 +2233,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetFrictionValue_wall(self, coeff):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         coeff = list(map(float, coeff))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetFrictionValue_wall(coeff)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetFrictionValue_wall(coeff)
         return error
 
     """   
@@ -3194,17 +2246,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetFrictionValue_ceiling(self, coeff):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         coeff = list(map(float, coeff))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetFrictionValue_ceiling(coeff)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetFrictionValue_ceiling(coeff)
         return error
 
     """   
@@ -3216,17 +2259,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetFrictionValue_freedom(self, coeff):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         coeff = list(map(float, coeff))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetFrictionValue_freedom(coeff)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetFrictionValue_freedom(coeff)
         return error
 
     """   
@@ -3243,21 +2277,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetRobotInstallAngle(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetRobotInstallAngle()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetRobotInstallAngle()
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取系统变量值
@@ -3269,22 +2294,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetSysVarValue(self, id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetSysVarValue(id)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetSysVarValue(id)
         error = _error[0]
         if error == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取当前关节位置 (角度)
@@ -3315,22 +2331,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetActualJointPosRadian(self, flag=1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         flag = int(flag)
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                _error = self.robot.GetActualJointPosRadian(flag)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        _error = self.robot.GetActualJointPosRadian(flag)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取关节反馈速度-deg/s
@@ -3539,24 +2546,15 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetInverseKin(self, type, desc_pos, config=-1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         type = int(type)
         desc_pos = list(map(float, desc_pos))
         config = int(config)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetInverseKin(type, desc_pos, config)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetInverseKin(type, desc_pos, config)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  逆运动学，工具位姿求解关节位置，参考指定关节位置求解
@@ -3570,24 +2568,15 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetInverseKinRef(self, type, desc_pos, joint_pos_ref):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         type = int(type)
         desc_pos = list(map(float, desc_pos))
         joint_pos_ref = list(map(float, joint_pos_ref))
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetInverseKinRef(type, desc_pos, joint_pos_ref)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetInverseKinRef(type, desc_pos, joint_pos_ref)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  逆运动学，工具位姿求解关节位置是否有解
@@ -3601,24 +2590,15 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetInverseKinHasSolution(self, type, desc_pos, joint_pos_ref):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         type = int(type)
         desc_pos = list(map(float, desc_pos))
         joint_pos_ref = list(map(float, joint_pos_ref))
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetInverseKinHasSolution(type, desc_pos, joint_pos_ref)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetInverseKinHasSolution(type, desc_pos, joint_pos_ref)
         error = _error[0]
         if error == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  正运动学，关节位置求解工具位姿
@@ -3630,22 +2610,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetForwardKin(self, joint_pos):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         joint_pos = list(map(float, joint_pos))
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetForwardKin(joint_pos)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetForwardKin(joint_pos)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取当前关节转矩
@@ -3677,22 +2648,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetTargetPayload(self, flag=1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         flag = int(flag)
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                _error = self.robot.GetTargetPayload(flag)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        _error = self.robot.GetTargetPayload(flag)
         error = _error[0]
         if error == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取当前负载的质心
@@ -3704,22 +2666,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetTargetPayloadCog(self, flag=1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         flag = int(flag)
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                _error = self.robot.GetTargetPayloadCog(flag)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        _error = self.robot.GetTargetPayloadCog(flag)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取当前工具坐标系
@@ -3731,22 +2684,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetTCPOffset(self, flag=1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         flag = int(flag)
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                _error = self.robot.GetTCPOffset(flag)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        _error = self.robot.GetTCPOffset(flag)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取当前工件坐标系
@@ -3758,22 +2702,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetWObjOffset(self, flag=1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         flag = int(flag)
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                _error = self.robot.GetWObjOffset(flag)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        _error = self.robot.GetWObjOffset(flag)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取关节软限位角度
@@ -3785,23 +2720,14 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetJointSoftLimitDeg(self, flag=1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         flag = int(flag)
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                _error = self.robot.GetJointSoftLimitDeg(flag)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        _error = self.robot.GetJointSoftLimitDeg(flag)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6], _error[7], _error[8],
                            _error[9], _error[10], _error[11], _error[12]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取系统时间
@@ -3813,21 +2739,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetSystemClock(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetSystemClock()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetSystemClock()
         error = _error[0]
         if error == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取机器人当前关节配置
@@ -3839,21 +2756,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetRobotCurJointsConfig(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetRobotCurJointsConfig()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetRobotCurJointsConfig()
         error = _error[0]
         if error == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取默认速度
@@ -3865,21 +2773,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetDefaultTransVel(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetDefaultTransVel()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetDefaultTransVel()
         error = _error[0]
         if error == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  查询机器人运动是否完成
@@ -3926,17 +2825,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetRobotTeachingPoint(self, name):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         name = str(name)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetRobotTeachingPoint(name)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetRobotTeachingPoint(name)
         error = _error[0]
         if error == 0:
             data =_error[1].split(',')
@@ -3947,7 +2837,7 @@ class RPC():
                            data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15],
                            data[16], data[17], data[18], data[19] ]
         else:
-            return error,None
+            return error
 
     """   
     @brief  查询机器人运动队列缓存长度
@@ -4014,27 +2904,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetSDKComState(self):
-        # while self.reconnect_flag:
-        #     time.sleep(0.1)
-        # flag = True
-        # while flag:
-        #     try:
-        #         _error = self.robot.GetSDKComState()
-        #         flag = False
-        #     except socket.error as e:
-        #         flag = True
-        #
-        # error = _error[0]
-        # if error == 0:
-        #     return error, [_error[1], _error[2]]
-        # else:
-        #     return error,None
-        g_sock_com_err = self.SDK_state
-        if g_sock_com_err is True:
-            return 0,0
+        _error = self.robot.GetSDKComState()
+        error = _error[0]
+        if error == 0:
+            return error, [_error[1], _error[2]]
         else:
-            return 0,1
-
+            return error
 
     """   
        @brief  获取SSH公钥
@@ -4046,21 +2921,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetSSHKeygen(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetSSHKeygen()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetSSHKeygen()
         error = _error[0]
         if _error[0] == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  下发SCP指令
@@ -4075,21 +2941,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetSSHScpCmd(self, mode, sshname, sship, usr_file_url, robot_file_url):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         mode = int(mode)
         sshname = str(sshname)
         sship = str(sship)
         usr_file_url = str(usr_file_url)
         robot_file_url = str(robot_file_url)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetSSHScpCmd(mode, sshname, sship, usr_file_url, robot_file_url)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetSSHScpCmd(mode, sshname, sship, usr_file_url, robot_file_url)
         return error
 
     """   
@@ -4102,22 +2959,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ComputeFileMD5(self, file_path):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         file_path = str(file_path)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ComputeFileMD5(file_path)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.ComputeFileMD5(file_path)
         error = _error[0]
         if _error[0] == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取机器人版本信息
@@ -4131,21 +2979,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetSoftwareVersion(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetSoftwareVersion()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetSoftwareVersion()
         error = _error[0]
         if _error[0] == 0:
             return error, _error[1], _error[2], _error[3]
         else:
-            return error,None,None,None
+            return error
 
     """   
     @brief  获取机器人硬件版本信息
@@ -4164,40 +3003,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetSlaveHardVersion(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetSlaveHardVersion()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetSlaveHardVersion()
         error = _error[0]
         if _error[0] == 0:
             return error, _error[1], _error[2], _error[3], _error[4], _error[5], _error[6], _error[7], _error[8]
         else:
-            return error,None,None,None,None,None,None,None,None
-
-    @log_call
-    @xmlrpc_timeout
-    def GetHardwareversion(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetSlaveHardVersion()
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        error = _error[0]
-        if _error[0] == 0:
-            return error, _error[1], _error[2], _error[3], _error[4], _error[5], _error[6], _error[7], _error[8]
-        else:
-            return error, None, None, None, None, None, None, None, None
+            return error
 
     """   
     @brief  获取机器人固件版本信息
@@ -4216,40 +3027,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetSlaveFirmVersion(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetSlaveFirmVersion()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetSlaveFirmVersion()
         error = _error[0]
         if _error[0] == 0:
             return error, _error[1], _error[2], _error[3], _error[4], _error[5], _error[6], _error[7], _error[8]
         else:
-            return error,None,None,None,None,None,None,None,None
-
-    @log_call
-    @xmlrpc_timeout
-    def GetFirmwareVersion(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetSlaveFirmVersion()
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        error = _error[0]
-        if _error[0] == 0:
-            return error, _error[1], _error[2], _error[3], _error[4], _error[5], _error[6], _error[7], _error[8]
-        else:
-            return error, None, None, None, None, None, None, None, None
+            return error
 
     """   
     @brief  获取DH补偿参数
@@ -4261,21 +3044,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetDHCompensation(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetDHCompensation()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetDHCompensation()
         error = _error[0]
         if _error[0] == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     ***************************************************************************机器人轨迹复现********************************************************************************************
@@ -4294,21 +3068,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetTPDParam(self, name, period_ms, type=1, di_choose=0, do_choose=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         name = str(name)
         period_ms = int(period_ms)
         type = int(type)
         di_choose = int(di_choose)
         do_choose = int(do_choose)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetTPDParam(type, name, period_ms, di_choose, do_choose)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetTPDParam(type, name, period_ms, di_choose, do_choose)
         return error
 
     """   
@@ -4324,21 +3089,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetTPDStart(self, name, period_ms, type=1, di_choose=0, do_choose=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         name = str(name)
         period_ms = int(period_ms)
         type = int(type)
         di_choose = int(di_choose)
         do_choose = int(do_choose)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetTPDStart(type, name, period_ms, di_choose, do_choose)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetTPDStart(type, name, period_ms, di_choose, do_choose)
         return error
 
     """   
@@ -4350,16 +3106,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetWebTPDStop(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetWebTPDStop()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetWebTPDStop()
         return error
 
     """   
@@ -4371,17 +3118,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetTPDDelete(self, name):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         name = str(name)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetTPDDelete(name)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetTPDDelete(name)
         return error
 
     """   
@@ -4393,17 +3131,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def LoadTPD(self, name):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         name = str(name)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LoadTPD(name)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LoadTPD(name)
         return error
 
     """   
@@ -4416,22 +3145,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetTPDStartPose(self, name):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         name = str(name)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetTPDStartPose(name)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetTPDStartPose(name)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  轨迹复现
@@ -4444,21 +3164,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def MoveTPD(self, name, blend, ovl):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         name = str(name)
         blend = int(blend)
         ovl = float(ovl)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveTPD(name, blend, ovl)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.MoveTPD(name, blend, ovl)
         return error
 
     """   
@@ -4472,19 +3183,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def LoadTrajectoryJ(self, name, ovl, opt=1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         name = str(name)
         ovl = float(ovl)
         opt = int(opt)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LoadTrajectoryJ(name, ovl, opt)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LoadTrajectoryJ(name, ovl, opt)
         return error
 
     """   
@@ -4496,18 +3198,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def MoveTrajectoryJ(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveTrajectoryJ()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.MoveTrajectoryJ()
         return error
 
     """   
@@ -4520,22 +3213,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetTrajectoryStartPose(self, name):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         name = str(name)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetTrajectoryStartPose(name)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetTrajectoryStartPose(name)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  获取轨迹点编号
@@ -4547,21 +3231,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetTrajectoryPointNum(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetTrajectoryPointNum()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetTrajectoryPointNum()
         error = _error[0]
         if error == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  设置轨迹运行中的速度
@@ -4572,17 +3247,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetTrajectoryJSpeed(self, ovl):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ovl = float(ovl)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetTrajectoryJSpeed(ovl)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetTrajectoryJSpeed(ovl)
         return error
 
     """   
@@ -4594,17 +3260,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetTrajectoryJForceTorque(self, ft):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ft = list(map(float, ft))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetTrajectoryJForceTorque(ft)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetTrajectoryJForceTorque(ft)
         return error
 
     """   
@@ -4616,17 +3273,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetTrajectoryJForceFx(self, fx):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         fx = float(fx)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetTrajectoryJForceFx(fx)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetTrajectoryJForceFx(fx)
         return error
 
     """   
@@ -4638,17 +3286,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetTrajectoryJForceFy(self, fy):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         fy = float(fy)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetTrajectoryJForceFy(fy)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetTrajectoryJForceFy(fy)
         return error
 
     """   
@@ -4660,17 +3299,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetTrajectoryJForceFz(self, fz):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         fz = float(fz)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetTrajectoryJForceFy(fz)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetTrajectoryJForceFy(fz)
         return error
 
     """   
@@ -4682,17 +3312,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetTrajectoryJTorqueTx(self, tx):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         tx = float(tx)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetTrajectoryJTorqueTx(tx)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetTrajectoryJTorqueTx(tx)
         return error
 
     """   
@@ -4704,17 +3325,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetTrajectoryJTorqueTy(self, ty):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ty = float(ty)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetTrajectoryJTorqueTx(ty)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetTrajectoryJTorqueTx(ty)
         return error
 
     """   
@@ -4726,17 +3338,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetTrajectoryJTorqueTz(self, tz):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         tz = float(tz)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetTrajectoryJTorqueTx(tz)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetTrajectoryJTorqueTx(tz)
         return error
 
     """   
@@ -4753,18 +3356,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def LoadDefaultProgConfig(self, flag, program_name):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         flag = int(flag)
         program_name = str(program_name)
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                error = self.robot.LoadDefaultProgConfig(flag, program_name)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        error = self.robot.LoadDefaultProgConfig(flag, program_name)
         return error
 
     """   
@@ -4776,17 +3370,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ProgramLoad(self, program_name):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         program_name = str(program_name)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ProgramLoad(program_name)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ProgramLoad(program_name)
         return error
 
     """   
@@ -4799,21 +3384,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetCurrentLine(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetCurrentLine()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetCurrentLine()
         error = _error[0]
         if error == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  运行当前加载的作业程序
@@ -4824,18 +3400,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ProgramRun(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ProgramRun()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ProgramRun()
         return error
 
     """   
@@ -4847,16 +3414,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ProgramPause(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ProgramPause()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ProgramPause()
         return error
 
     """   
@@ -4868,18 +3426,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ProgramResume(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ProgramResume()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ProgramResume()
         return error
 
     """   
@@ -4891,16 +3440,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ProgramStop(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ProgramStop()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ProgramStop()
         return error
 
     """   
@@ -4931,21 +3471,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetLoadedProgram(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetLoadedProgram()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetLoadedProgram()
         error = _error[0]
         if error == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     ***************************************************************************机器人外设********************************************************************************************
@@ -4965,21 +3496,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetGripperConfig(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetGripperConfig()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetGripperConfig()
         error = _error[0]
         if error == 0:
             return error, [_error[1] + 1, _error[2] + 1, _error[3], _error[4]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  激活夹爪
@@ -4991,18 +3513,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ActGripper(self, index, action):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         index = int(index)
         action = int(action)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ActGripper(index, action)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ActGripper(index, action)
         return error
 
     """   
@@ -5023,8 +3536,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def MoveGripper(self, index, pos, vel, force, maxtime, block, type, rotNum, rotVel, rotTorque):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         index = int(index)
@@ -5037,14 +3548,7 @@ class RPC():
         rotNum = float(rotNum)
         rotVel = int(rotVel)
         rotTorque = int(rotTorque)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveGripper(index, pos, vel, force, maxtime, block, type, rotNum, rotVel, rotTorque)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.MoveGripper(index, pos, vel, force, maxtime, block, type, rotNum, rotVel, rotTorque)
         return error
 
     """   
@@ -5057,21 +3561,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetGripperMotionDone(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetGripperMotionDone()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetGripperMotionDone()
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  配置夹爪
@@ -5085,20 +3580,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetGripperConfig(self, company, device, softversion=0, bus=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         company = int(company)
         device = int(device)
         softversion = int(softversion)
         bus = int(bus)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetGripperConfig(company, device, softversion, bus)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetGripperConfig(company, device, softversion, bus)
         return error
 
     """   
@@ -5113,24 +3599,15 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ComputePrePick(self, desc_pos, zlength, zangle):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         desc_pos = list(map(float, desc_pos))
         zlength = float(zlength)
         zangle = float(zangle)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ComputePrePick(desc_pos, zlength, zangle)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.ComputePrePick(desc_pos, zlength, zangle)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  计算撤退点-视觉
@@ -5144,24 +3621,15 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ComputePostPick(self, desc_pos, zlength, zangle):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         desc_pos = list(map(float, desc_pos))
         zlength = float(zlength)
         zangle = float(zangle)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ComputePostPick(desc_pos, zlength, zangle)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.ComputePostPick(desc_pos, zlength, zangle)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     ***************************************************************************机器人力控********************************************************************************************
@@ -5181,21 +3649,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_GetConfig(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.FT_GetConfig()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.FT_GetConfig()
         error = _error[0]
         if error == 0:
             return error, [_error[1] + 1, _error[2] + 1, _error[3], _error[4]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  力传感器配置
@@ -5209,20 +3668,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_SetConfig(self, company, device, softversion=0, bus=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         company = int(company)
         device = int(device)
         softversion = int(softversion)
         bus = int(bus)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_SetConfig(company, device, softversion, bus)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_SetConfig(company, device, softversion, bus)
         return error
 
     """   
@@ -5234,17 +3684,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_Activate(self, state):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         state = int(state)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_Activate(state)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_Activate(state)
         return error
 
     """   
@@ -5256,17 +3697,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_SetZero(self, state):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         state = int(state)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_SetZero(state)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_SetZero(state)
         return error
 
     """   
@@ -5279,18 +3711,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_SetRCS(self, ref,coord=[0,0,0,0,0,0]):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ref = int(ref)
         coord = list(map(float, coord))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_SetRCS(ref,coord)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_SetRCS(ref,coord)
         return error
 
     """   
@@ -5303,21 +3726,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_PdIdenCompute(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.FT_PdIdenCompute()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.FT_PdIdenCompute()
         error = _error[0]
         if error == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  负载重量辨识记录
@@ -5328,17 +3742,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_PdIdenRecord(self, tool_id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         tool_id = int(tool_id)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_PdIdenRecord(tool_id)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_PdIdenRecord(tool_id)
         return error
 
     """   
@@ -5351,21 +3756,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_PdCogIdenCompute(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.FT_PdCogIdenCompute()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.FT_PdCogIdenCompute()
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  负载质心辨识记录
@@ -5377,18 +3773,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_PdCogIdenRecord(self, tool_id, index):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         tool_id = int(tool_id)
         index = int(index)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_PdCogIdenRecord(tool_id, index)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_PdCogIdenRecord(tool_id, index)
         return error
 
     """   
@@ -5445,40 +3832,27 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_Guard(self, flag, sensor_num, select, force_torque, max_threshold, min_threshold):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         flag = int(flag)
         sensor_num = int(sensor_num)
         select = list(map(int, select))
         force_torque = list(map(float, force_torque))
         max_threshold = list(map(float, max_threshold))
         min_threshold = list(map(float, min_threshold))
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                error = self.robot.FT_Guard(flag, sensor_num, select, force_torque, max_threshold, min_threshold)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        error = self.robot.FT_Guard(flag, sensor_num, select, force_torque, max_threshold, min_threshold)
         return error
 
     """   
     @brief  恒力控制
     @param  [in] 必选参数 flag：0-关闭碰撞守护，1-开启碰撞守护；
-    @param  [in] 必选参数 sensor_id：力传感器编号
+    @param  [in] 必选参数 sensor_num：力传感器编号
     @param  [in] 必选参数 select：[fx,fy,fz,mx,my,mz]六个自由度是否检测碰撞 ，0-不生效，1-生效
-    @param  [in] 必选参数 ft：[fx,fy,fz,mx,my,mz]碰撞检测力/力矩，单位 N 或 Nm
-    @param  [in] 必选参数 ft_pid：[f_p,f_i,f_d,m_p,m_i,m_d], 力PID参数，力矩PID参数
+    @param  [in] 必选参数 force_torque：[fx,fy,fz,mx,my,mz]碰撞检测力/力矩，单位 N 或 Nm
+    @param  [in] 必选参数 gain：[f_p,f_i,f_d,m_p,m_i,m_d], 力PID参数，力矩PID参数
     @param  [in] 必选参数 adj_sign：自适应启停状态，0-关闭，1-开启
     @param  [in] 必选参数 ILC_sign: ILC 控制启停状态，0-停止，1-训练，2-实操
     @param  [in] 必选参数 max_dis：最大调整距离，单位mm
     @param  [in] 必选参数 max_ang：最大调整角度，单位deg
-    @param  [in] 必选参数 M 质量参数
-    @param  [in] 必选参数 B 阻尼参数
-    @param  [in] 默认参数 threshold rx、ry启动阈值[0-10],默认0.2
-    @param  [in] 默认参数 adjustCoeff rx、ry力矩调节系数[0-1],默认1
-    @param  [in] 默认参数 polishRadio：打磨盘半径，单位mm
+    @param  [in] 必选参数 r：打磨盘半径，单位mm
     @param  [in] 默认参数 filter_Sign 滤波开启标志 0-关；1-开，默认 0-关闭
     @param  [in] 默认参数 posAdapt_sign 姿态顺应开启标志 0-关；1-开，默认 0-关闭
     @param  [in] 默认参数 isNoBlock 阻塞标志，0-阻塞；1-非阻塞 默认0-阻塞
@@ -5487,41 +3861,22 @@ class RPC():
 
     @log_call
     @xmlrpc_timeout
-    def FT_Control(self, flag, sensor_id, select, ft, ft_pid, adj_sign, ILC_sign, max_dis, max_ang, M=None, B=None, threshold=[0.2,0.2], adjustCoeff=[1.0,1.0], polishRadio=0, filter_Sign=0, posAdapt_sign=0, isNoBlock=0):
-        if M is None:
-            M = [0, 0]
-        if B is None:
-            B = [0, 0]
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def FT_Control(self, flag, sensor_num, select, force_torque, gain, adj_sign, ILC_sign, max_dis, max_ang,filter_Sign=0, posAdapt_sign=0,isNoBlock=0):
         flag = int(flag)
-        sensor_id = int(sensor_id)
+        sensor_num = int(sensor_num)
         select = list(map(int, select))
-        ft = list(map(float, ft))
-        ft_pid = list(map(float, ft_pid))
+        force_torque = list(map(float, force_torque))
+        gain = list(map(float, gain))
         adj_sign = int(adj_sign)
         ILC_sign = int(ILC_sign)
         max_dis = float(max_dis)
         max_ang = float(max_ang)
 
-
-        M = list(map(float, M))
-        B = list(map(float, B))
-        threshold = list(map(float, threshold))
-        adjustCoeff = list(map(float, adjustCoeff))
-        polishRadio = float(polishRadio)
         filter_Sign = int(filter_Sign)
         posAdapt_sign = int(posAdapt_sign)
         isNoBlock = int(isNoBlock)
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                error = self.robot.FT_Control(flag, sensor_id, select, ft, ft_pid, adj_sign, ILC_sign, max_dis,
-                                              max_ang,polishRadio, filter_Sign, posAdapt_sign,[M[0],M[1],B[0],B[0],threshold[0],threshold[1],adjustCoeff[0],adjustCoeff[1]],isNoBlock)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        error = self.robot.FT_Control(flag, sensor_num, select, force_torque, gain, adj_sign, ILC_sign, max_dis,
+                                      max_ang, filter_Sign, posAdapt_sign,isNoBlock)
         return error
 
     """   
@@ -5537,57 +3892,37 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_SpiralSearch(self, rcs, ft, dr=0.7, max_t_ms=60000, max_vel=5):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         rcs = int(rcs)
         ft = float(ft)
         dr = float(dr)
         max_t_ms = float(max_t_ms)
         max_vel = float(max_vel)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_SpiralSearch(rcs, ft, dr, max_t_ms, max_vel)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_SpiralSearch(rcs, ft, dr, max_t_ms, max_vel)
         return error
 
     """   
     @brief  旋转插入
     @param  [in] 必选参数 rcs 参考坐标系，0-工具坐标系，1-基坐标系
-    @param  [in] 必选参数 angVelRot 旋转角速度，单位deg/s
-    @param  [in] 必选参数 ft  力/扭矩阈值，fx,fy,fz,tx,ty,tz，范围[0~100]
-    @param  [in] 必选参数 max_angle 最大旋转角度，单位deg
+    @param  [in] 必选参数 ft：力或力矩阈值 (0~100)，单位 N 或 Nm
     @param  [in] 必选参数 orn 力/扭矩方向，1-沿z轴方向，2-绕z轴方向
-    @param  [in] 必选参数 max_angAcc 最大旋转加速度，单位deg/s^2，暂不使用，默认为0
+    @param  [in] 默认参数 angVelRot：旋转角速度，单位 °/s  默认 3
+    @param  [in] 默认参数 angleMax：最大旋转角度，单位 ° 默认 45
+    @param  [in] 默认参数 angAccmax：最大旋转加速度，单位 °/s^2，暂不使用 默认0
     @param  [in] 默认参数 rotorn：旋转方向，1-顺时针，2-逆时针 默认1
-    @param  [in] 默认参数 strategy 未检测到力/力矩的处理策略，0-报错；1-警告，继续运动
     @return 错误码 成功- 0, 失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
-    def FT_RotInsertion(self, rcs, angVelRot, ft, max_angle, orn, max_angAcc=0, rotorn=1, strategy=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def FT_RotInsertion(self, rcs, ft, orn, angVelRot=3, angleMax=45, angAccmax=0, rotorn=1):
         rcs = int(rcs)
-        angVelRot = float(angVelRot)
         ft = float(ft)
-        max_angle = float(max_angle)
         orn = int(orn)
-        max_angAcc = float(max_angAcc)
+        angVelRot = float(angVelRot)
+        angleMax = float(angleMax)
+        angAccmax = float(angAccmax)
         rotorn = int(rotorn)
-        strategy = int(strategy)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_RotInsertion(rcs, angVelRot, ft, max_angle, orn, max_angAcc, rotorn, strategy)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_RotInsertion(rcs, angVelRot, ft, angleMax, orn, angAccmax, rotorn)
         return error
 
     """   
@@ -5604,22 +3939,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_LinInsertion(self, rcs, ft, disMax, linorn, lin_v=1.0, lin_a=1.0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         rcs = int(rcs)
         ft = float(ft)
         disMax = float(disMax)
         linorn = int(linorn)
         lin_v = float(lin_v)
         lin_a = float(lin_a)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_LinInsertion(rcs, ft, lin_v, lin_a, disMax, linorn)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_LinInsertion(rcs, ft, lin_v, lin_a, disMax, linorn)
         return error
 
     """   
@@ -5631,16 +3957,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_CalCenterStart(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_CalCenterStart()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_CalCenterStart()
         return error
 
     """   
@@ -5653,21 +3970,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_CalCenterEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.FT_CalCenterEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.FT_CalCenterEnd()
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  表面定位
@@ -5684,22 +3992,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_FindSurface(self, rcs, dir, axis, disMax, ft, lin_v=3.0, lin_a=0.0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         rcs = int(rcs)
         dir = int(dir)
         axis = int(axis)
         ft = float(ft)
         lin_v = float(lin_v)
         lin_a = float(lin_a)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_FindSurface(rcs, dir, axis, lin_v, lin_a, disMax, ft)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_FindSurface(rcs, dir, axis, lin_v, lin_a, disMax, ft)
         return error
 
     """   
@@ -5711,16 +4010,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_ComplianceStop(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_ComplianceStop()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_ComplianceStop()
         return error
 
     """   
@@ -5733,18 +4023,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def FT_ComplianceStart(self, p, force):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         p = float(p)
         force = float(force)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FT_ComplianceStart(p, force)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.FT_ComplianceStart(p, force)
         return error
 
     """   
@@ -5756,16 +4037,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def LoadIdentifyDynFilterInit(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LoadIdentifyDynFilterInit()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LoadIdentifyDynFilterInit()
         return error
 
     """   
@@ -5777,16 +4049,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def LoadIdentifyDynVarInit(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LoadIdentifyDynVarInit()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LoadIdentifyDynVarInit()
         return error
 
     """   
@@ -5800,19 +4063,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def LoadIdentifyMain(self, joint_torque, joint_pos, t):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         joint_torque = list(map(float, joint_torque))
         joint_pos = list(map(float, joint_pos))
         t = float(t)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LoadIdentifyMain(joint_torque, joint_pos, t)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LoadIdentifyMain(joint_torque, joint_pos, t)
         return error
 
     """   
@@ -5826,22 +4080,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def LoadIdentifyGetResult(self, gain):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         gain = list(map(float, gain))
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.LoadIdentifyGetResult(gain)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.LoadIdentifyGetResult(gain)
         error = _error[0]
         if error == 0:
             return error, _error[1], [_error[2], _error[3], _error[4]]
         else:
-            return error,None,None
+            return error
 
     """   
     ***************************************************************************传送带功能********************************************************************************************
@@ -5856,19 +4101,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ConveyorStartEnd(self, status):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         status = int(status)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ConveyorStartEnd(status)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ConveyorStartEnd(status)
         return error
 
     """   
@@ -5880,16 +4116,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ConveyorPointIORecord(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ConveyorPointIORecord()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ConveyorPointIORecord()
         return error
 
     """   
@@ -5901,16 +4128,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ConveyorPointARecord(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ConveyorPointARecord()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ConveyorPointARecord()
         return error
 
     """   
@@ -5922,16 +4140,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ConveyorRefPointRecord(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ConveyorRefPointRecord()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ConveyorRefPointRecord()
         return error
 
     """   
@@ -5943,16 +4152,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ConveyorPointBRecord(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ConveyorPointBRecord()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ConveyorPointBRecord()
         return error
 
     """   
@@ -5964,17 +4164,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ConveyorIODetect(self, max_t):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         max_t = int(max_t)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ConveyorIODetect(max_t)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ConveyorIODetect(max_t)
         return error
 
     """   
@@ -5986,17 +4177,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ConveyorGetTrackData(self, mode):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         mode = int(mode)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ConveyorGetTrackData(mode)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ConveyorGetTrackData(mode)
         return error
 
     """   
@@ -6008,17 +4190,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ConveyorTrackStart(self, status):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         status = int(status)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ConveyorTrackStart(status)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ConveyorTrackStart(status)
         return error
 
     """   
@@ -6030,16 +4203,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ConveyorTrackEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ConveyorTrackEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ConveyorTrackEnd()
         return error
 
     """   
@@ -6047,29 +4211,14 @@ class RPC():
     @param  [in] 必选参数  param = [encChannel,resolution,lead,wpAxis,vision,speedRadio]  encChannel编码器通道 1-2,resolution 编码器分辨率 编码器旋转一圈脉冲个数,
     lead机械传动比 编码器旋转一圈传送带移动距离,wpAxis  工件坐标系编号 针对跟踪运动功能选择工件坐标系编号，跟踪抓取、TPD跟踪设为0,vision 是否配视觉  0 不配  1 配,
     speedRadio 速度比  针对传送带跟踪抓取速度范围为（1-100）  跟踪运动、TPD跟踪设置为1
-    @param  [in] 必选参数 followType 跟踪运动类型，0-跟踪运动；1-追检运动
-    @param  [in] 默认参数 startDis 追检抓取需要设置， 跟踪起始距离， -1：自动计算(工件到达机器人下方后自动追检)，单位mm， 默认值0
-    @param  [in] 默认参数 endDis 追检抓取需要设置，跟踪终止距离， 单位mm， 默认值100
     @return 错误码 成功- 0, 失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
-    def ConveyorSetParam(self, param, followType, startDis=0, endDis=100):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def ConveyorSetParam(self, param):
         param = list(map(float, param))
-        followType = int(followType)
-        startDis = int(startDis)
-        endDis = int(endDis)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ConveyorSetParam(param, followType, startDis, endDis)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ConveyorSetParam(param)
         return error
 
     """   
@@ -6081,17 +4230,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ConveyorCatchPointComp(self, cmp):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         cmp = list(map(float, cmp))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ConveyorCatchPointComp(cmp)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ConveyorCatchPointComp(cmp)
         return error
 
     """   
@@ -6109,8 +4249,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ConveyorTrackMoveL(self, name, tool, wobj, vel=20, acc=100, ovl=100, blendR=-1.0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         name = str(name)
@@ -6120,14 +4258,7 @@ class RPC():
         acc = float(acc)
         ovl = float(ovl)
         blendR = float(blendR)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ConveyorTrackMoveL(name, tool, wobj, vel, acc, ovl, blendR, 0, 0)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ConveyorTrackMoveL(name, tool, wobj, vel, acc, ovl, blendR, 0, 0)
         return error
 
     """   
@@ -6146,19 +4277,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ARCStart(self, ioType, arcNum, timeout):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ioType = int(ioType)
         arcNum = int(arcNum)
         timeout = int(timeout)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ARCStart(ioType, arcNum, timeout)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ARCStart(ioType, arcNum, timeout)
         return error
 
     """   
@@ -6172,19 +4294,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ARCEnd(self, ioType, arcNum, timeout):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ioType = int(ioType)
         arcNum = int(arcNum)
         timeout = int(timeout)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ARCEnd(ioType, arcNum, timeout)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ARCEnd(ioType, arcNum, timeout)
         return error
 
     """   
@@ -6200,21 +4313,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeldingSetCurrentRelation(self, currentMin, currentMax, outputVoltageMin, outputVoltageMax,AOIndex):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         currentMin = float(currentMin)
         currentMax = float(currentMax)
         outputVoltageMin = float(outputVoltageMin)
         outputVoltageMax = float(outputVoltageMax)
         AOIndex =int(AOIndex)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingSetCurrentRelation(currentMin, currentMax, outputVoltageMin, outputVoltageMax,AOIndex)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeldingSetCurrentRelation(currentMin, currentMax, outputVoltageMin, outputVoltageMax,AOIndex)
         return error
 
     """   
@@ -6230,22 +4334,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeldingSetVoltageRelation(self, weldVoltageMin, weldVoltageMax, outputVoltageMin, outputVoltageMax,AOIndex):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         weldVoltageMin = float(weldVoltageMin)
         weldVoltageMax = float(weldVoltageMax)
         outputVoltageMin = float(outputVoltageMin)
         outputVoltageMax = float(outputVoltageMax)
         AOIndex =int(AOIndex)
 
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingSetVoltageRelation(weldVoltageMin, weldVoltageMax, outputVoltageMin, outputVoltageMax,AOIndex)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeldingSetVoltageRelation(weldVoltageMin, weldVoltageMax, outputVoltageMin, outputVoltageMax,AOIndex)
         return error
 
     """   
@@ -6261,24 +4356,15 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeldingGetCurrentRelation(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
 
         try:
-            flag = True
-            while flag:
-                try:
-                    _error = self.robot.WeldingGetCurrentRelation()
-                    flag = False
-                except socket.error as e:
-                    flag = True
-
+            _error = self.robot.WeldingGetCurrentRelation()
             error = _error[0]
             if error == 0:
                 return error, _error[1], _error[2], _error[3], _error[4], _error[5]
-            return _error,None,None,None,None,None
+            return _error
         except Exception as e:
-            return RobotError.ERR_RPC_ERROR,None,None,None,None,None
+            return RobotError.ERR_RPC_ERROR
 
     """   
     @brief  获取焊接电压与输出模拟量对应关系 
@@ -6293,24 +4379,15 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeldingGetVoltageRelation(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
 
         try:
-            flag = True
-            while flag:
-                try:
-                    _error = self.robot.WeldingGetVoltageRelation()
-                    flag = False
-                except socket.error as e:
-                    flag = True
-
+            _error = self.robot.WeldingGetVoltageRelation()
             error = _error[0]
             if error == 0:
                 return error, _error[1], _error[2], _error[3], _error[4], _error[5]
-            return _error,None,None,None,None,None
+            return _error
         except Exception as e:
-            return RobotError.ERR_RPC_ERROR,None,None,None,None,None
+            return RobotError.ERR_RPC_ERROR
 
     """   
     @brief  设置焊接电流 
@@ -6324,20 +4401,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeldingSetCurrent(self, ioType, current, AOIndex,blend):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ioType = int(ioType)
         current = float(current)
         AOIndex = int(AOIndex)
         blend = int(blend)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingSetCurrent(ioType, current, AOIndex,blend)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeldingSetCurrent(ioType, current, AOIndex,blend)
         return error
 
     """   
@@ -6352,20 +4420,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeldingSetVoltage(self, ioType, voltage, AOIndex,blend):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ioType = int(ioType)
         voltage = float(voltage)
         AOIndex = int(AOIndex)
         blend = int(blend)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingSetVoltage(ioType, voltage, AOIndex,blend)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeldingSetVoltage(ioType, voltage, AOIndex,blend)
         return error
 
     """   
@@ -6375,15 +4434,14 @@ class RPC():
     @param  [in] 必选参数 float weaveFrequency 摆动频率(Hz)
     @param  [in] 必选参数 int weaveIncStayTime 等待模式 0-周期不包含等待时间；1-周期包含等待时间
     @param  [in] 必选参数 float weaveRange 摆动幅度(mm)
-    @param  [in] 必选参数 float weaveLeftRange 垂直三角摆动左弦长度(mm)
-    @param  [in] 必选参数 float weaveRightRange 垂直三角摆动右弦长度(mm)
-    @param  [in] 必选参数 int additionalStayTime 垂直三角摆动垂三角点停留时间(ms)
+    @param  [in] 必选参数 weaveLeftRange 垂直三角摆动左弦长度(mm)
+    @param  [in] 必选参数 weaveRightRange 垂直三角摆动右弦长度(mm)
+    @param  [in] 必选参数 additionalStayTime 垂直三角摆动垂三角点停留时间(mm)
     @param  [in] 必选参数 int weaveLeftStayTime 摆动左停留时间(ms)
     @param  [in] 必选参数 int weaveRightStayTime 摆动右停留时间(ms)
     @param  [in] 必选参数 int weaveCircleRadio 圆形摆动-回调比率(0-100%)
     @param  [in] 必选参数 int weaveStationary 摆动位置等待，0-等待时间内位置继续移动；1-等待时间内位置静止
     @param  [in] 必选参数 float weaveYawAngle 摆动方向方位角（绕摆动Z轴旋转），单位°,默认0
-    @param  [in] 必选参数 float weaveRotAngle 摆动方向方位角（绕摆动X轴旋转），单位°,默认0
     @return 错误码 成功- 0, 失败-错误码
     """
 
@@ -6391,9 +4449,7 @@ class RPC():
     @xmlrpc_timeout
     def WeaveSetPara(self, weaveNum, weaveType, weaveFrequency, weaveIncStayTime, weaveRange,
                      weaveLeftRange, weaveRightRange, additionalStayTime, weaveLeftStayTime,
-                     weaveRightStayTime, weaveCircleRadio, weaveStationary,weaveYawAngle=0,weaveRotAngle=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+                     weaveRightStayTime, weaveCircleRadio, weaveStationary,weaveYawAngle=0):
         weaveNum = int(weaveNum)
         weaveType = int(weaveType)
         weaveFrequency = float(weaveFrequency)
@@ -6407,17 +4463,9 @@ class RPC():
         weaveCircleRadio = int(weaveCircleRadio)
         weaveStationary = int(weaveStationary)
         weaveYawAngle = float(weaveYawAngle)
-        weaveRotAngle = float(weaveRotAngle)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeaveSetPara(weaveNum, weaveType, weaveFrequency, weaveIncStayTime, weaveRange,
-                                                weaveLeftRange, weaveRightRange, additionalStayTime,
-                                                weaveLeftStayTime, weaveRightStayTime, weaveCircleRadio, weaveStationary,weaveYawAngle,weaveRotAngle)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeaveSetPara(weaveNum, weaveType, weaveFrequency, weaveIncStayTime, weaveRange,
+                                        weaveLeftRange, weaveRightRange, additionalStayTime,
+                                        weaveLeftStayTime, weaveRightStayTime, weaveCircleRadio, weaveStationary,weaveYawAngle)
         return error
 
     """   
@@ -6438,8 +4486,6 @@ class RPC():
     @xmlrpc_timeout
     def WeaveOnlineSetPara(self, weaveNum, weaveType, weaveFrequency, weaveIncStayTime, weaveRange, weaveLeftStayTime,
                            weaveRightStayTime, weaveCircleRadio, weaveStationary):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         weaveNum = int(weaveNum)
         weaveType = int(weaveType)
         weaveFrequency = float(weaveFrequency)
@@ -6450,16 +4496,9 @@ class RPC():
         weaveCircleRadio = int(weaveCircleRadio)
         weaveStationary = int(weaveStationary)
         try:
-            flag = True
-            while flag:
-                try:
-                    error = self.robot.WeaveOnlineSetPara(weaveNum, weaveType, weaveFrequency, weaveIncStayTime, weaveRange,
-                                                          weaveLeftStayTime, weaveRightStayTime, weaveCircleRadio,
-                                                          weaveStationary)
-                    flag = False
-                except socket.error as e:
-                    flag = True
-
+            error = self.robot.WeaveOnlineSetPara(weaveNum, weaveType, weaveFrequency, weaveIncStayTime, weaveRange,
+                                                  weaveLeftStayTime, weaveRightStayTime, weaveCircleRadio,
+                                                  weaveStationary)
             return error
         except Exception as e:
             return RobotError.ERR_RPC_ERROR
@@ -6473,18 +4512,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeaveStart(self, weaveNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         weaveNum = int(weaveNum)
         try:
-            flag = True
-            while flag:
-                try:
-                    error = self.robot.WeaveStart(weaveNum)
-                    flag = False
-                except socket.error as e:
-                    flag = True
-
+            error = self.robot.WeaveStart(weaveNum)
             return error
         except Exception as e:
             return RobotError.ERR_RPC_ERROR
@@ -6498,18 +4528,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeaveEnd(self, weaveNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         weaveNum = int(weaveNum)
         try:
-            flag = True
-            while flag:
-                try:
-                    error = self.robot.WeaveEnd(weaveNum)
-                    flag = False
-                except socket.error as e:
-                    flag = True
-
+            error = self.robot.WeaveEnd(weaveNum)
             return error
         except Exception as e:
             return RobotError.ERR_RPC_ERROR
@@ -6524,19 +4545,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetForwardWireFeed(self, ioType, wireFeed):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ioType = int(ioType)
         wireFeed = int(wireFeed)
         try:
-            flag = True
-            while flag:
-                try:
-                    error = self.robot.SetForwardWireFeed(ioType, wireFeed)
-                    flag = False
-                except socket.error as e:
-                    flag = True
-
+            error = self.robot.SetForwardWireFeed(ioType, wireFeed)
             return error
         except Exception as e:
             return RobotError.ERR_RPC_ERROR
@@ -6551,19 +4563,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetReverseWireFeed(self, ioType, wireFeed):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ioType = int(ioType)
         wireFeed = int(wireFeed)
         try:
-            flag = True
-            while flag:
-                try:
-                    error = self.robot.SetReverseWireFeed(ioType, wireFeed)
-                    flag = False
-                except socket.error as e:
-                    flag = True
-
+            error = self.robot.SetReverseWireFeed(ioType, wireFeed)
             return error
         except Exception as e:
             return RobotError.ERR_RPC_ERROR
@@ -6578,19 +4581,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAspirated(self, ioType, airControl):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ioType = int(ioType)
         airControl = int(airControl)
         try:
-            flag = True
-            while flag:
-                try:
-                    error = self.robot.SetAspirated(ioType, airControl)
-                    flag = False
-                except socket.error as e:
-                    flag = True
-
+            error = self.robot.SetAspirated(ioType, airControl)
             return error
         except Exception as e:
             return RobotError.ERR_RPC_ERROR
@@ -6611,19 +4605,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetSegmentWeldPoint(self, startPos, endPos, startDistance):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         startPos = list(map(float, startPos))
         endPos = list(map(float, endPos))
         startDistance = float(startDistance)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetSegmentWeldPoint(startPos, endPos, startDistance)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetSegmentWeldPoint(startPos, endPos, startDistance)
         error = _error[0]
         if error == 0:
             data = _error[1].split(',')
@@ -6637,7 +4622,7 @@ class RPC():
                 return (error, [ data[0],data[1],data[3],data[4],data[4],data[5]],
                         [data[6],data[7],data[8],data[9],data[10],data[11]],tool, work)
         else:
-            return error,None,None,None
+            return error
 
     """   
     @brief  分段焊接启动
@@ -6747,7 +4732,7 @@ class RPC():
                     # tmpWeldDesc = [data[6],data[7],data[8],data[9],data[10],data[11]]
                     # tmpTool = int(data[12])
                     # tmpUser = int(data[13])
-                    rtn = self.robot.MoveL(endJPos,endDesePos, tool, user, vel, acc, ovl, blendR,0, exaxis_pos,
+                    rtn = self.robot.MoveL(endJPos,endDesePos, tool, user, vel, acc, ovl, blendR, exaxis_pos,
                                            search, 0, endOffPos)
                     # print("rtn3", rtn,endJPos,endDesePos)
                     if rtn != 0:
@@ -6798,7 +4783,7 @@ class RPC():
                     tmpUser = int(data[13])
                     # print("tmpJoint",tmpJoint,tmpWeldDesc,tmpTool,tmpUser)
                     time.sleep(1)
-                    nihao = self.robot.MoveL(tmpJoint, tmpWeldDesc, tmpTool, tmpUser, vel, acc, ovl, blendR,0, exaxis_pos,
+                    nihao = self.robot.MoveL(tmpJoint, tmpWeldDesc, tmpTool, tmpUser, vel, acc, ovl, blendR, exaxis_pos,
                                            search, 0, endOffPos)
                     # print("rtn10nihao", nihao)
                     if nihao != 0:
@@ -6837,7 +4822,7 @@ class RPC():
                     # tmpWeldDesc = [data[6], data[7], data[8], data[9], data[10], data[11]]
                     # tmpTool = int(data[12])
                     # tmpUser = int(data[13])
-                    rtn = self.robot.MoveL(endJPos,endDesePos, tool, user, vel, acc, ovl, blendR,0, exaxis_pos,
+                    rtn = self.robot.MoveL(endJPos,endDesePos, tool, user, vel, acc, ovl, blendR, exaxis_pos,
                                            search, 0, endOffPos)
                     # print("rtn15", rtn,endJPos,endDesePos)
                     if rtn != 0:
@@ -6861,7 +4846,7 @@ class RPC():
                     tmpWeldDesc = [data[6], data[7], data[8], data[9], data[10], data[11]]
                     tmpTool = int(data[12])
                     tmpUser = int(data[13])
-                    rtn = self.robot.MoveL(tmpJoint, tmpWeldDesc, tmpTool, tmpUser, vel, acc, ovl, blendR,0, exaxis_pos,
+                    rtn = self.robot.MoveL(tmpJoint, tmpWeldDesc, tmpTool, tmpUser, vel, acc, ovl, blendR, exaxis_pos,
                                            search, 0, endOffPos)
                     # print("rtn17", rtn)
                     if rtn != 0:
@@ -6880,20 +4865,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SegmentWeldEnd(self, ioType, arcNum, timeout):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ioType = int(ioType)
         arcNum = int(arcNum)
         timeout = int(timeout)
 
-        flag = True
-        while flag:
-            try:
-                rtn = self.robot.SegmentWeldEnd(ioType, arcNum, timeout)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        rtn = self.robot.SegmentWeldEnd(ioType, arcNum, timeout)
         return rtn
 
     """   
@@ -6996,7 +4972,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def PointTableUpLoad(self, point_table_file_path):
-        MAX_UPLOAD_FILE_SIZE = 2 * 1024 * 1024  # 最大上传文件为2Mb
+        MAX_UPLOAD_FILE_SIZE = 2 * 1024 * 1024;  # 最大上传文件为2Mb
         # 判断上传文件是否存在
         if not os.path.exists(point_table_file_path):
             return RobotError.ERR_UPLOAD_FILE_NOT_FOUND
@@ -7145,22 +5121,17 @@ class RPC():
             if not find_head_flag and total_size > 4 and total_buffer[:4].decode('utf-8') == "/f/b":
                 find_head_flag = True
             # 找到文件头后，提取文件大小和MD5校验码。文件大小的信息位于总数据的第5到第12个字节，MD5校验码的信息位于总数据的第13到第44个字节。
-            # if find_head_flag and total_size > 12 + 32:
-            if find_head_flag and total_size > 14 + 32:
-                # recv_size = int(total_buffer[4:12].decode('utf-8'))
-                recv_size = int(total_buffer[4:14].decode('utf-8'))
-                # recv_md5 = total_buffer[12:44].decode('utf-8')
-                recv_md5 = total_buffer[14:46].decode('utf-8')
+            if find_head_flag and total_size > 12 + 32:
+                recv_size = int(total_buffer[4:12].decode('utf-8'))
+                recv_md5 = total_buffer[12:44].decode('utf-8')
             # 接收到整个文件跳出循环
             if find_head_flag and total_size == recv_size:
                 break
         if total_size == 0:
             return RobotError.ERR_OTHER
-        # file_buffer = total_buffer[12 + 32:total_size - 4]
-        file_buffer = total_buffer[14 + 32:total_size - 4]
+        file_buffer = total_buffer[12 + 32:total_size - 4]
         with open(os.path.join(saveFilePath, fileName), 'wb') as file_writer:
-            # file_writer.write(file_buffer[:total_size - 16 - 32])
-            file_writer.write(file_buffer[:total_size - 16 - 32 - 2])
+            file_writer.write(file_buffer[:total_size - 16 - 32])
         check_md5 = calculate_file_md5(saveFilePath + fileName)
         if check_md5 == recv_md5:
             client.send("SUCCESS".encode('utf-8'))
@@ -7168,8 +5139,7 @@ class RPC():
         else:
             client.send("FAIL".encode('utf-8'))
             os.remove(os.path.join(saveFilePath, fileName))
-            # return RobotError.ERR_OTHER
-            return RobotError.ERR_DOWN_LOAD_FILE_FAILED
+            return RobotError.ERR_OTHER
 
     """   
     @brief  上传文件
@@ -7302,14 +5272,14 @@ class RPC():
     @xmlrpc_timeout
     def GetLuaList(self):
         _error = self.robot.GetLuaList()
-        # size = len(_error)
+        size = len(_error)
         error = _error[0]
         if _error[0] == 0:
             lua_num = _error[1]
             lua_name = _error[2].split(';')
             return error, lua_num, lua_name
         else:
-            return error,None,None
+            return error
 
     """   
     @brief  设置485扩展轴参数
@@ -7326,23 +5296,14 @@ class RPC():
     @xmlrpc_timeout
     def AuxServoSetParam(self, servoId, servoCompany, servoModel, servoSoftVersion, servoResolution,
                          axisMechTransRatio):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         servoId = int(servoId)
         servoCompany = int(servoCompany)
         servoModel = int(servoModel)
         servoSoftVersion = int(servoSoftVersion)
         servoResolution = int(servoResolution)
         axisMechTransRatio = float(axisMechTransRatio)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoSetParam(servoId, servoCompany, servoModel, servoSoftVersion, servoResolution,
-                                                    axisMechTransRatio)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoSetParam(servoId, servoCompany, servoModel, servoSoftVersion, servoResolution,
+                                            axisMechTransRatio)
         return error
 
     """   
@@ -7359,22 +5320,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AuxServoGetParam(self, servoId):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         servoId = int(servoId)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.AuxServoGetParam(servoId)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.AuxServoGetParam(servoId)
         error = _error[0]
         if _error[0] == 0:
             return error, _error[1], _error[2], _error[3], _error[4], _error[5]
         else:
-            return error,None,None,None,None,None
+            return error
 
     """   
     @brief  设置485扩展轴使能/去使能
@@ -7386,18 +5338,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AuxServoEnable(self, servoId, status):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         servoId = int(servoId)
         status = int(status)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoEnable(servoId, status)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoEnable(servoId, status)
         return error
 
     """   
@@ -7410,18 +5353,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AuxServoSetControlMode(self, servoId, mode):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         servoId = int(servoId)
         mode = int(mode)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoSetControlMode(servoId, mode)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoSetControlMode(servoId, mode)
         return error
 
     """   
@@ -7435,21 +5369,12 @@ class RPC():
 
     @log_call
     @xmlrpc_timeout
-    def AuxServoSetTargetPos(self, servoId, pos, speed,acc=100):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def AuxServoSetTargetPos(self, servoId, pos, speed,acc):
         servoId = int(servoId)
         pos = float(pos)
         speed = float(speed)
         acc = float(acc)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoSetTargetPos(servoId, pos, speed,acc)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoSetTargetPos(servoId, pos, speed,acc)
         return error
 
     """   
@@ -7463,19 +5388,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AuxServoSetTargetSpeed(self, servoId, speed,acc):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         servoId = int(servoId)
         speed = float(speed)
         acc = float(acc)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoSetTargetSpeed(servoId, speed,acc)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoSetTargetSpeed(servoId, speed,acc)
         return error
 
     """   
@@ -7488,18 +5404,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AuxServoSetTargetTorque(self, servoId, torque):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         servoId = int(servoId)
         torque = float(torque)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoSetTargetTorque(servoId, torque)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoSetTargetTorque(servoId, torque)
         return error
 
     """   
@@ -7514,22 +5421,13 @@ class RPC():
 
     @log_call
     @xmlrpc_timeout
-    def AuxServoHoming(self, servoId, mode, searchVel, latchVel,acc=100):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def AuxServoHoming(self, servoId, mode, searchVel, latchVel,acc):
         servoId = int(servoId)
         mode = int(mode)
         searchVel = float(searchVel)
         latchVel = float(latchVel)
         acc = float(acc)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoHoming(servoId, mode, searchVel, latchVel,acc)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoHoming(servoId, mode, searchVel, latchVel,acc)
         return error
 
     """   
@@ -7541,17 +5439,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AuxServoClearError(self, servoId):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         servoId = int(servoId)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoClearError(servoId)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoClearError(servoId)
         return error
 
     """   
@@ -7568,22 +5457,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AuxServoGetStatus(self, servoId):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         servoId = int(servoId)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.AuxServoGetStatus(servoId)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.AuxServoGetStatus(servoId)
         error = _error[0]
         if _error[0] == 0:
             return error, _error[1], _error[2], _error[3], _error[4], _error[5]
         else:
-            return error,None,None,None,None,None
+            return error
 
     """   
     @brief  设置状态反馈中485扩展轴数据轴号
@@ -7594,17 +5474,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AuxServosetStatusID(self, servoId):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         servoId = int(servoId)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoSetStatusID(servoId)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoSetStatusID(servoId)
         return error
 
     """   
@@ -7616,17 +5487,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetExDevProtocol(self, protocol):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         protocol = int(protocol)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetExDevProtocol(protocol)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetExDevProtocol(protocol)
         return error
 
     """   
@@ -7638,21 +5500,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetExDevProtocol(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetExDevProtocol()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetExDevProtocol()
         error = _error[0]
         if _error[0] == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
     """   
     @brief  设置机器人加速度
@@ -7663,17 +5516,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetOaccScale(self, acc):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         acc = float(acc)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetOaccScale(acc)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetOaccScale(acc)
         return error
 
     """   
@@ -7688,20 +5532,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def MoveAOStart(self, AONum, maxTCPSpeed=1000, maxAOPercent=100, zeroZoneCmp=20):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         AONum = int(AONum)
         maxTCPSpeed = int(maxTCPSpeed)
         maxAOPercent = int(maxAOPercent)
         zeroZoneCmp = int(zeroZoneCmp)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveAOStart(AONum, maxTCPSpeed, maxAOPercent, zeroZoneCmp)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.MoveAOStart(AONum, maxTCPSpeed, maxAOPercent, zeroZoneCmp)
         return error
 
     """   
@@ -7712,16 +5547,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def MoveAOStop(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveAOStop()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.MoveAOStop()
         return error
 
     """   
@@ -7736,20 +5562,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def MoveToolAOStart(self, AONum, maxTCPSpeed=1000, maxAOPercent=100, zeroZoneCmp=20):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         AONum = int(AONum)
         maxTCPSpeed = int(maxTCPSpeed)
         maxAOPercent = int(maxAOPercent)
         zeroZoneCmp = int(zeroZoneCmp)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveToolAOStart(AONum, maxTCPSpeed, maxAOPercent, zeroZoneCmp)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.MoveToolAOStart(AONum, maxTCPSpeed, maxAOPercent, zeroZoneCmp)
         return error
 
     """   
@@ -7760,16 +5577,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def MoveToolAOStop(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveToolAOStop()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.MoveToolAOStop()
         return error
 
     """   
@@ -7783,16 +5591,13 @@ class RPC():
     @param [in]必选参数 reconnectEnable	通讯断开自动重连使能 0-不使能 1-使能
     @param [in]必选参数 reconnectPeriod	重连周期间隔(ms)
     @param [in]必选参数 reconnectNum	重连次数
-    @param [in]必选参数 selfConnect 断电重启是否自动建立连接；0-不建立连接；1-建立连接
     @return 错误码 成功- 0, 失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
     def ExtDevSetUDPComParam(self, ip, port, period, lossPkgTime, lossPkgNum, disconnectTime,
-                             reconnectEnable, reconnectPeriod, reconnectNum,selfConnect):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+                             reconnectEnable, reconnectPeriod, reconnectNum):
         ip = str(ip)
         port = int(port)
         period = int(period)
@@ -7803,17 +5608,9 @@ class RPC():
         reconnectEnable = int(reconnectEnable)
         reconnectPeriod = int(reconnectPeriod)
         reconnectNum = int(reconnectNum)
-        selfConnect = int(selfConnect)
 
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtDevSetUDPComParam(ip, port, period, lossPkgTime, lossPkgNum, disconnectTime,
-                                                        reconnectEnable, reconnectPeriod, reconnectNum,selfConnect)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtDevSetUDPComParam(ip, port, period, lossPkgTime, lossPkgNum, disconnectTime,
+                                                reconnectEnable, reconnectPeriod, reconnectNum)
         return error
 
     """   
@@ -7833,21 +5630,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ExtDevGetUDPComParam(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ExtDevGetUDPComParam()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.ExtDevGetUDPComParam()
         if _error[0] == 0:
             return _error[0], [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6], _error[7], _error[8],
                                _error[9]]
         else:
-            return _error[0],None
+            return _error[0]
 
     """   
     @brief  加载UDP通信
@@ -7857,16 +5645,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ExtDevLoadUDPDriver(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtDevLoadUDPDriver()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtDevLoadUDPDriver()
         return error
 
     """   
@@ -7877,16 +5656,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ExtDevUnloadUDPDriver(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtDevUnloadUDPDriver()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtDevUnloadUDPDriver()
         return error
 
     """   
@@ -7897,16 +5667,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ExtDevUDPClientComReset(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtDevUDPClientComReset()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtDevUDPClientComReset()
         return error
 
     """   
@@ -7917,16 +5678,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ExtDevUDPClientComClose(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtDevUDPClientComClose()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtDevUDPClientComClose()
         return error
 
     """   
@@ -7938,17 +5690,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetRobotPosToAxis(self, installType):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         installType = int(installType)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetRobotPosToAxis(installType)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetRobotPosToAxis(installType)
         return error
 
     """   
@@ -7969,8 +5712,6 @@ class RPC():
     @xmlrpc_timeout
     def SetAxisDHParaConfig(self, axisConfig, axisDHd1, axisDHd2, axisDHd3, axisDHd4, axisDHa1, axisDHa2, axisDHa3,
                             axisDHa4):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         axisConfig = int(axisConfig)
         axisDHd1 = float(axisDHd1)
         axisDHd2 = float(axisDHd2)
@@ -7980,15 +5721,8 @@ class RPC():
         axisDHa2 = float(axisDHa2)
         axisDHa3 = float(axisDHa3)
         axisDHa4 = float(axisDHa4)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAxisDHParaConfig(axisConfig, axisDHd1, axisDHd2, axisDHd3, axisDHd4, axisDHa1, axisDHa2,
-                                                       axisDHa3, axisDHa4)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetAxisDHParaConfig(axisConfig, axisDHd1, axisDHd2, axisDHd3, axisDHd4, axisDHa1, axisDHa2,
+                                               axisDHa3, axisDHa4)
         return error
 
     """   
@@ -8013,8 +5747,6 @@ class RPC():
     @xmlrpc_timeout
     def ExtAxisParamConfig(self, axisId, axisType, axisDirection, axisMax, axisMin, axisVel, axisAcc, axisLead,
                            encResolution, axisOffect, axisCompany, axisModel, axisEncType):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         axisId = int(axisId)
         axisType = int(axisType)
         axisDirection = int(axisDirection)
@@ -8028,15 +5760,8 @@ class RPC():
         axisCompany = int(axisCompany)
         axisModel = int(axisModel)
         axisEncType = int(axisEncType)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtAxisParamConfig(axisId, axisType, axisDirection, axisMax, axisMin, axisVel, axisAcc,
-                                                      axisLead, encResolution, axisOffect, axisCompany, axisModel, axisEncType)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtAxisParamConfig(axisId, axisType, axisDirection, axisMax, axisMin, axisVel, axisAcc,
+                                              axisLead, encResolution, axisOffect, axisCompany, axisModel, axisEncType)
         return error
 
     """   
@@ -8051,17 +5776,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetExAxisDriverConfig(self, axisId):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         axisId = int(axisId)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.GetExAxisDriverConfig(axisId)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.GetExAxisDriverConfig(axisId)
         if error[0] == 0:
             return error[0], [error[1], error[2], error[3]]
         else:
@@ -8076,17 +5792,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ExtAxisSetRefPoint(self, pointNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         pointNum = int(pointNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtAxisSetRefPoint(pointNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtAxisSetRefPoint(pointNum)
         return error
 
     """   
@@ -8098,16 +5805,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ExtAxisComputeECoordSys(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtAxisComputeECoordSys()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtAxisComputeECoordSys()
         return error
 
     """   
@@ -8119,17 +5817,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetRefPointInExAxisEnd(self, pos):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         pos = list(map(float, pos))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetRefPointInExAxisEnd(pos[0], pos[1], pos[2], pos[3], pos[4], pos[5])
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetRefPointInExAxisEnd(pos[0], pos[1], pos[2], pos[3], pos[4], pos[5])
         return error
 
     """   
@@ -8141,17 +5830,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def PositionorSetRefPoint(self, pointNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         pointNum = int(pointNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.PositionorSetRefPoint(pointNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.PositionorSetRefPoint(pointNum)
         return error
 
     """   
@@ -8163,21 +5843,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def PositionorComputeECoordSys(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.PositionorComputeECoordSys()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.PositionorComputeECoordSys()
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
     """   
     @brief  应用扩展轴坐标系
@@ -8191,21 +5862,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ExtAxisActiveECoordSys(self, axisCoordNum, toolNum, coord, calibFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         axisCoordNum = int(axisCoordNum)
         toolNum = int(toolNum)
         coord = list(map(float, coord))
         calibFlag = int(calibFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtAxisActiveECoordSys(axisCoordNum, toolNum, coord[0], coord[1], coord[2], coord[3],
-                                                          coord[4], coord[5], calibFlag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtAxisActiveECoordSys(axisCoordNum, toolNum, coord[0], coord[1], coord[2], coord[3],
+                                                  coord[4], coord[5], calibFlag)
         return error
 
     """   
@@ -8218,18 +5880,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ExtAxisServoOn(self, axisID, status):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         axisID = int(axisID)
         status = int(status)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtAxisServoOn(axisID, status)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtAxisServoOn(axisID, status)
         return error
 
     """   
@@ -8244,20 +5897,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ExtAxisSetHoming(self, axisID, mode, searchVel, latchVel):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         axisID = int(axisID)
         mode = int(mode)
         searchVel = float(searchVel)
         latchVel = float(latchVel)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtAxisSetHoming(axisID, mode, searchVel, latchVel)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtAxisSetHoming(axisID, mode, searchVel, latchVel)
         return error
 
     """   
@@ -8273,8 +5917,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ExtAxisStartJog(self, axisID, direction, vel, acc, maxDistance):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         axisID = int(axisID)
@@ -8282,14 +5924,7 @@ class RPC():
         vel = float(vel)
         acc = float(acc)
         maxDistance = float(maxDistance)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtAxisStartJog(6, axisID, direction, vel, acc, maxDistance)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtAxisStartJog(6, axisID, direction, vel, acc, maxDistance)
         return error
 
     """   
@@ -8318,8 +5953,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAuxDO(self, DONum, bOpen, smooth, block):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         DONum = int(DONum)
         bOpen = bool(bOpen)
         smooth = bool(smooth)
@@ -8330,14 +5963,7 @@ class RPC():
         print("open_flag",open_flag)
         print("smooth_flag", smooth_flag)
         print("no_block_flag", no_block_flag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAuxDO(DONum, open_flag, smooth_flag, no_block_flag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetAuxDO(DONum, open_flag, smooth_flag, no_block_flag)
         return error
 
     """   
@@ -8351,21 +5977,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAuxAO(self, AONum, value, block):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         AONum = int(AONum)
         value = float(value)
         block = bool(block)
         no_block_flag = 0 if block else 1
-        value =value
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAuxAO(AONum, value, no_block_flag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        value =value*40.96
+        error = self.robot.SetAuxAO(AONum, value, no_block_flag)
         return error
 
     """   
@@ -8377,17 +5994,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAuxDIFilterTime(self, filterTime):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         filterTime = int(filterTime)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAuxDIFilterTime(filterTime)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetAuxDIFilterTime(filterTime)
         return error
 
     """   
@@ -8400,18 +6008,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAuxAIFilterTime(self, AINum,filterTime):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         AINum = int(AINum)
         filterTime = int(filterTime)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAuxAIFilterTime(AINum,filterTime)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetAuxAIFilterTime(AINum,filterTime)
         return error
 
     """   
@@ -8426,22 +6025,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WaitAuxDI(self, DINum, bOpen, time, errorAlarm):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         DINum = int(DINum)
         bOpen = bool(bOpen)
         open_flag = 0 if bOpen else 1
         time = int(time)
         errorAlarm = bool(errorAlarm)
         errorAlarm_flag = 0 if errorAlarm else 1
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WaitAuxDI(DINum, open_flag, time, errorAlarm_flag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WaitAuxDI(DINum, open_flag, time, errorAlarm_flag)
         return error
 
     """   
@@ -8457,22 +6047,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WaitAuxAI(self, AINum, sign, value, time, errorAlarm):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         AINum = int(AINum)
         sign = int(sign)
         value = int(value)
         time = int(time)
         errorAlarm = bool(errorAlarm)
         errorAlarm_flag = 0 if errorAlarm else 1
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WaitAuxAI(AINum, sign, value, time, errorAlarm_flag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WaitAuxAI(AINum, sign, value, time, errorAlarm_flag)
         return error
 
     """   
@@ -8486,19 +6067,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetAuxDI(self, DINum, isNoBlock):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         DINum = int(DINum)
         isNoBlock = bool(isNoBlock)
         isNoBlock_flag = 0 if isNoBlock else 1
-        flag = True
-        while flag:
-            try:
-                error = self.robot.GetAuxDI(DINum, isNoBlock_flag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.GetAuxDI(DINum, isNoBlock_flag)
         if error[0] == 0:
             return error[0], error[1]
         else:
@@ -8515,19 +6087,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetAuxAI(self, AINum, isNoBlock):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         AINum = int(AINum)
         isNoBlock = bool(isNoBlock)
         isNoBlock_flag = 0 if isNoBlock else 1
-        flag = True
-        while flag:
-            try:
-                error = self.robot.GetAuxAI(AINum, isNoBlock_flag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.GetAuxAI(AINum, isNoBlock_flag)
         if error[0] == 0:
             return error[0], error[1]
         else:
@@ -8537,32 +6100,21 @@ class RPC():
     @brief  UDP扩展轴运动
     @param [in]必选参数 pos 目标位置 轴 1 位置 ~ 轴 4 位置[exaxis[0],exaxis[1],exaxis[2],exaxis[3]]
     @param [in]必选参数 ovl 速度百分比
-    @param [in]必选参数 blend 平滑参数(mm或ms)，-1,等待运动完成
     @return 错误码 成功- 0, 失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
-    def ExtAxisMove(self, pos, ovl, blend=-1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def ExtAxisMove(self, pos, ovl):
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         pos = list(map(float, pos))
         ovl = float(ovl)
-        blend = float(blend)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ExtAxisMoveJ(0, pos[0], pos[1], pos[2], pos[3], ovl, blend)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ExtAxisMoveJ(0, pos[0], pos[1], pos[2], pos[3], ovl)
         return error
 
     """   
-    @brief  UDP扩展轴与机器人关节运动同步运动(自动正/逆运动学计算)
+    @brief  UDP扩展轴与机器人关节运动同步运动
     @param  [in] 必选参数 joint_pos: 目标关节位置，单位 [°]
     @param  [in] 必选参数 desc_pos: 目标笛卡尔位姿，单位 [mm][°]
     @param  [in] 必选参数 tool: 工具号，[0~14]
@@ -8579,10 +6131,8 @@ class RPC():
 
     @log_call
     @xmlrpc_timeout
-    def ExtAxisSyncMoveJ(self, joint_pos, tool, user, exaxis_pos, desc_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], vel=20.0, acc=0.0, ovl=100.0,
+    def ExtAxisSyncMoveJ(self, joint_pos, desc_pos, tool, user, exaxis_pos, vel=20.0, acc=0.0, ovl=100.0,
                          blendT=-1.0, offset_flag=0, offset_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         joint_pos = list(map(float, joint_pos))
@@ -8604,22 +6154,15 @@ class RPC():
             else:
                 error = ret[0]
                 return error
-        error = self.robot.ExtAxisMoveJ(1, exaxis_pos[0], exaxis_pos[1], exaxis_pos[2], exaxis_pos[3], ovl, blendT)
+        error = self.robot.ExtAxisMoveJ(1, exaxis_pos[0], exaxis_pos[1], exaxis_pos[2], exaxis_pos[3], ovl)
         if error != 0:
             return error
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveJ(joint_pos, desc_pos, tool, user, vel, acc, ovl, exaxis_pos, blendT, offset_flag,
-                                         offset_pos)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.MoveJ(joint_pos, desc_pos, tool, user, vel, acc, ovl, exaxis_pos, blendT, offset_flag,
+                                 offset_pos)
         return error
 
     """   
-    @brief  UDP扩展轴与机器人直线运动同步运动(自动正/逆运动学计算)
+    @brief  UDP扩展轴与机器人直线运动同步运动
     @param  [in] 必选参数 joint_pos: 目标关节位置，单位 [°] 
     @param  [in] 必选参数 desc_pos: 目标笛卡尔位姿，单位 [mm][°]
     @param  [in] 必选参数 tool: 工具号，[0~14]
@@ -8632,16 +6175,13 @@ class RPC():
     @param  [in] 默认参数 search:[0]-不焊丝寻位，[1]-焊丝寻位
     @param  [in] 默认参数 offset_flag:[0]-不偏移，[1]-工件/基坐标系下偏移，[2]-工具坐标系下偏移 默认 0
     @param  [in] 默认参数 offset_pos: 位姿偏移量，单位 [mm][°] 默认[0.0,0.0,0.0,0.0,0.0,0.0]
-    @param  [in] 默认参数 config 逆解关节空间配置，[-1]-参考当前关节位置解算，[0~7]-依据特定关节空间配置求解，默认-1
     @return 错误码 成功-0  失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
-    def ExtAxisSyncMoveL(self, desc_pos, tool, user, exaxis_pos, joint_pos, vel=20.0, acc=0.0, ovl=100.0,
-                         blendR=-1.0, search=0, offset_flag=0, offset_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],config=-1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def ExtAxisSyncMoveL(self, joint_pos, desc_pos, tool, user, exaxis_pos, vel=20.0, acc=0.0, ovl=100.0,
+                         blendR=-1.0, search=0, offset_flag=0, offset_pos=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]):
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         desc_pos = list(map(float, desc_pos))
@@ -8656,32 +6196,23 @@ class RPC():
         search = int(search)
         offset_flag = int(offset_flag)
         offset_pos = list(map(float, offset_pos))
-        config = int(config)
-
         if ((joint_pos[0] == 0.0) and (joint_pos[1] == 0.0) and (joint_pos[2] == 0.0) and (joint_pos[3] == 0.0)
                 and (joint_pos[4] == 0.0) and (joint_pos[5] == 0.0)):  # 若未输入参数则调用逆运动学求解
-            ret = self.robot.GetInverseKin(0, desc_pos, config)  # 逆运动学求解
+            ret = self.robot.GetInverseKin(0, desc_pos, -1)  # 逆运动学求解
             if ret[0] == 0:
                 joint_pos = [ret[1], ret[2], ret[3], ret[4], ret[5], ret[6]]
             else:
                 error = ret[0]
                 return error
-        error = self.robot.ExtAxisMoveJ(1, exaxis_pos[0], exaxis_pos[1], exaxis_pos[2], exaxis_pos[3], ovl, blendR)
+        error = self.robot.ExtAxisMoveJ(1, exaxis_pos[0], exaxis_pos[1], exaxis_pos[2], exaxis_pos[3], ovl)
         if error != 0:
             return error
-        flag = True
-        while flag:
-            try:
-                error = self.MoveL(joint_pos=joint_pos,desc_pos=desc_pos,tool= tool,user= user,vel= vel, acc=acc,ovl= ovl,blendR= blendR,blendMode=0,exaxis_pos= exaxis_pos,search= search,
-                                         offset_flag=offset_flag,offset_pos= offset_pos)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.MoveL(joint_pos, desc_pos, tool, user, vel, acc, ovl, blendR, exaxis_pos, search,
+                                 offset_flag, offset_pos)
         return error
 
     """   
-    @brief  UDP扩展轴与机器人圆弧运动同步运动(自动正/逆运动学计算)
+    @brief  UDP扩展轴与机器人圆弧运动同步运动
     @param  [in] 必选参数 joint_pos_p: 路径点关节位置，单位 [°] 
     @param  [in] 必选参数 desc_pos_p: 路径点笛卡尔位姿，单位 [mm][°]
     @param  [in] 必选参数 tool_p: 路径点工具号，[0~14]
@@ -8702,22 +6233,18 @@ class RPC():
     @param  [in] 默认参数 offset_pos_t: 目标点位姿偏移量，单位 [mm][°] 默认[0.0,0.0,0.0,0.0,0.0,0.0]
     @param  [in] 默认参数 ovl: 速度缩放因子，[0~100] 默认100.0
     @param  [in] 默认参数 blendR:[-1.0]-运动到位 (阻塞)，[0~1000]-平滑半径 (非阻塞)，单位 [mm] 默认-1.0
-    @param  [in] 默认参数 config 逆解关节空间配置，[-1]-参考当前关节位置解算，[0~7]-依据特定关节空间配置求解，默认-1
     @return 错误码 成功-0  失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
-    def ExtAxisSyncMoveC(self, desc_pos_p, tool_p, user_p, exaxis_pos_p, desc_pos_t, tool_t,
+    def ExtAxisSyncMoveC(self, joint_pos_p, desc_pos_p, tool_p, user_p, exaxis_pos_p, joint_pos_t, desc_pos_t, tool_t,
                          user_t, exaxis_pos_t,
-                         joint_pos_p=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], joint_pos_t=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                          vel_p=20.0, acc_p=100.0, offset_flag_p=0,
                          offset_pos_p=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                          vel_t=20.0, acc_t=100.0, offset_flag_t=0,
                          offset_pos_t=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                         ovl=100.0, blendR=-1.0,config=-1):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+                         ovl=100.0, blendR=-1.0):
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         desc_pos_p = list(map(float, desc_pos_p))
@@ -8742,11 +6269,10 @@ class RPC():
 
         ovl = float(ovl)
         blendR = float(blendR)
-        config = int(config)
 
         if ((joint_pos_p[0] == 0.0) and (joint_pos_p[1] == 0.0) and (joint_pos_p[2] == 0.0) and (joint_pos_p[3] == 0.0)
                 and (joint_pos_p[4] == 0.0) and (joint_pos_p[5] == 0.0)):  # 若未输入参数则调用逆运动学求解
-            retp = self.robot.GetInverseKin(0, desc_pos_p, config)  # 逆运动学求解
+            retp = self.robot.GetInverseKin(0, desc_pos_p, -1)  # 逆运动学求解
             if retp[0] == 0:
                 joint_pos_p = [retp[1], retp[2], retp[3], retp[4], retp[5], retp[6]]
             else:
@@ -8755,25 +6281,18 @@ class RPC():
 
         if ((joint_pos_t[0] == 0.0) and (joint_pos_t[1] == 0.0) and (joint_pos_t[2] == 0.0) and (joint_pos_t[3] == 0.0)
                 and (joint_pos_t[4] == 0.0) and (joint_pos_t[5] == 0.0)):  # 若未输入参数则调用逆运动学求解
-            rett = self.robot.GetInverseKin(0, desc_pos_t, config)  # 逆运动学求解
+            rett = self.robot.GetInverseKin(0, desc_pos_t, -1)  # 逆运动学求解
             if rett[0] == 0:
                 joint_pos_t = [rett[1], rett[2], rett[3], rett[4], rett[5], rett[6]]
             else:
                 error = rett[0]
                 return error
-        error = self.robot.ExtAxisMoveJ(1, exaxis_pos_t[0], exaxis_pos_t[1], exaxis_pos_t[2], exaxis_pos_t[3], ovl, blendR)
+        error = self.robot.ExtAxisMoveJ(1, exaxis_pos_t[0], exaxis_pos_t[1], exaxis_pos_t[2], exaxis_pos_t[3], ovl)
         if error != 0:
             return error
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveC(joint_pos_p, desc_pos_p, [tool_p, user_p, vel_p, acc_p], exaxis_pos_p, offset_flag_p,
-                                         offset_pos_p, joint_pos_t, desc_pos_t, [tool_t, user_t, vel_t, acc_t], exaxis_pos_t,
-                                         offset_flag_t, offset_pos_t, ovl, blendR)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.MoveC(joint_pos_p, desc_pos_p, [tool_p, user_p, vel_p, acc_p], exaxis_pos_p, offset_flag_p,
+                                 offset_pos_p, joint_pos_t, desc_pos_t, [tool_t, user_t, vel_t, acc_t], exaxis_pos_t,
+                                 offset_flag_t, offset_pos_t, ovl, blendR)
         return error
 
     """   
@@ -8791,8 +6310,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WireSearchStart(self, refPos,searchVel,searchDis,autoBackFlag,autoBackVel,autoBackDis,offectFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         refPos = int(refPos)
         searchVel = float(searchVel)
         searchDis = int(searchDis)
@@ -8800,14 +6317,7 @@ class RPC():
         autoBackVel = float(autoBackVel)
         autoBackDis = int(autoBackDis)
         offectFlag = int(offectFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WireSearchStart(refPos,searchVel,searchDis,autoBackFlag,autoBackVel,autoBackDis,offectFlag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WireSearchStart(refPos,searchVel,searchDis,autoBackFlag,autoBackVel,autoBackDis,offectFlag)
         return error
 
     """   
@@ -8824,8 +6334,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WireSearchEnd(self, refPos,searchVel,searchDis,autoBackFlag,autoBackVel,autoBackDis,offectFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         refPos = int(refPos)
         searchVel = float(searchVel)
         searchDis = int(searchDis)
@@ -8833,14 +6341,7 @@ class RPC():
         autoBackVel = float(autoBackVel)
         autoBackDis = int(autoBackDis)
         offectFlag = int(offectFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WireSearchEnd(refPos,searchVel,searchDis,autoBackFlag,autoBackVel,autoBackDis,offectFlag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WireSearchEnd(refPos,searchVel,searchDis,autoBackFlag,autoBackVel,autoBackDis,offectFlag)
         return error
 
     """   
@@ -8856,8 +6357,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetWireSearchOffset(self, seamType, method,varNameRef,varNameRes):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         seamType = int(seamType)
         method = int(method)
         if(len(varNameRes)!=6):
@@ -8867,40 +6366,23 @@ class RPC():
         varNameRef = list(map(str, varNameRef))
         varNameRes = list(map(str, varNameRes))
 
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetWireSearchOffset(seamType, method, varNameRef[0], varNameRef[1], varNameRef[2], varNameRef[3], varNameRef[4], varNameRef[5],
-                                                        varNameRes[0], varNameRes[1], varNameRes[2], varNameRes[3], varNameRes[4], varNameRes[5])
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetWireSearchOffset(seamType, method, varNameRef[0], varNameRef[1], varNameRef[2], varNameRef[3], varNameRef[4], varNameRef[5],
+                                               varNameRes[0], varNameRes[1], varNameRes[2], varNameRes[3], varNameRes[4], varNameRes[5])
         error = _error[0]
         if error == 0:
             return error, _error[1], [_error[2], _error[3], _error[4], _error[5], _error[6], _error[7]]
         else:
-            return error,None,None
+            return error
 
     """   
     @brief  等待焊丝寻位完成
-    @param  [in]必选参数 varName  接触点名称 “RES0” ~ “RES99”
     @return 错误码 成功- 0, 失败-错误码
     """
     @log_call
     @xmlrpc_timeout
     def WireSearchWait(self,varname):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         varname=str(varname)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WireSearchWait(varname)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WireSearchWait(varname)
         return error
 
     """   
@@ -8912,19 +6394,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetPointToDatabase(self,varName,pos):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         varName = str(varName)
         pos = list(map(float,pos))
 
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetPointToDatabase(varName,pos)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetPointToDatabase(varName,pos)
         return error
 
     """   
@@ -8954,8 +6427,6 @@ class RPC():
     @xmlrpc_timeout
     def ArcWeldTraceControl(self,flag,delaytime, isLeftRight, klr, tStartLr, stepMaxLr, sumMaxLr, isUpLow, kud, tStartUd, stepMaxUd,
                             sumMaxUd, axisSelect, referenceType, referSampleStartUd, referSampleCountUd, referenceCurrent, offsetType, offsetParameter):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         flag = int(flag)
         delaytime = float(delaytime)
         isLeftRight = int(isLeftRight)
@@ -8976,15 +6447,8 @@ class RPC():
         offsetType = int(offsetType)
         offsetParameter = int(offsetParameter)
 
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                error = self.robot.ArcWeldTraceControl(flag,delaytime, isLeftRight, [klr, tStartLr, stepMaxLr, sumMaxLr], isUpLow, [kud, tStartUd, stepMaxUd,
-                                                       sumMaxUd], axisSelect, referenceType, referSampleStartUd, referSampleCountUd, referenceCurrent, offsetType, offsetParameter)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        error = self.robot.ArcWeldTraceControl(flag,delaytime, isLeftRight, [klr, tStartLr, stepMaxLr, sumMaxLr], isUpLow, [kud, tStartUd, stepMaxUd,
+                            sumMaxUd], axisSelect, referenceType, referSampleStartUd, referSampleCountUd, referenceCurrent, offsetType, offsetParameter)
         return error
 
     """   
@@ -8995,17 +6459,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ArcWeldTraceExtAIChannelConfig(self,channel):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         channel = int(channel)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ArcWeldTraceExtAIChannelConfig(channel)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ArcWeldTraceExtAIChannelConfig(channel)
         return error
 
     """   
@@ -9014,7 +6469,6 @@ class RPC():
     @param  [in]必选参数 asaptiveFlag 自适应开启标志，0-关闭；1-开启
     @param  [in]必选参数 interfereDragFlag 干涉区拖动标志，0-关闭；1-开启
     @param  [in]必选参数 ingularityConstraintsFlag 奇异点策略，0-规避；1-穿越
-    @param  [in]必选参数 forceCollisionFlag 辅助拖动时机器人碰撞检测标志；0-关闭；1-开启
     @param  [in]必选参数 M=[m1,m2,m3,m4,m5,m6] 惯性系数 
     @param  [in]必选参数 B=[b1,b2,b3,b4,b5,b6] 阻尼系数
     @param  [in]必选参数 K=[k1,k2,k3,k4,k5,k6] 刚度系数
@@ -9025,9 +6479,7 @@ class RPC():
     """
     @log_call
     @xmlrpc_timeout
-    def EndForceDragControl(self, status, asaptiveFlag, interfereDragFlag, ingularityConstraintsFlag, forceCollisionFlag, M, B, K, F, Fmax, Vmax):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def EndForceDragControl(self, status, asaptiveFlag, interfereDragFlag, ingularityConstraintsFlag, M, B, K, F, Fmax, Vmax):
         status = int(status)
         asaptiveFlag = int(asaptiveFlag)
         interfereDragFlag = int(interfereDragFlag)
@@ -9038,15 +6490,7 @@ class RPC():
         F = list(map(float,F))
         Fmax = float(Fmax)
         Vmax = float(Vmax)
-        forceCollisionFlag = int(forceCollisionFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.EndForceDragControl(status, asaptiveFlag, interfereDragFlag, ingularityConstraintsFlag,forceCollisionFlag, M, B, K, F, Fmax, Vmax)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.EndForceDragControl(status, asaptiveFlag, interfereDragFlag, ingularityConstraintsFlag, M, B, K, F, Fmax, Vmax)
         return error
 
     """   
@@ -9058,17 +6502,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetForceSensorDragAutoFlag(self, status):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         status = int(status)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetForceSensorDragAutoFlag(status)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetForceSensorDragAutoFlag(status)
         return error
 
     """   
@@ -9086,8 +6521,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ForceAndJointImpedanceStartStop(self,status, impedanceFlag, lamdeDain, KGain, BGain,dragMaxTcpVel,dragMaxTcpOriVel):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         status = int(status)
         impedanceFlag = int(impedanceFlag)
         if((len(lamdeDain)!=6)or(len(KGain)!=6)or(len(BGain)!=6)):
@@ -9097,14 +6530,7 @@ class RPC():
         BGain = list(map(float,BGain))
         dragMaxTcpVel = float(dragMaxTcpVel)
         dragMaxTcpOriVel = float(dragMaxTcpOriVel)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ForceAndJointImpedanceStartStop(status, impedanceFlag, lamdeDain, KGain, BGain,dragMaxTcpVel,dragMaxTcpOriVel)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ForceAndJointImpedanceStartStop(status, impedanceFlag, lamdeDain, KGain, BGain,dragMaxTcpVel,dragMaxTcpOriVel)
         return error
 
 
@@ -9118,21 +6544,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetForceAndTorqueDragState(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetForceAndTorqueDragState()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetForceAndTorqueDragState()
         error = _error[0]
         if error == 0:
             return error, _error[1], _error[2]
         else:
-            return error,None,None
+            return error
 
     """   
     @brief  设置力传感器下负载重量
@@ -9143,17 +6560,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetForceSensorPayload(self,weight):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         weight = float(weight)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetForceSensorPayload(weight)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetForceSensorPayload(weight)
         return error
 
     """   
@@ -9167,19 +6575,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetForceSensorPayloadCog(self,x,y,z):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         x = float(x)
         y = float(y)
         z = float(z)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetForceSensorPayloadCog(x,y,z)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetForceSensorPayloadCog(x,y,z)
         return error
 
     """   
@@ -9191,21 +6590,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetForceSensorPayload(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetForceSensorPayload()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetForceSensorPayload()
         error = _error[0]
         if error == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
 
     """   
@@ -9219,21 +6609,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetForceSensorPayloadCog(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetForceSensorPayloadCog()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetForceSensorPayloadCog()
         error = _error[0]
         if error == 0:
             return error, _error[1], _error[2], _error[3]
         else:
-            return error,None,None,None
+            return error
 
     """   
     @brief  力传感器自动校零
@@ -9246,7 +6627,7 @@ class RPC():
     def ForceSensorAutoComputeLoad(self):
         rtn = self.ForceSensorSetSaveDataFlag(1)
         if rtn!=0:
-            return rtn,None,None
+            return rtn
         error =self.GetActualJointPosDegree()
         start_joint = error[1]
         error = self.GetActualJointPosDegree()
@@ -9258,13 +6639,13 @@ class RPC():
                 joint[3] = joint[3] - 90
             rtn = self.MoveJ(joint,0,0,vel=10)
             if rtn!=0:
-                return rtn,None,None
+                return rtn
         else:
-            return error,None,None
+            return error
 
         rtn = self.ForceSensorSetSaveDataFlag(2)
         if rtn!=0:
-            return rtn,None,None
+            return rtn
 
         error = self.GetActualJointPosDegree()
         if error[0] == 0:
@@ -9275,13 +6656,13 @@ class RPC():
                 joint[5] = joint[5] - 90
             rtn = self.MoveJ(joint, 0, 0,vel=10)
             if rtn != 0:
-                return rtn,None,None
+                return rtn
         else:
-            return error,None,None
+            return error
 
         rtn = self.ForceSensorSetSaveDataFlag(3)
         if rtn!=0:
-            return rtn,None,None
+            return rtn
 
         _error = self.robot.ForceSensorComputeLoad()
         error = _error[0]
@@ -9289,7 +6670,7 @@ class RPC():
         if error == 0:
             return error, _error[1],[_error[2],_error[3],_error[4]]
         else:
-            return error,None,None
+            return error
 
     """   
     @brief  传感器自动校零数据记录
@@ -9299,16 +6680,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ForceSensorSetSaveDataFlag(self,recordCount):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ForceSensorSetSaveDataFlag(recordCount)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ForceSensorSetSaveDataFlag(recordCount)
         return error
 
     """   
@@ -9321,21 +6693,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ForceSensorComputeLoad(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ForceSensorComputeLoad()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.ForceSensorComputeLoad()
         error = _error[0]
         if error == 0:
             return error, _error[1],[_error[2],_error[3],_error[4]]
         else:
-            return error,None,None
+            return error
 
     """   
     @brief  末端传感器配置
@@ -9349,21 +6712,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AxleSensorConfig(self,idCompany, idDevice, idSoftware, idBus):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         idCompany = int(idCompany)
         idDevice = int(idDevice)
         idSoftware = int(idSoftware)
         idBus = int(idBus)
 
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AxleSensorConfig(idCompany, idDevice, idSoftware, idBus)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AxleSensorConfig(idCompany, idDevice, idSoftware, idBus)
         return error
 
     """   
@@ -9376,21 +6730,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AxleSensorConfigGet(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.AxleSensorConfigGet()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.AxleSensorConfigGet()
         error = _error[0]
         if error == 0:
             return error, _error[1], _error[2]
         else:
-            return error,None,None
+            return error
 
     """   
     @brief  末端传感器激活
@@ -9401,17 +6746,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AxleSensorActivate(self,actFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         actFlag = int(actFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AxleSensorActivate(actFlag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AxleSensorActivate(actFlag)
         return error
 
     """   
@@ -9429,8 +6765,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AxleSensorRegWrite(self,devAddr, regHAddr, regLAddr, regNum, data1, data2, isNoBlock):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         devAddr = int(devAddr)
         regHAddr = int(regHAddr)
         regLAddr = int(regLAddr)
@@ -9438,14 +6772,7 @@ class RPC():
         data1 = int(data1)
         data2 = int(data2)
         isNoBlock = int(isNoBlock)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AxleSensorRegWrite(devAddr, regHAddr, regLAddr, regNum, data1, data2, isNoBlock)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AxleSensorRegWrite(devAddr, regHAddr, regLAddr, regNum, data1, data2, isNoBlock)
         return error
 
     """   
@@ -9457,17 +6784,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetOutputResetCtlBoxDO(self,resetFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         resetFlag = int(resetFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetOutputResetCtlBoxDO(resetFlag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetOutputResetCtlBoxDO(resetFlag)
         return error
 
     """   
@@ -9479,17 +6797,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetOutputResetCtlBoxAO(self,resetFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         resetFlag = int(resetFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetOutputResetCtlBoxAO(resetFlag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetOutputResetCtlBoxAO(resetFlag)
         return error
 
     """   
@@ -9501,17 +6810,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetOutputResetAxleDO(self,resetFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         resetFlag = int(resetFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetOutputResetAxleDO(resetFlag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetOutputResetAxleDO(resetFlag)
         return error
 
     """   
@@ -9523,17 +6823,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetOutputResetAxleAO(self,resetFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         resetFlag = int(resetFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetOutputResetAxleAO(resetFlag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetOutputResetAxleAO(resetFlag)
         return error
 
     """   
@@ -9545,17 +6836,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetOutputResetExtDO(self,resetFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         resetFlag = int(resetFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetOutputResetExtDO(resetFlag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetOutputResetExtDO(resetFlag)
         return error
 
     """   
@@ -9567,17 +6849,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetOutputResetExtAO(self,resetFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         resetFlag = int(resetFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetOutputResetExtAO(resetFlag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetOutputResetExtAO(resetFlag)
         return error
 
     """   
@@ -9589,17 +6862,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetOutputResetSmartToolDO(self,resetFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         resetFlag = int(resetFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetOutputResetSmartToolDO(resetFlag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetOutputResetSmartToolDO(resetFlag)
         return error
 
 
@@ -9612,17 +6876,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeaveStartSim(self,weaveNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         weaveNum = int(weaveNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeaveStartSim(weaveNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeaveStartSim(weaveNum)
         return error
 
     """   
@@ -9634,17 +6889,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeaveEndSim(self,weaveNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         weaveNum = int(weaveNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeaveEndSim(weaveNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeaveEndSim(weaveNum)
         return error
 
     """   
@@ -9656,17 +6902,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeaveInspectStart(self,weaveNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         weaveNum = int(weaveNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeaveInspectStart(weaveNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeaveInspectStart(weaveNum)
         return error
 
     """   
@@ -9678,17 +6915,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeaveInspectEnd(self,weaveNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         weaveNum = int(weaveNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeaveInspectEnd(weaveNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeaveInspectEnd(weaveNum)
         return error
 
 
@@ -9711,8 +6939,6 @@ class RPC():
     @xmlrpc_timeout
     def WeldingSetProcessParam(self, id, startCurrent, startVoltage, startTime, weldCurrent, weldVoltage, endCurrent,
                                endVoltage, endTime):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         startCurrent = float(startCurrent)
         startVoltage = float(startVoltage)
@@ -9722,15 +6948,8 @@ class RPC():
         endCurrent = float(endCurrent)
         endVoltage = float(endVoltage)
         endTime = float(endTime)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingSetProcessParam(id, startCurrent, startVoltage, startTime, weldCurrent, weldVoltage,
-                                                          endCurrent, endVoltage, endTime)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeldingSetProcessParam(id, startCurrent, startVoltage, startTime, weldCurrent, weldVoltage,
+                                                  endCurrent, endVoltage, endTime)
         return error
 
     """   
@@ -9750,22 +6969,13 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def WeldingGetProcessParam(self, id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.WeldingGetProcessParam(id)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.WeldingGetProcessParam(id)
         error = _error[0]
         if error == 0:
             return error, _error[1], _error[2], _error[3], _error[4], _error[5], _error[6], _error[7], _error[8]
         else:
-            return error,None,None,None,None,None,None,None,None
+            return error
 
     """   
     @brief  扩展IO-配置焊机气体检测信号
@@ -9776,17 +6986,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAirControlExtDoNum(self,DONum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         DONum = int(DONum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAirControlExtDoNum(DONum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetAirControlExtDoNum(DONum)
         return error
 
     """   
@@ -9798,17 +6999,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetArcStartExtDoNum(self,DONum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         DONum = int(DONum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetArcStartExtDoNum(DONum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetArcStartExtDoNum(DONum)
         return error
 
     """   
@@ -9820,17 +7012,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetWireReverseFeedExtDoNum(self,DONum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         DONum = int(DONum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetWireReverseFeedExtDoNum(DONum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetWireReverseFeedExtDoNum(DONum)
         return error
 
     """   
@@ -9842,17 +7025,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetWireForwardFeedExtDoNum(self,DONum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         DONum = int(DONum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetWireForwardFeedExtDoNum(DONum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetWireForwardFeedExtDoNum(DONum)
         return error
 
     """   
@@ -9864,17 +7038,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetArcDoneExtDiNum(self,DINum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         DINum = int(DINum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetArcDoneExtDiNum(DINum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetArcDoneExtDiNum(DINum)
         return error
 
     """   
@@ -9886,17 +7051,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetWeldReadyExtDiNum(self,DINum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         DINum = int(DINum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetWeldReadyExtDiNum(DINum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetWeldReadyExtDiNum(DINum)
         return error
 
     """   
@@ -9909,18 +7065,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetExtDIWeldBreakOffRecover(self,reWeldDINum, abortWeldDINum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         reWeldDINum = int(reWeldDINum)
         abortWeldDINum = int(abortWeldDINum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetExtDIWeldBreakOffRecover(reWeldDINum, abortWeldDINum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetExtDIWeldBreakOffRecover(reWeldDINum, abortWeldDINum)
         return error
 
 
@@ -9928,25 +7075,14 @@ class RPC():
     """   
     @brief  设置机器人碰撞检测方法
     @param  [in]必选参数 method 碰撞检测方法：0-电流模式；1-双编码器；2-电流和双编码器同时开启
-    @param  [in]必选参数 thresholdMode 碰撞等级阈值方式；0-碰撞等级固定阈值方式；1-自定义碰撞检测阈值
     @return 错误码 成功- 0, 失败-错误码    
     """
 
     @log_call
     @xmlrpc_timeout
-    def SetCollisionDetectionMethod(self,method,thresholdMode):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def SetCollisionDetectionMethod(self,method):
         method = int(method)
-        thresholdMode = int(thresholdMode)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetCollisionDetectionMethod(method,thresholdMode)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetCollisionDetectionMethod(method)
         return error
 
     """   
@@ -9958,17 +7094,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetStaticCollisionOnOff(self,status):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         status = int(status)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetStaticCollisionOnOff(status)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetStaticCollisionOnOff(status)
         return error
 
     """   
@@ -9981,18 +7108,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetPowerLimit(self,status, power):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         status = int(status)
         power = float(power)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetPowerLimit(status, power)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetPowerLimit(status, power)
         return error
 
     """   
@@ -10004,17 +7122,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetRobotRealtimeStateSamplePeriod(self,period):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         period = int(period)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetRobotRealtimeStateSamplePeriod(period)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetRobotRealtimeStateSamplePeriod(period)
         return error
 
     """   
@@ -10027,21 +7136,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetRobotRealtimeStateSamplePeriod(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetRobotRealtimeStateSamplePeriod()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.GetRobotRealtimeStateSamplePeriod()
         error = _error[0]
         if error == 0:
             return error, _error[1]
         else:
-            return error,None
+            return error
 
 
     """   
@@ -10080,16 +7180,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ArcWeldTraceReplayStart(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ArcWeldTraceReplayStart()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ArcWeldTraceReplayStart()
         return error
 
 
@@ -10102,16 +7193,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def ArcWeldTraceReplayEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ArcWeldTraceReplayEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ArcWeldTraceReplayEnd()
         return error
 
     """   
@@ -10129,28 +7211,19 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def MultilayerOffsetTrsfToBase(self,pointo,pointX,pointZ,dx,dz,dry):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         pointo =list(map(float,pointo))
         pointX = list(map(float, pointX))
         pointZ = list(map(float, pointZ))
         dx = float(dx)
         dz = float(dz)
         dry = float(dry)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.MultilayerOffsetTrsfToBase(pointo[0],pointo[1],pointo[2],
-                                                               pointX[0],pointX[1],pointX[2],pointZ[0],pointZ[1],pointZ[2],dx,dz,dry)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.MultilayerOffsetTrsfToBase(pointo[0],pointo[1],pointo[2],
+                   pointX[0],pointX[1],pointX[2],pointZ[0],pointZ[1],pointZ[2],dx,dz,dry)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
         else:
-            return error,None
+            return error
 
 
     """   
@@ -10161,17 +7234,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AngularSpeedStart(self, ratio):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         ratio = int(ratio)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AngularSpeedStart(ratio)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AngularSpeedStart(ratio)
         return error
 
 
@@ -10182,16 +7246,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AngularSpeedEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AngularSpeedEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AngularSpeedEnd()
         return error
 
 
@@ -10253,18 +7308,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AuxServoSetAcc(self,acc,dec):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         acc = float(acc)
         dec = float(dec)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoSetAcc(acc,dec)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoSetAcc(acc,dec)
         return error
 
     """   
@@ -10276,18 +7322,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AuxServoSetEmergencyStopAcc(self,acc,dec):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         acc = float(acc)
         dec = float(dec)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoSetEmergencyStopAcc(acc,dec)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoSetEmergencyStopAcc(acc,dec)
         return error
 
 
@@ -10300,16 +7337,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AuxServoGetEmergencyStopAcc(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoGetEmergencyStopAcc()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoGetEmergencyStopAcc()
         if error[0]==0:
             return error[0],error[1],error[2]
         else:
@@ -10325,16 +7353,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def AuxServoGetAcc(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AuxServoGetAcc()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.AuxServoGetAcc()
         if error[0] == 0:
             return error[0], error[1], error[2]
         else:
@@ -10355,16 +7374,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetAxleCommunicationParam(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.GetAxleCommunicationParam()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.GetAxleCommunicationParam()
         if error[0] == 0:
             return error[0], error[1], error[2], error[3], error[4], error[5], error[6], error[7]
         else:
@@ -10384,8 +7394,6 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAxleCommunicationParam(self,baudRate,dataBit,stopBit,verify,timeout,timeoutTimes,period):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         baudRate = int (baudRate)
         dataBit = int (dataBit)
         stopBit = int (stopBit)
@@ -10393,14 +7401,7 @@ class RPC():
         timeout = int (timeout)
         timeoutTimes = int (timeoutTimes)
         period = int(period)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAxleCommunicationParam(baudRate,dataBit,stopBit,verify,timeout,timeoutTimes,period)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetAxleCommunicationParam(baudRate,dataBit,stopBit,verify,timeout,timeoutTimes,period)
         return error
 
     """   
@@ -10411,17 +7412,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAxleFileType(self,type):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         type=int(type)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAxleFileType(type)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetAxleFileType(type)
         return error
 
     """   
@@ -10432,17 +7424,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAxleLuaEnable(self,enable):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         enable=int(enable)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAxleLuaEnable(enable)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetAxleLuaEnable(enable)
         return error
 
     """   
@@ -10453,16 +7436,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetRecoverAxleLuaErr(self,enable):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetRecoverAxleLuaErr(enable)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetRecoverAxleLuaErr(enable)
         return error
 
     """   
@@ -10473,16 +7447,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetAxleLuaEnableStatus(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.GetAxleLuaEnableStatus()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.GetAxleLuaEnableStatus()
         if error[0] == 0:
             return error[0], error[1]
         else:
@@ -10498,19 +7463,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAxleLuaEnableDeviceType(self,forceSensorEnable,gripperEnable,IOEnable):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         forceSensorEnable = int(forceSensorEnable)
         gripperEnable = int(gripperEnable)
         IOEnable = int(IOEnable)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAxleLuaEnableDeviceType(forceSensorEnable,gripperEnable,IOEnable)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetAxleLuaEnableDeviceType(forceSensorEnable,gripperEnable,IOEnable)
         return error
 
     """   
@@ -10523,16 +7479,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetAxleLuaEnableDeviceType(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.GetAxleLuaEnableDeviceType()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.GetAxleLuaEnableDeviceType()
         if error[0] == 0:
             return error[0], error[1], error[2], error[3]
         else:
@@ -10548,28 +7495,19 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetAxleLuaEnableDevice(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.GetAxleLuaEnableDevice()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.GetAxleLuaEnableDevice()
         if error[0] == 0:
             par= error[1].split(',')
             if 24 != len(par):
                 self.log_error("GetAxleLuaEnableDevice fail")
-                return -1,None,None,None
+                return -1
             else:
                 print(par)
-                return (error[0], [par[0],par[1], par[2], par[3], par[4], par[5], par[6], par[7]],
-                        [par[8], par[9], par[10], par[11], par[12], par[13], par[14], par[15]],
-                        [par[16], par[17], par[18], par[19], par[20], par[21], par[22], par[23]])
+                return (error[0], [par[0],par[1], par[2], par[3], par[4], par[5], par[6], par[7], par[8]],
+                        [par[9], par[10], par[11], par[12], par[13], par[14], par[15], par[16]],
+                        [par[17], par[18], par[19], par[20], par[21], par[22], par[23]])
         else:
-            return error,None,None,None
+            return error
 
     """   
     @brief  设置启用夹爪动作控制功能
@@ -10580,18 +7518,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetAxleLuaGripperFunc(self,id,func):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         func = list(map(int, func))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAxleLuaGripperFunc(id,func)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetAxleLuaGripperFunc(id,func)
         # error = self.robot.SetAxleLuaGripperFunc(id,func)
         return error
 
@@ -10604,17 +7533,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetAxleLuaGripperFunc(self,id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id=int(id)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.GetAxleLuaGripperFunc(id)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.GetAxleLuaGripperFunc(id)
         if error[0] == 0:
             par = error[1].split(',')
             print(len(par))
@@ -10636,18 +7556,9 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetCtrlOpenLUAName(self,id,name):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
         name = str(name)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetCtrlOpenLUAName(id,name)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetCtrlOpenLUAName(id,name)
         return error
 
     """   
@@ -10658,16 +7569,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def GetCtrlOpenLUAName(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.GetCtrlOpenLUAName()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.GetCtrlOpenLUAName()
         if error[0] == 0:
             par = error[2].split(',')
             if 4 != sizeof(par):
@@ -10687,17 +7589,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def LoadCtrlOpenLUA(self,id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LoadCtrlOpenLUA(id)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LoadCtrlOpenLUA(id)
         return error
 
     """   
@@ -10709,17 +7602,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def UnloadCtrlOpenLUA(self,id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.UnloadCtrlOpenLUA(id)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.UnloadCtrlOpenLUA(id)
         return error
 
     """   
@@ -10731,17 +7615,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetCtrlOpenLuaErrCode(self,id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         id = int(id)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetCtrlOpenLuaErrCode(id)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetCtrlOpenLuaErrCode(id)
         return error
 
     """   
@@ -10755,19 +7630,10 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SlaveFileWrite(self,type,slaveID,fileName):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         type = int(type)
         slaveID = int(slaveID)
         fileName =str(fileName)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SlaveFileWrite(type,slaveID,fileName)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SlaveFileWrite(type,slaveID,fileName)
         return error
 
     """   
@@ -10778,16 +7644,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def SetSysServoBootMode(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetSysServoBootMode()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetSysServoBootMode()
         return error
 
     """   
@@ -10831,17 +7688,8 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def TractorEnable(self, enable):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         enable = int(enable)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.TractorEnable(enable)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.TractorEnable(enable)
         return error
 
     """   
@@ -10852,16 +7700,7 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def TractorHoming(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.TractorHoming()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.TractorHoming()
         return error
 
     """   
@@ -10874,20 +7713,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def TractorMoveL(self,distance,vel):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         distance = float(distance)
         vel = float(vel)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.TractorMoveL(distance,vel)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.TractorMoveL(distance,vel)
         return error
 
     """   
@@ -10901,21 +7731,12 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def TractorMoveC(self,radio, angle, vel):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         if self.GetSafetyCode() != 0:
             return self.GetSafetyCode()
         radio = float(radio)
         angle = float(angle)
         vel = float(vel)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.TractorMoveC(radio, angle, vel)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.TractorMoveC(radio, angle, vel)
         return error
 
     """   
@@ -10927,16 +7748,7 @@ class RPC():
     @xmlrpc_timeout
 
     def TractorStop(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ProgramStop()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ProgramStop()
         return error
 
     """   
@@ -10950,18 +7762,9 @@ class RPC():
     @xmlrpc_timeout
 
     def SetWireSearchExtDIONum(self,searchDoneDINum,searchStartDONum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         searchDoneDINum = int(searchDoneDINum)
         searchStartDONum = int(searchStartDONum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetWireSearchExtDIONum(searchDoneDINum,searchStartDONum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetWireSearchExtDIONum(searchDoneDINum,searchStartDONum)
         return error
 
     """   
@@ -10974,17 +7777,8 @@ class RPC():
     @xmlrpc_timeout
 
     def SetWeldMachineCtrlModeExtDoNum(self, DONum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         DONum = int(DONum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetWeldMachineCtrlModeExtDoNum(DONum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetWeldMachineCtrlModeExtDoNum(DONum)
         return error
 
     """   
@@ -10997,17 +7791,8 @@ class RPC():
     @xmlrpc_timeout
 
     def SetWeldMachineCtrlMode(self, mode):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         mode = int(mode)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetWeldMachineCtrlMode(mode)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SetWeldMachineCtrlMode(mode)
         return error
 
     """   
@@ -11072,20 +7857,11 @@ class RPC():
     @xmlrpc_timeout
 
     def SingularAvoidStart(self, protectMode, minShoulderPos=100,minElbowPos=50,minWristPos=10):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         protectMode = int(protectMode)
         minShoulderPos = float(minShoulderPos)
         minElbowPos = float(minElbowPos)
         minWristPos = float(minWristPos)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SingularAvoidStart(protectMode, minShoulderPos,minElbowPos,minWristPos)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SingularAvoidStart(protectMode, minShoulderPos,minElbowPos,minWristPos)
         return error
 
     """   
@@ -11097,16 +7873,7 @@ class RPC():
     @xmlrpc_timeout
 
     def SingularAvoidEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SingularAvoidEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.SingularAvoidEnd()
         return error
 
     """   
@@ -11151,26 +7918,15 @@ class RPC():
     """   
        @brief 开始Ptp运动FIR滤波
        @param  [in] maxAcc 最大加速度极值(deg/s2)
-       @param  [in] maxJek 统一关节急动度极值(deg/s3)
        @return 错误码 成功- 0, 失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
 
-    def PtpFIRPlanningStart(self, maxAcc,maxJek):
-        while self.reconnect_flag:
-            time.sleep(0.1)
+    def PtpFIRPlanningStart(self, maxAcc):
         maxAcc = float(maxAcc)
-        maxJek = float(maxJek)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.PtpFIRPlanningStart(maxAcc,maxJek)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.PtpFIRPlanningStart(maxAcc)
         return error
 
     """   
@@ -11182,16 +7938,7 @@ class RPC():
     @xmlrpc_timeout
 
     def PtpFIRPlanningEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.PtpFIRPlanningEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.PtpFIRPlanningEnd()
         return error
 
     """   
@@ -11235,20 +7982,11 @@ class RPC():
     @xmlrpc_timeout
 
     def LinArcFIRPlanningStart(self, maxAccLin, maxAccDeg, maxJerkLin, maxJerkDeg):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         maxAccLin = float(maxAccLin)
         maxAccDeg = float(maxAccDeg)
         maxJerkLin = float(maxJerkLin)
         maxJerkDeg = float(maxJerkDeg)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LinArcFIRPlanningStart(maxAccLin, maxAccDeg, maxJerkLin, maxJerkDeg)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LinArcFIRPlanningStart(maxAccLin, maxAccDeg, maxJerkLin, maxJerkDeg)
         return  error
 
     """   
@@ -11260,16 +7998,7 @@ class RPC():
     @xmlrpc_timeout
 
     def LinArcFIRPlanningEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LinArcFIRPlanningEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LinArcFIRPlanningEnd()
         return error
 
     """2025.01.08"""
@@ -11283,17 +8012,8 @@ class RPC():
     @xmlrpc_timeout
 
     def ToolTrsfStart(self, toolNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         toolNum = int(toolNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ToolTrsfStart(toolNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ToolTrsfStart(toolNum)
         return error
 
     """   
@@ -11305,16 +8025,7 @@ class RPC():
     @xmlrpc_timeout
 
     def ToolTrsfEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ToolTrsfEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.ToolTrsfEnd()
         return error
 
     """2025.01.08"""
@@ -11331,8 +8042,6 @@ class RPC():
     @xmlrpc_timeout
 
     def ComputeToolCoordWithPoints(self, method, pos):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         method = int(method)
         param = {}
         param[0] = pos[0]
@@ -11346,18 +8055,11 @@ class RPC():
         else:  # 六点法
             param[4] = pos[4]
             param[5] = pos[5]
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ComputeToolCoordWithPoints(method, param[0], param[1], param[2], param[3], param[4], param[5])
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.ComputeToolCoordWithPoints(method, param[0], param[1], param[2], param[3], param[4], param[5])
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
-        return error,None
+        return error
 
     """
        @brief 根据点位信息计算工件坐标系
@@ -11372,26 +8074,17 @@ class RPC():
     @xmlrpc_timeout
 
     def ComputeWObjCoordWithPoints(self, method, pos, refFrame):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         method = int(method)
         param = {}
         param[0] = pos[0]
         param[1] = pos[1]
         param[2] = pos[2]
         refFrame = int(refFrame)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ComputeWObjCoordWithPoints(method, param[0], param[1], param[2], refFrame)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.ComputeWObjCoordWithPoints(method, param[0], param[1], param[2], refFrame)
         error = _error[0]
         if error == 0:
             return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
-        return error,None
+        return error
 
     """
        @brief 设置机器人焊接电弧意外中断检测参数
@@ -11404,18 +8097,9 @@ class RPC():
     @xmlrpc_timeout
 
     def WeldingSetCheckArcInterruptionParam(self, checkEnable, arcInterruptTimeLength):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         checkEnable = int(checkEnable)
         arcInterruptTimeLength = int(arcInterruptTimeLength)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingSetCheckArcInterruptionParam(checkEnable, arcInterruptTimeLength)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeldingSetCheckArcInterruptionParam(checkEnable, arcInterruptTimeLength)
         return error
 
     """
@@ -11429,20 +8113,11 @@ class RPC():
     @xmlrpc_timeout
 
     def WeldingGetCheckArcInterruptionParam(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.WeldingGetCheckArcInterruptionParam()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.WeldingGetCheckArcInterruptionParam()
         error = _error[0]
         if error == 0:
             return error, _error[1], _error[2]
-        return error,None,None
+        return error
 
     """
        @brief 设置机器人焊接中断恢复参数
@@ -11457,20 +8132,11 @@ class RPC():
     @xmlrpc_timeout
 
     def WeldingSetReWeldAfterBreakOffParam(self, enable, length, velocity, moveType):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         enable = int(enable)
         length = float(length)
         velocity = float(velocity)
         moveType = int(moveType)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingSetReWeldAfterBreakOffParam(enable, length, velocity, moveType)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeldingSetReWeldAfterBreakOffParam(enable, length, velocity, moveType)
         return error
 
     """
@@ -11486,20 +8152,11 @@ class RPC():
     @xmlrpc_timeout
 
     def WeldingGetReWeldAfterBreakOffParam(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.WeldingGetReWeldAfterBreakOffParam()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        _error = self.robot.WeldingGetReWeldAfterBreakOffParam()
         error = _error[0]
         if error == 0:
             return error, _error[1], _error[2], _error[3], _error[4]
-        return error,None,None,None,None
+        return error
 
     """
        @brief 设置机器人焊接中断后恢复焊接
@@ -11510,16 +8167,7 @@ class RPC():
     @xmlrpc_timeout
 
     def WeldingStartReWeldAfterBreakOff(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingStartReWeldAfterBreakOff()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeldingStartReWeldAfterBreakOff()
         return error
 
     """
@@ -11531,16 +8179,7 @@ class RPC():
     @xmlrpc_timeout
 
     def WeldingAbortWeldAfterBreakOff(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingAbortWeldAfterBreakOff()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeldingAbortWeldAfterBreakOff()
         return error
 
     """2025.01.09"""
@@ -11560,8 +8199,6 @@ class RPC():
     @xmlrpc_timeout
 
     def LaserSensorRecord(self, status, delayMode, delayTime, delayDisExAxisNum, delayDis, sensitivePara, speed):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         status = int(status)
         delayMode = int(delayMode)
         delayTime = int(delayTime)
@@ -11569,14 +8206,7 @@ class RPC():
         delayDis = float(delayDis)
         sensitivePara = float(sensitivePara)
         speed = float(speed)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserSensorRecord(status, delayMode, delayTime, delayDisExAxisNum, delayDis, sensitivePara, speed)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LaserSensorRecord(status, delayMode, delayTime, delayDisExAxisNum, delayDis, sensitivePara, speed)
         return error
 
     """
@@ -11589,17 +8219,8 @@ class RPC():
     @xmlrpc_timeout
 
     def LaserTrackingLaserOn(self, weldId):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         weldId = int(weldId)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserTrackingLaserOn(weldId)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LaserTrackingLaserOn(weldId)
         return error
 
     """
@@ -11611,16 +8232,7 @@ class RPC():
     @xmlrpc_timeout
 
     def LaserTrackingLaserOff(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserTrackingLaserOff()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LaserTrackingLaserOff()
         return error
 
     """
@@ -11633,17 +8245,8 @@ class RPC():
     @xmlrpc_timeout
 
     def LaserTrackingTrackOn(self, coordId):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         coordId = int(coordId)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserTrackingTrackOn(coordId)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LaserTrackingTrackOn(coordId)
         return error
 
     """
@@ -11655,16 +8258,7 @@ class RPC():
     @xmlrpc_timeout
 
     def LaserTrackingTrackOff(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserTrackingTrackOff()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LaserTrackingTrackOff()
         return error
 
     """
@@ -11682,26 +8276,17 @@ class RPC():
     @xmlrpc_timeout
 
     def LaserTrackingSearchStart(self, direction, directionPoint, vel, distance, timeout, posSensorNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
         direction = int(direction)
         directionPoint = list(map(float, directionPoint))
         vel = int(vel)
         distance = int(distance)
         timeout = int(timeout)
         posSensorNum = int(posSensorNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserTrackingSearchStart(direction, directionPoint[0], directionPoint[1], directionPoint[2], vel, distance, timeout, posSensorNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LaserTrackingSearchStart(direction, directionPoint, vel, distance, timeout, posSensorNum)
         return error
 
     """
-       @brief 激光寻位结束
+       @brief 
        @return 错误码 成功- 0, 失败-错误码
     """
 
@@ -11709,47 +8294,23 @@ class RPC():
     @xmlrpc_timeout
 
     def LaserTrackingSearchStop(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserTrackingSearchStop()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.LaserTrackingSearchStop()
         return error
 
     """2025.01.24"""
     """3.7.9"""
     """
        @brief 摆动渐变开始
-       @param  [in] weaveChangeFlag 摆动编号 1-变摆动参数；2-变摆动参数+焊接速度
        @param  [in] weaveNum 摆动编号
-       @param  [in] velStart 焊接开始速度，(cm/min)
-       @param  [in] velEnd 焊接结束速度，(cm/min)
        @return 错误码 成功- 0, 失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
 
-    def WeaveChangeStart(self, weaveChangeFlag, weaveNum, velStart, velEnd):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        weaveChangeFlag = int(weaveChangeFlag)
+    def WeaveChangeStart(self, weaveNum):
         weaveNum = int(weaveNum)
-        velStart = float(velStart)
-        velEnd = float(velEnd)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeaveChangeStart(weaveChangeFlag, weaveNum, velStart, velEnd)
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeaveChangeStart(weaveNum)
         return error
 
     """
@@ -11761,16 +8322,7 @@ class RPC():
     @xmlrpc_timeout
 
     def WeaveChangeEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeaveChangeEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.WeaveChangeEnd()
         return error
 
     """2025.02.20"""
@@ -11785,18 +8337,13 @@ class RPC():
        @param  [in] vamx 设定的最大速度，mm/s
        @param  [in] amax 设定的最大加速度，mm/s2
        @param  [in] jmax 设定的最大加加速度，mm/s3
-       @param  [in] flag 匀速前瞻开启开关 0-不开启；1-开启
        @return 错误码 成功- 0, 失败-错误码
     """
 
     @log_call
     @xmlrpc_timeout
 
-    def LoadTrajectoryLA(self, name, mode, errorLim, type, precision, vamx, amax, jmax, flag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
+    def LoadTrajectoryLA(self, name, mode, errorLim, type, precision, vamx, amax, jmax):
         name =str(name)
         mode = int(mode)
         errorLim = float(errorLim)
@@ -11805,16 +8352,7 @@ class RPC():
         vamx = float(vamx)
         amax = float(amax)
         jmax = float(jmax)
-        flag = int(flag)
-
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                error = self.robot.LoadTrajectoryLA(name, mode, errorLim, type, precision, vamx, amax, jmax, flag)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        error = self.robot.LoadTrajectoryLA(name, mode, errorLim, type, precision, vamx, amax, jmax)
         return error
 
     """
@@ -11826,18 +8364,7 @@ class RPC():
     @xmlrpc_timeout
 
     def MoveTrajectoryLA(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveTrajectoryLA()
-                flag = False
-            except socket.error as e:
-                flag = True
-
+        error = self.robot.MoveTrajectoryLA()
         return error
 
     """2025.02.25"""
@@ -11853,22 +8380,11 @@ class RPC():
     @log_call
     @xmlrpc_timeout
     def CustomCollisionDetectionStart(self, flag, jointDetectionThreshould, tcpDetectionThreshould, block):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
         flag = int(flag)
         jointDetectionThreshould = list(map(float, jointDetectionThreshould))
         tcpDetectionThreshould = list(map(float, tcpDetectionThreshould))
         block = int(block)
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                error = self.robot.CustomCollisionDetectionStart(flag, jointDetectionThreshould, tcpDetectionThreshould, block)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-
+        error = self.robot.CustomCollisionDetectionStart(flag, jointDetectionThreshould, tcpDetectionThreshould, block)
         return error
 
     """
@@ -11880,2785 +8396,5 @@ class RPC():
     @xmlrpc_timeout
 
     def CustomCollisionDetectionEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        flag = True
-        while flag:
-            try:
-                error = self.robot.CustomCollisionDetectionEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-        
-        return error
-
-    """2025.03.19"""
-    """3.8.1"""
-    """
-       @brief 获取机器人状态
-       @return 错误码 成功- 0, 失败-错误码
-       @return 返回值（调用成功返回）robot_state_pkg 机器人状态结构体
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetRobotRealTimeState(self):
-        return 0,self.robot_state_pkg
-
-    """   
-    @brief  停止运动
-    @param  [in] NULL
-    @return 错误码 成功-0  失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def StopMove(self):
-        error = self.send_message("/f/bIII0III102III4IIIStopIII/b/f")
-        return error
-
-    """2025.03.28"""
-    """
-       @brief 加速度平滑开启
-       @param  [in] saveFlag 是否断电保存
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def AccSmoothStart(self, saveFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        saveFlag = bool(saveFlag)
-        saveFlag_flag = 1 if saveFlag else 0
-        saveFlag_flag = int(saveFlag_flag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AccSmoothStart(saveFlag_flag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        return error
-
-    """
-       @brief 加速度平滑关闭
-       @param  [in] saveFlag 是否断电保存
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def AccSmoothEnd(self, saveFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        saveFlag = bool(saveFlag)
-        saveFlag_flag = 1 if saveFlag else 0
-        saveFlag_flag = int(saveFlag_flag)
-
-        flag = True
-        while flag:
-            try:
-                error = self.robot.AccSmoothEnd(saveFlag_flag)
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        return error
-
-    """2025.04.03"""
-    """
-       @brief 控制器日志下载
-       @param  [in] savePath 保存文件路径"D://zDown/"
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def RbLogDownload(self, savePath):
-        try:
-            error = self.robot.RbLogDownloadPrepare()
-            if error == 0:
-                savePath = str(savePath)
-                fileName = "rblog.tar.gz"
-                try:
-                    error = self.__FileDownLoad(1, fileName, savePath)
-                    return error
-                except socket.error as e:
-                    return RobotError.ERR_DOWN_LOAD_FILE_FAILED
-            else:
-                return error
-        except socket.error as e:
-            return RobotError.ERR_RPC_ERROR
-
-    """
-       @brief 所有数据源下载
-       @param  [in] savePath 保存文件路径"D://zDown/"
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def AllDataSourceDownload(self, savePath):
-        try:
-            error = self.robot.AllDataSourceDownloadPrepare()
-            if error == 0:
-                savePath = str(savePath)
-                fileName = "alldatasource.tar.gz"
-                try:
-                    error = self.__FileDownLoad(2, fileName, savePath)
-                    return error
-                except socket.error as e:
-                    return RobotError.ERR_DOWN_LOAD_FILE_FAILED
-            else:
-                return error
-        except socket.error as e:
-            return RobotError.ERR_RPC_ERROR
-
-    """
-       @brief 数据备份包下载
-       @param  [in] savePath 保存文件路径"D://zDown/"
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def DataPackageDownload(self, savePath):
-        try:
-            error = self.robot.DataPackageDownloadPrepare()
-            if error == 0:
-                savePath = str(savePath)
-                fileName = "fr_user_data.tar.gz"
-                try:
-                    error = self.__FileDownLoad(3, fileName, savePath)
-                    return error
-                except socket.error as e:
-                    return RobotError.ERR_DOWN_LOAD_FILE_FAILED
-            else:
-                return error
-        except socket.error as e:
-            return RobotError.ERR_RPC_ERROR
-
-    """
-       @brief 获取控制箱SN码
-       @return 错误码 成功- 0, 失败-错误码
-       @return 返回值（调用成功返回） SNCode 控制箱SN码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetRobotSN(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetRobotSN()
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        error = _error[0]
-        if error == 0:
-            return error, _error[1]
-        return error,None
-
-    """
-       @brief 关闭机器人操作系统
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def ShutDownRobotOS(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ShutDownRobotOS()
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        return error
-
-    """
-       @brief 传送带通讯输入检测
-       @param  [in] timeout 等待超时时间ms
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def ConveyorComDetect(self, timeout):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        timeout = int(timeout)
-        flag = True
-        while flag:
-            try:
-                # error = self.robot.ConveryComDetect(timeout)
-                error = self.robot.ConveyorComDetect(timeout)
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        return error
-
-    """
-       @brief 传送带通讯输入检测触发
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def ConveyorComDetectTrigger(self):
-        error = self.send_message("/f/bIII0III1149III25IIIConveyorComDetectTrigger()III/b/f")
-        return error
-        # while self.reconnect_flag:
-        #     time.sleep(0.1)
-        # if self.GetSafetyCode() != 0:
-        #     return self.GetSafetyCode()
-        #
-        # flag = True
-        # while flag:
-        #     try:
-        #         error = self.robot.ConveryComDetectTrigger()
-        #         # error = self.robot.ConveyorComDetectTrigger()
-        #         flag = False
-        #     except socket.error as e:
-        #         flag = True
-        #
-        # return error
-
-    """2025.04.14"""
-    """3.8.2"""
-    """
-       @brief 电弧跟踪焊机电流反馈AI通道选择
-       @param  [in] channel 通道；0-扩展AI0；1-扩展AI1；2-扩展AI2；3-扩展AI3；4-控制箱AI0；5-控制箱AI1
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def ArcWeldTraceAIChannelCurrent(self, channel):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        channel = int(channel)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ArcWeldTraceAIChannelCurrent(channel)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-       @brief 电弧跟踪焊机电压反馈AI通道选择
-       @param  [in] channel 通道；0-扩展AI0；1-扩展AI1；2-扩展AI2；3-扩展AI3；4-控制箱AI0；5-控制箱AI1
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def ArcWeldTraceAIChannelVoltage(self, channel):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        channel = int(channel)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ArcWeldTraceAIChannelVoltage(channel)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-       @brief 电弧跟踪焊机电流反馈转换参数
-       @param  [in] AILow AI通道下限，默认值0V，范围[0-10V]
-       @param  [in] AIHigh AI通道上限，默认值10V，范围[0-10V]
-       @param  [in] currentLow AI通道下限对应焊机电流值，默认值0V，范围[0-200V]
-       @param  [in] currentHigh AI通道上限对应焊机电流值，默认值100V，范围[0-200V]
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def ArcWeldTraceCurrentPara(self, AILow=0, AIHigh=10, currentLow=0, currentHigh=100):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        AILow = float(AILow)
-        AIHigh = float(AIHigh)
-        currentLow = float(currentLow)
-        currentHigh = float(currentHigh)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ArcWeldTraceCurrentPara(AILow, AIHigh, currentLow, currentHigh)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-       @brief 电弧跟踪焊机电压反馈转换参数
-       @param  [in] AILow AI通道下限，默认值0V，范围[0-10V]
-       @param  [in] AIHigh AI通道上限，默认值10V，范围[0-10V]
-       @param  [in] voltageLow AI通道下限对应焊机电压值，默认值0V，范围[0-200V]
-       @param  [in] voltageHigh AI通道上限对应焊机电压值，默认值100V，范围[0-200V]
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def ArcWeldTraceVoltagePara(self, AILow=0, AIHigh=10, voltageLow=0, voltageHigh=100):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        AILow = float(AILow)
-        AIHigh = float(AIHigh)
-        voltageLow = float(voltageLow)
-        voltageHigh = float(voltageHigh)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ArcWeldTraceVoltagePara(AILow, AIHigh, voltageLow, voltageHigh)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """2025.04.16"""
-    """
-       @brief 设置焊接电压渐变开始
-       @param  [in] IOType 控制类型；0-控制箱IO；1-数字通信协议(UDP);2-数字通信协议(ModbusTCP)
-       @param  [in] voltageStart 起始焊接电压(V)
-       @param  [in] voltageEnd 终止焊接电压(V)
-       @param  [in] AOIndex 控制箱AO端口号(0-1)
-       @param  [in] blend 是否平滑 0-不平滑；1-平滑
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def WeldingSetVoltageGradualChangeStart(self, IOType, voltageStart, voltageEnd, AOIndex, blend):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        IOType = int(IOType)
-        voltageStart = float(voltageStart)
-        voltageEnd = float(voltageEnd)
-        AOIndex = int(AOIndex)
-        blend = int(blend)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingSetVoltageGradualChangeStart(IOType, voltageStart, voltageEnd, AOIndex, blend)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-       @brief 设置焊接电压渐变结束
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def WeldingSetVoltageGradualChangeEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingSetVoltageGradualChangeEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-       @brief 设置焊接电流渐变开始
-       @param  [in] IOType 控制类型；0-控制箱IO；1-数字通信协议(UDP);2-数字通信协议(ModbusTCP)
-       @param  [in] currentStart 起始焊接电流(A)
-       @param  [in] currentEnd 终止焊接电流(A)
-       @param  [in] AOIndex 控制箱AO端口号(0-1)
-       @param  [in] blend 是否平滑 0-不平滑；1-平滑
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def WeldingSetCurrentGradualChangeStart(self, IOType, currentStart, currentEnd, AOIndex, blend):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        IOType = int(IOType)
-        currentStart = float(currentStart)
-        currentEnd = float(currentEnd)
-        AOIndex = int(AOIndex)
-        blend = int(blend)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingSetCurrentGradualChangeStart(IOType, currentStart, currentEnd, AOIndex, blend)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-       @brief 设置焊接电流渐变结束
-       @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def WeldingSetCurrentGradualChangeEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WeldingSetCurrentGradualChangeEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """2025.04.27"""
-    """
-       @brief 获取SmartTool按钮状态
-       @return 错误码 成功- 0, 失败-错误码
-       @return 返回值（调用成功返回） state SmartTool手柄按钮状态;(bit0:0-通信正常；1-通信掉线；bit1-撤销操作；bit2-清空程序；bit3-A键；bit4-B键；bit5-C键；bit6-D键；bit7-E键；bit8-IO键；bit9-手自动；bit10开始)
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetSmarttoolBtnState(self):
-        return 0,self.robot_state_pkg.smartToolState
-
-    """2025.05.08"""
-    """
-       @brief 获取扩展轴坐标系
-       @return 错误码 成功- 0, 失败-错误码
-       @return 返回值（调用成功返回） coord 扩展轴坐标系
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def ExtAxisGetCoord(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ExtAxisGetCoord()
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        error = _error[0]
-        if error == 0:
-            return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
-        return error, None
-
-    """2025.06.06"""
-    """   
-    @brief  获取夹爪激活状态
-    @param  [in] NULL
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） fault 0-无错误，1-有错误
-    @return 返回值（调用成功返回） gripper_active bit0~bit15对应夹爪编号0~15，bit=0为未激活，bit=1为激活
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetGripperActivateStatus(self):
-        return 0, self.robot_state_pkg.gripper_fault,self.robot_state_pkg.gripper_active
-
-    """   
-    @brief  获取夹爪位置
-    @param  [in] NULL
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） fault 0-无错误，1-有错误
-    @return 返回值（调用成功返回） position 位置百分比，范围0~100% 
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetGripperCurPosition(self):
-        return 0, self.robot_state_pkg.gripper_fault, self.robot_state_pkg.gripper_position
-
-    """   
-    @brief  获取夹爪电流
-    @param  [in] NULL
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） fault 0-无错误，1-有错误
-    @return 返回值（调用成功返回） current 电流百分比，范围0~100%
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetGripperCurCurrent(self):
-        return 0, self.robot_state_pkg.gripper_fault, self.robot_state_pkg.gripper_current
-
-    """   
-    @brief  获取夹爪电压
-    @param  [in] NULL
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） fault 0-无错误，1-有错误
-    @return 返回值（调用成功返回） voltage 电压,单位0.1V
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetGripperVoltage(self):
-        return 0, self.robot_state_pkg.gripper_fault, self.robot_state_pkg.gripper_voltage
-
-    """   
-    @brief  获取夹爪温度
-    @param  [in] NULL
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） fault 0-无错误，1-有错误
-    @return 返回值（调用成功返回） temp 温度，单位℃
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetGripperTemp(self):
-        return 0, self.robot_state_pkg.gripper_fault, self.robot_state_pkg.gripper_tmp
-
-    """   
-    @brief  获取夹爪速度
-    @param  [in] NULL
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） fault 0-无错误，1-有错误
-    @return 返回值（调用成功返回） speed 速度百分比，范围0~100%
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetGripperCurSpeed(self):
-        return 0, self.robot_state_pkg.gripper_fault, self.robot_state_pkg.gripper_speed
-
-    """2025.06.24"""
-    """3.8.3"""
-    """
-    @brief 设置宽电压控制箱温度及风扇转速监控参数
-    @param  [in] enable 0-不使能监测；1-使能监测
-    @param  [in] period 监测周期(s),范围1-100
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SetWideBoxTempFanMonitorParam(self, enable, period):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        if self.GetSafetyCode() != 0:
-            return self.GetSafetyCode()
-        enable = int(enable)
-        period = int(period)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetWideBoxTempFanMonitorParam(enable, period)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 获取宽电压控制箱温度及风扇转速监控参数
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） enable 0-不使能监测；1-使能监测
-    @return 返回值（调用成功返回） period 监测周期(s),范围1-100
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetWideBoxTempFanMonitorParam(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetWideBoxTempFanMonitorParam()
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        error = _error[0]
-        if error == 0:
-            return error, _error[1], _error[2]
-        return error, None, None
-
-    """2025.07.04"""
-    """3.8.4"""
-
-    """
-    @brief 设置焦点标定点
-    @param  [in] pointNum 焦点标定点编号 1-8
-    @param  [in] point 标定点坐标
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SetFocusCalibPoint(self, pointNum, point):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        pointNum = int(pointNum)
-        point = list(map(float, point))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetFocusCalibPoint(pointNum,point[0],point[1],point[2],point[3],point[4],point[5])
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 计算焦点标定结果
-    @param  [in] pointNum 标定点个数
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） resultPos 标定结果XYZ
-    @return 返回值（调用成功返回） accuracy 标定精度误差
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def ComputeFocusCalib(self, pointNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        pointNum = int(pointNum)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.ComputeFocusCalib(pointNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        error = _error[0]
-        if error == 0:
-            return error, [_error[1], _error[2], _error[3]], _error[4]
-        return error, None, None
-
-    """
-    @brief 开启焦点跟随
-    @param  [in] kp 比例参数，默认50.0
-    @param  [in] kpredict 前馈参数，默认19.0
-    @param  [in] aMax 最大角加速度限制，默认1440°/s^2
-    @param  [in] vMax 最大角速度限制，默认180°/s
-    @param  [in] type 锁定X轴指向(0-参考输入矢量；1-水平；2-垂直)
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def FocusStart(self, kp=50.0, kpredic=19.0, aMax=1440, vMax=180, type=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        kp = float(kp)
-        kpredic = float(kpredic)
-        aMax = float(aMax)
-        vMax = float(vMax)
-        type = int(type)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FocusStart(kp, kpredic, aMax, vMax, type)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 停止焦点跟随
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def FocusEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FocusEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 设置焦点坐标
-    @param  [in] pos 焦点坐标XYZ
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SetFocusPosition(self, pos):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        pos = list(map(float, pos))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetFocusPosition(pos[0],pos[1],pos[2])
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """2025.07.08"""
-    """
-    @brief 设置编码器升级
-    @param  [in] path 本地升级包全路径(D://zUP/XXXXX.bin)
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SetEncoderUpgrade(self, path):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        path = str(path)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetEncoderUpgrade(path)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 设置关节固件升级
-    @param  [in] type 升级文件类型；1-升级固件；2-升级从站配置文件
-    @param  [in] path 本地升级包全路径(D://zUP/XXXXX.bin)
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SetJointFirmwareUpgrade(self, type, path):
-        type = int(type)
-        path = str(path)
-        errcode = self.__FileUpLoad(2, path)
-        if errcode == 0:
-            file_name = "/tmp/" + os.path.basename(path)
-            for joint_num in range(1, 7):
-                errcode = self.SlaveFileWrite(1, joint_num, file_name)
-                if errcode != 0:
-                    return errcode
-        return errcode
-
-    """
-    @brief 设置控制箱固件升级
-    @param  [in] type 升级文件类型；1-升级固件；2-升级从站配置文件
-    @param  [in] path 本地升级包全路径(D://zUP/XXXXX.bin)
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SetCtrlFirmwareUpgrade(self, type, path):
-        type = int(type)
-        path = str(path)
-        errcode = self.__FileUpLoad(2, path)
-        if errcode == 0:
-            file_name = "/tmp/" + os.path.basename(path)
-            errcode = self.SlaveFileWrite(type, 0, file_name)
-            return errcode
-        return errcode
-
-    """
-    @brief 设置末端固件升级
-    @param  [in] type 升级文件类型；1-升级固件；2-升级从站配置文件
-    @param  [in] path 本地升级包全路径(D://zUP/XXXXX.bin)
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SetEndFirmwareUpgrade(self, type, path):
-        type = int(type)
-        path = str(path)
-        errcode = self.__FileUpLoad(2, path)
-        if errcode == 0:
-            file_name = "/tmp/" + os.path.basename(path)
-            errcode = self.SlaveFileWrite(type, 7, file_name)
-            return errcode
-        return errcode
-
-    """
-    @brief 关节全参数配置文件升级
-    @param  [in] path 本地升级包全路径(D://zUP/XXXXX.bin)
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def JointAllParamUpgrade(self, path):
-        path = str(path)
-        errcode = self.__FileUpLoad(5, path)
-        if errcode == 0:
-            error = self.robot.JointAllParamUpgrade()
-            return error
-        return errcode
-
-    """2025.07.21"""
-    """3.8.5"""
-    """
-    @brief 激光传感器记录点
-    @param  [in] coordID 激光传感器坐标系
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） joint 激光传感器识别点关节位置
-    @return 返回值（调用成功返回） desc 激光传感器识别点笛卡尔位置
-    @return 返回值（调用成功返回） exaxis 激光传感器识别点扩展轴位置
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def LaserRecordPoint(self, coordID):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        coordID = int(coordID)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.LaserRecordPoint(coordID,0,100)
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            param_str = str(_error[1])
-            par_s = param_str.split(',')
-            if len(par_s) != 16:
-                return -1, None, None, None
-            return (error, [float(par_s[0]),float(par_s[1]),float(par_s[2]),float(par_s[3]),float(par_s[4]),float(par_s[5])],
-                    [float(par_s[6]),float(par_s[7]),float(par_s[8]),float(par_s[9]),float(par_s[10]),float(par_s[11])],
-                    [float(par_s[12]),float(par_s[13]),float(par_s[14]),float(par_s[15])])
-        return error, None, None, None
-
-    """2025.08.07"""
-    """
-    @brief 设置扩展轴与机器人同步运动策略
-    @param  [in] strategy 策略；0-以机器人为主；1-扩展轴与机器人同步
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SetExAxisRobotPlan(self, strategy):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        strategy = int(strategy)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetExAxisRobotPlan(strategy)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """2025.08.12"""
-    """
-    @brief 获取从站板卡参数
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） type  0-Ethercat，1-CClink, 3-Ethercat, 4-EIP
-    @return 返回值（调用成功返回） version  协议版本
-    @return 返回值（调用成功返回） connState  0-未连接 1-已连接
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetFieldBusConfig(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetFieldBusConfig()
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        error = _error[0]
-        if error == 0:
-            return error, _error[2], _error[3], _error[4]
-        return error, None, None, None
-
-    """
-    @brief 写入从站DO
-    @param  [in] DOIndex  DO编号
-    @param  [in] wirteNum  写入的数量
-    @param  [in] status[8] 写入的数值，最多写8个
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def FieldBusSlaveWriteDO(self, DOIndex, wirteNum, status):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        DOIndex = int(DOIndex)
-        wirteNum = int(wirteNum)
-        status = list(map(int, status))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FieldBusSlaveWriteDO(DOIndex, wirteNum, status)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 写入从站AO
-    @param  [in] AOIndex  AO编号
-    @param  [in] wirteNum  写入的数量
-    @param  [in] status[8] 写入的数值，最多写8个
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def FieldBusSlaveWriteAO(self, AOIndex, wirteNum, status):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        AOIndex = int(AOIndex)
-        wirteNum = int(wirteNum)
-        status = list(map(int, status))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FieldBusSlaveWriteAO(AOIndex, wirteNum, status)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 读取从站DI
-    @param  [in] DOIndex  DI编号
-    @param  [in] readeNum  读取的数量
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） status[8] 读取到的数值，最多读8个
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def FieldBusSlaveReadDI(self, DOIndex, readeNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        DOIndex = int(DOIndex)
-        readeNum = int(readeNum)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.FieldBusSlaveReadDI(DOIndex, readeNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        error = _error[0]
-        if error == 0:
-            return error, _error[1:readeNum+1]
-        return error, None
-
-    """
-    @brief 读取从站AI
-    @param  [in] AOIndex  AI编号
-    @param  [in] readeNum  读取的数量
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） status[8] 读取到的数值，最多读8个
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def FieldBusSlaveReadAI(self, AOIndex, readeNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        AOIndex = int(AOIndex)
-        readeNum = int(readeNum)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.FieldBusSlaveReadAI(AOIndex, readeNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        error = _error[0]
-        if error == 0:
-            return error, _error[1:readeNum + 1]
-        return error, None
-
-    """
-    @brief 等待扩展DI输入
-    @param  [in] DIIndex DI编号
-    @param  [in] status 0-低电平；1-高电平
-    @param  [in] waitMs 最大等待时间(ms)
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def FieldBusSlaveWaitDI(self, DIIndex, status, waitMs):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        DIIndex = int(DIIndex)
-        status = int(status)
-        waitMs = int(waitMs)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FieldBusSlaveWaitDI(DIIndex, status, waitMs)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 等待扩展AI输入
-    @param  [in] AIIndex AI编号
-    @param  [in] waitType 0-大于；1-小于
-    @param  [in] value AI值
-    @param  [in] waitMs 最大等待时间(ms)
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def FieldBusSlaveWaitAI(self, AIIndex, waitType, value, waitMs):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        AIIndex = int(AIIndex)
-        waitType = int(waitType)
-        value = float(value)
-        waitMs = int(waitMs)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.FieldBusSlaveWaitAI(AIIndex, waitType, value, waitMs)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 控制阵列式吸盘
-    @param  [in] slaveID 从站号
-    @param  [in] len 长度
-    @param  [in] ctrlValue 控制值 1-按最大真空度吸取 2-按设定真空度吸取 3-停止吸取
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SetSuckerCtrl(self, slaveID, len, ctrlValue):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        slaveID = int(slaveID)
-        len = int(len)
-        ctrlValue = list(map(int, ctrlValue))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetSuckerCtrl(slaveID, len, ctrlValue)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 获取阵列式吸盘状态
-    @param  [in] slaveID 从站号
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） state 吸附状态 0-释放物体 1-检测到工件吸附成功 2-没有吸附到物体 3-物体脱离
-    @return 返回值（调用成功返回） pressValue 当前真空度 单位kpa
-    @return 返回值（调用成功返回） error 吸盘当前的错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetSuckerState(self, slaveID):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        slaveID = int(slaveID)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetSuckerState(slaveID)
-                flag = False
-            except socket.error as e:
-                flag = True
-
-        error = _error[0]
-        if error == 0:
-            return error, _error[1], _error[2], _error[3]
-        return error, None, None, None
-
-    """
-    @brief 等待吸盘状态
-    @param  [in] slaveID 从站号
-    @param  [in] state 吸附状态 0-释放物体 1-检测到工件吸附成功 2-没有吸附到物体 3-物体脱离
-    @param  [in] ms 等待最大时间
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def WaitSuckerState(self, slaveID, state, ms):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        slaveID = int(slaveID)
-        state = int(state)
-        ms = int(ms)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.WaitSuckerState(slaveID, state, ms)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-
-    """
-    @brief 上传开放协议的Lua文件
-    @param  [in] filePath 本地开放协议lua文件路径名
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def OpenLuaUpload(self, filePath):
-        filePath =str(filePath)
-        errcode = self.__FileUpLoad(11, filePath)
-        if errcode == 0:
-            pos = filePath.rfind('/')
-            if pos == -1:
-                return RobotError.ERR_FILE_NAME
-            filename = filePath[pos + 1:]  # 获取文件名部分
-            error = self.robot.CtrlOpenLuaUpLoadCheck(filename)
-            return error
-        return errcode
-
-    """3.8.6"""
-    """2025.09.03"""
-    """
-    @brief 设置拖动开启前负载力检测
-    @param  [in] flag 0-关闭；1-开启
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SetTorqueDetectionSwitch(self, flag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = int(flag)
-        flag_tmp = True
-        while flag_tmp:
-            try:
-                error = self.robot.SetTorqueDetectionSwitch(flag)
-                flag_tmp = False
-            except socket.error as e:
-                flag_tmp = True
-        return error
-
-    # """2025.09.03"""
-    # """
-    # @brief 设置拖动开启前负载力检测
-    # @param  [in] flag 0-关闭；1-开启
-    # @return 错误码 成功- 0, 失败-错误码
-    # """
-    #
-    # @log_call
-    # @xmlrpc_timeout
-    # def SetTorqueDetectionSwitch(self, flag):
-    #     while self.reconnect_flag:
-    #         time.sleep(0.1)
-    #     flag = int(flag)
-    #     flag_tmp = True
-    #     while flag_tmp:
-    #         try:
-    #             error = self.robot.SetTorqueDetectionSwitch(flag)
-    #             flag_tmp = False
-    #         except socket.error as e:
-    #             flag_tmp = True
-    #     return error
-
-    """2025.09.05"""
-    """
-    @brief 激光外设打开关闭函数
-    @param  [in] OnOff 0-关闭 1-打开
-    @param  [in] weldId 焊缝ID 默认为0
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def LaserTrackingLaserOnOff(self, OnOff, weldId=0):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        OnOff = int(OnOff)
-        weldId = int(weldId)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserTrackingLaserOnOff(OnOff, weldId)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 激光跟踪开始结束函数
-    @param  [in] OnOff 0-结束 1-开始
-    @param  [in] coordId 激光外设工具坐标系编号
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def LaserTrackingTrackOnOff(self, OnOff, coordId):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        OnOff = int(OnOff)
-        coordId = int(coordId)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserTrackingTrackOnOff(OnOff, coordId)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 激光寻位-固定方向
-    @param  [in] direction 0-x+ 1-x- 2-y+ 3-y- 4-z+ 5-z-
-    @param  [in] vel 速度 单位%
-    @param  [in] distance 最大寻位距离 单位mm
-    @param  [in] timeout 寻位超时时间 单位ms
-    @param  [in] posSensorNum 激光标定的工具坐标编号
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def LaserTrackingSearchStart_xyz(self, direction, vel, distance, timeout, posSensorNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        direction = int(direction)
-        vel = int(vel)
-        distance = int(distance)
-        timeout = int(timeout)
-        posSensorNum = int(posSensorNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserTrackingSearchStart_xyz(direction, vel, distance, timeout, posSensorNum)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 激光寻位-任意方向
-    @param  [in] directionPoint 寻位输入的点的xyz左边,[x,y,z]
-    @param  [in] vel 速度 单位%
-    @param  [in] distance 最大寻位距离 单位mm
-    @param  [in] timeout 寻位超时时间 单位ms
-    @param  [in] posSensorNum 激光标定的工具坐标编号
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def LaserTrackingSearchStart_point(self, directionPoint, vel, distance, timeout, posSensorNum):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        directionPoint = list(map(float, directionPoint))
-        vel = int(vel)
-        distance = int(distance)
-        timeout = int(timeout)
-        posSensorNum = int(posSensorNum)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserTrackingSearchStart_point(6, vel, distance, timeout, posSensorNum, directionPoint[0], directionPoint[1], directionPoint[2])
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 激光IP配置
-    @param  [in] ip 激光外设的ip地址
-    @param  [in] port 激光外设的端口号
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def LaserTrackingSensorConfig(self, ip, port):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        ip =str (ip)
-        port = int(port)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserTrackingSensorConfig(ip, port)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 激光外设采样周期配置
-    @param  [in] period 激光外设采样周期 单位ms
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def LaserTrackingSensorSamplePeriod(self, period):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        period = int(period)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserTrackingSensorSamplePeriod(period)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 激光外设驱动加载
-    @param  [in] type 激光外设驱动的协议类型 101-睿牛 102-创想 103-全视 104-同舟 105-奥太
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def LoadPosSensorDriver(self, type):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        type = int(type)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LoadPosSensorDriver(type)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 激光外设驱动卸载
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def UnLoadPosSensorDriver(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.UnLoadPosSensorDriver()
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 激光焊缝轨迹记录
-    @param  [in] status 0-停止记录 1-实时跟踪  2-开始记录
-    @param  [in] delayTime 延时时间 单位ms
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def LaserSensorRecord1(self, status, delayTime):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        status = int(status)
-        delayTime = int(delayTime)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserSensorRecord1(status, delayTime)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 激光焊缝轨迹复现
-    @param  [in] delayTime 延时时间 单位ms
-    @param  [in] speed 速度 单位%
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def LaserSensorReplay(self, delayTime, speed):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        delayTime = int(delayTime)
-        speed = float(speed)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserSensorReplay(3, delayTime, speed)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 激光跟踪复现
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def MoveLTR(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveLTR(0)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 运动到焊缝记录的起点
-    @param  [in] moveType 0-PTP 1-LIN
-    @param  [in] ovl 速度 单位%
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def MoveToLaserRecordStart(self, moveType, ovl):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        moveType = int(moveType)
-        ovl = float(ovl)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveToLaserRecordStart(moveType, ovl)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 运动到焊缝记录的终点
-    @param  [in] moveType 0-PTP 1-LIN
-    @param  [in] ovl 速度 单位%
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def MoveToLaserRecordEnd(self, moveType, ovl):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        moveType = int(moveType)
-        ovl = float(ovl)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveToLaserRecordEnd(moveType, ovl)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 运动到激光传感器寻位点
-    @param  [in] moveFlag 运动类型：0-PTP；1-LIN
-    @param  [in] ovl 速度缩放因子，0-100
-    @param  [in] dataFlag 焊缝缓存数据选择：0-执行规划数据；1-执行记录数据
-    @param  [in] plateType 板材类型：0-波纹板；1-瓦楞板；2-围栏板；3-油桶；4-波纹甲壳钢
-    @param  [in] trackOffectType 激光传感器偏移类型：0-不偏移；1-基坐标系偏移；2-工具坐标系偏移；3-激光传感器原始数据偏移
-    @param  [in] offset 偏移量
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def MoveToLaserSeamPos(self, moveFlag, ovl, dataFlag, plateType, trackOffectType, offset):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        moveFlag = int(moveFlag)
-        ovl = float(ovl)
-        plateType = int(plateType)
-        trackOffectType = int(trackOffectType)
-        offset = list(map(float, offset))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveToLaserSeamPos([moveFlag, ovl, dataFlag, plateType, trackOffectType, offset[0], offset[1],offset[2], offset[3], offset[4],offset[5]])
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 获取激光传感器寻位点坐标信息
-    @param [in] trackOffectType 激光传感器偏移类型：0-不偏移；1-基坐标系偏移；2-工具坐标系偏移；3-激光传感器原始数据偏移
-    @param [in] offset 偏移量
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） jPos 关节位置[°]
-    @return 返回值（调用成功返回） descPos 笛卡尔位置[mm]
-    @return 返回值（调用成功返回） tool 工具坐标系
-    @return 返回值（调用成功返回） user 工件坐标系
-    @return 返回值（调用成功返回） exaxis 扩展轴位置[mm]
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetLaserSeamPos(self, trackOffectType, offset):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        trackOffectType = int(trackOffectType)
-        offset = list(map(float, offset))
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetLaserSeamPos([trackOffectType, offset[0], offset[1], offset[2], offset[3],offset[4], offset[5]])
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            paramStr = str(_error[1])
-            # print(f"{paramStr}\n")
-
-            parS = paramStr.split(',')
-            if len(parS) != 20:
-                return -1, None, None, None, None, None
-            return (error, [float(parS[0]),float(parS[1]),float(parS[2]),float(parS[3]),float(parS[4]),float(parS[5])],
-                    [float(parS[6]),float(parS[7]),float(parS[8]),float(parS[9]),float(parS[10]),float(parS[11])],
-                    int(parS[12]), int(parS[13]),
-                    [float(parS[16]),float(parS[17]),float(parS[18]),float(parS[19])])
-        return error, None, None, None, None, None
-
-    """2025.09.12"""
-    """
-    @brief 阻抗启停控制
-    @param [in] status 0：关闭；1-开启
-    @param [in] workSpace 0-关节空间；1-迪卡尔空间
-    @param [in] forceThreshold 触发力阈值(N)
-    @param [in] m 质量参数
-    @param [in] b 阻尼参数
-    @param [in] k 刚度参数
-    @param [in] maxV 最大线速度(mm/s)
-    @param [in] maxVA 最大线加速度(mm/s2)
-    @param [in] maxW 最大角速度(°/s)
-    @param [in] maxWA 最大角加速度(°/s2)
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def ImpedanceControlStartStop(self, status, workSpace, forceThreshold, m, b, k, maxV, maxVA, maxW, maxWA):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        status = int(status)
-        workSpace = int(workSpace)
-        forceThreshold = list(map(float, forceThreshold))
-        m = list(map(float, m))
-        b = list(map(float, b))
-        k = list(map(float, k))
-        maxV = float(maxV)
-        maxVA = float(maxVA)
-        maxW = float(maxW)
-        maxWA = float(maxWA)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.ImpedanceControlStartStop([status, workSpace,
-                                                     forceThreshold[0], forceThreshold[1], forceThreshold[2], forceThreshold[3], forceThreshold[4], forceThreshold[5]
-                                                     ,m[0], m[1], m[2], m[3], m[4], m[5]
-                                                     ,b[0], b[1], b[2], b[3], b[4], b[5]
-                                                     ,k[0], k[1], k[2], k[3], k[4], k[5]
-                                                     ,maxV, maxVA, maxW, maxWA])
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """2025.09.17"""
-    """
-    @brief 根据编号获取工具坐标系
-    @param [in] id 工具坐标系编号
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） coord 坐标系数值
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetToolCoordWithID(self, id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        id = int(id)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetToolCoordWithID(id)
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
-        return error, None
-
-    """
-    @brief 根据编号获取工件坐标系
-    @param [in] id 工件坐标系编号
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） coord 坐标系数值
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetWObjCoordWithID(self, id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        id = int(id)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetWObjCoordWithID(id)
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
-        return error, None
-
-    """
-    @brief 根据编号获取外部工具坐标系
-    @param [in] id 外部工具坐标系编号
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） coord 坐标系数值
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetExToolCoordWithID(self, id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        id = int(id)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetExToolCoordWithID(id)
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
-        return error, None
-
-    """
-    @brief 根据编号获取扩展轴坐标系
-    @param [in] id 扩展轴坐标系编号
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） coord 坐标系数值
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetExAxisCoordWithID(self, id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        id = int(id)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetExAxisCoordWithID(id)
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]]
-        return error, None
-
-    """
-    @brief 根据编号获取负载质量及质心
-    @param [in] id 扩展轴坐标系编号
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） weight 负载质量
-    @return 返回值（调用成功返回） cog 负载质心
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetTargetPayloadWithID(self, id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        id = int(id)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetTargetPayloadWithID(id)
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, _error[1], [_error[2], _error[3], _error[4]]
-        return error, None, None
-
-    """
-    @brief 获取当前工具坐标系
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） coord 坐标系数值
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetCurToolCoord(self):
-        return 0, [self.robot_state_pkg.toolCoord[0],
-                   self.robot_state_pkg.toolCoord[1],
-                   self.robot_state_pkg.toolCoord[2],
-                   self.robot_state_pkg.toolCoord[3],
-                   self.robot_state_pkg.toolCoord[4],
-                   self.robot_state_pkg.toolCoord[5]]
-
-    """
-    @brief 获取当前工件坐标系
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） coord 坐标系数值
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetCurWObjCoord(self):
-        return 0, [self.robot_state_pkg.wobjCoord[0],
-                   self.robot_state_pkg.wobjCoord[1],
-                   self.robot_state_pkg.wobjCoord[2],
-                   self.robot_state_pkg.wobjCoord[3],
-                   self.robot_state_pkg.wobjCoord[4],
-                   self.robot_state_pkg.wobjCoord[5]]
-
-    """
-    @brief 获取当前外部工具坐标系
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） coord 坐标系数值
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetCurExToolCoord(self):
-        return 0, [self.robot_state_pkg.extoolCoord[0],
-                   self.robot_state_pkg.extoolCoord[1],
-                   self.robot_state_pkg.extoolCoord[2],
-                   self.robot_state_pkg.extoolCoord[3],
-                   self.robot_state_pkg.extoolCoord[4],
-                   self.robot_state_pkg.extoolCoord[5]]
-
-    """
-    @brief 获取当前扩展轴坐标系
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） coord 坐标系数值
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetCurExAxisCoord(self):
-        return 0, [self.robot_state_pkg.exAxisCoord[0],
-                   self.robot_state_pkg.exAxisCoord[1],
-                   self.robot_state_pkg.exAxisCoord[2],
-                   self.robot_state_pkg.exAxisCoord[3],
-                   self.robot_state_pkg.exAxisCoord[4],
-                   self.robot_state_pkg.exAxisCoord[5]]
-
-    """2025.09.18"""
-    """
-    @brief 设置自定义摆动参数
-    @param [in] id 自定义摆动编号：0-2
-    @param [in] pointNum 摆动点位个数 0-10
-    @param [in] point 移动端点数据x,y,z
-    @param [in] stayTime 摆动停留时间ms
-    @param [in] frequency 摆动频率 Hz
-    @param [in] incStayType 等待模式：0-周期不包含等待时间；1-周期包含等待时间
-    @param [in] stationary 摆动位置等待：0-等待时间内继续运动；1-等待时间内位置静止
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def CustomWeaveSetPara(self, id, pointNum, point, stayTime, frequency, incStayType, stationary):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        id = int(id)
-        pointNum = int(pointNum)
-        point = list(map(float, point))
-        stayTime = list(map(float,stayTime))
-        frequency = float(frequency)
-        incStayType = int(incStayType)
-        stationary = int(stationary)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.CustomWeaveSetPara([id, pointNum,
-                                                       point[0],point[1],point[2],point[3],point[4],point[5],point[6],point[7],point[8],point[9],
-                                                       point[10],point[11],point[12],point[13],point[14],point[15],point[16],point[17],point[18],point[19],
-                                                       point[20],point[21],point[22],point[23],point[24],point[25],point[26],point[27],point[28],point[29],
-                                                       stayTime[0],stayTime[1],stayTime[2],stayTime[3],stayTime[4],stayTime[5],stayTime[6],stayTime[7],stayTime[8],stayTime[9],
-                                                       frequency,incStayType,stationary])
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 获取自定义摆动参数
-    @param [in] id 自定义摆动编号：0-2
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） pointNum 摆动点位个数 0-10
-    @return 返回值（调用成功返回） point 移动端点数据x,y,z
-    @return 返回值（调用成功返回） stayTime 摆动停留时间ms
-    @return 返回值（调用成功返回） frequency 摆动频率 Hz
-    @return 返回值（调用成功返回） incStayType 等待模式：0-周期不包含等待时间；1-周期包含等待时间
-    @return 返回值（调用成功返回） stationary 摆动位置等待：0-等待时间内继续运动；1-等待时间内位置静止
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def CustomWeaveGetPara(self, id):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        id = int(id)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.CustomWeaveGetPara(id)
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            paramStr = str(_error[1])
-            # print(f"{paramStr}\n")
-
-            parS = paramStr.split(',')
-            if len(parS) != 44:
-                return -1, None, None, None, None, None, None
-            return (error, int(parS[0]), [float(parS[1]),  float(parS[2]),  float(parS[3]),
-                                          float(parS[4]),  float(parS[5]),  float(parS[6]),
-                                          float(parS[7]),  float(parS[8]),  float(parS[9]),
-                                          float(parS[10]), float(parS[11]), float(parS[12]),
-                                          float(parS[13]), float(parS[14]), float(parS[15]),
-                                          float(parS[16]), float(parS[17]), float(parS[18]),
-                                          float(parS[19]), float(parS[20]), float(parS[21]),
-                                          float(parS[22]), float(parS[23]), float(parS[24]),
-                                          float(parS[25]), float(parS[26]), float(parS[27]),
-                                          float(parS[28]), float(parS[29]), float(parS[30])],
-                                          [float(parS[31]), float(parS[32]), float(parS[33]),
-                                           float(parS[34]), float(parS[35]), float(parS[36]),
-                                           float(parS[37]), float(parS[38]), float(parS[39]),
-                                           float(parS[40])],
-                                          float(parS[41]),int(parS[42]), int(parS[43]))
-        return error, None, None, None, None, None, None
-
-    """2025.09.19"""
-    """
-    @brief 机器人操作系统升级(LA控制箱)
-    @param [in] filePath 操作系统升级包全路径
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def KernelUpgrade(self, filePath):
-        filePath = str(filePath)
-        errcode = self.__FileUpLoad(6, filePath)
-        if errcode == 0:
-            try:
-                result = self.robot.KernelUpgrade()
-                if result is not None and hasattr(result, '__len__') and len(result) == 0:
-                    # print("警告: 内核升级调用成功，但返回空数据")
-                    return 0
-                return result if result is not None else 0
-            except xmlrpc.client.Fault as e:
-                if "array has only 0 items" in str(e):
-                    # print("内核升级指令已发送，但服务器返回空响应")
-                    return 0
-                else:
-                    # print(f"内核升级失败: {e}")
-                    return -1
-        return errcode
-
-    """
-    @brief 获取机器人操作系统升级结果(LA控制箱)
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） result 升级结果：0:成功；-1:失败
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetKernelUpgradeResult(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetKernelUpgradeResult()
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, _error[1]
-        return error, None
-
-    """3.8.7"""
-    """2025.10.11"""
-    """
-    @brief 关节扭矩传感器灵敏度标定功能开启
-    @param [in] status 0-关闭；1-开启
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def JointSensitivityEnable(self, status):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        status = int(status)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.JointSensitivityEnable([status])
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 获取关节扭矩传感器灵敏度标定结果
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） calibResult j1~j6关节灵敏度[0-1]
-    @return 返回值（调用成功返回） linearityn j1~j6关节线性度[0-1]
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def JointSensitivityCalibration(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.JointSensitivityCalibration()
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, [_error[1], _error[2], _error[3], _error[4], _error[5], _error[6]], [_error[7], _error[8], _error[9], _error[10], _error[11], _error[12]]
-        return error, None, None
-
-    """
-    @brief 关节扭矩传感器灵敏度数据采集
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def JointSensitivityCollect(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.JointSensitivityCollect()
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """2025.10.15"""
-    """
-    @brief 清空运动指令队列
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def MotionQueueClear(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MotionQueueClear()
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 获取机器人8个从站端口错误帧数
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） inRecvErr 输入接收错误帧数
-    @return 返回值（调用成功返回） inCRCErr 输入CRC错误帧数
-    @return 返回值（调用成功返回） inTransmitErr 输入转发错误帧数
-    @return 返回值（调用成功返回） inLinkErr 输入链接错误帧数
-    @return 返回值（调用成功返回） outRecvErr 输出接收错误帧数
-    @return 返回值（调用成功返回） outCRCErr 输出CRC错误帧数
-    @return 返回值（调用成功返回） outTransmitErr 输出转发错误帧数
-    @return 返回值（调用成功返回） outLinkErr 输出链接错误帧数
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetSlavePortErrCounter(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetSlavePortErrCounter()
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            paramStr = str(_error[1])
-            # print(f"{paramStr}\n")
-
-            parS = paramStr.split(',')
-            if len(parS) != 64:
-                return -1, None, None, None, None, None, None, None, None
-            return (error,
-                    [int(parS[0]), int(parS[4]), int(parS[8]), int(parS[12]), int(parS[16]), int(parS[20]), int(parS[24]), int(parS[28])],
-                    [int(parS[1]), int(parS[5]), int(parS[9]), int(parS[13]), int(parS[17]), int(parS[21]), int(parS[25]), int(parS[29])],
-                    [int(parS[2]), int(parS[6]), int(parS[10]), int(parS[14]), int(parS[18]), int(parS[22]), int(parS[26]), int(parS[30])],
-                    [int(parS[3]), int(parS[7]), int(parS[11]), int(parS[15]), int(parS[19]), int(parS[23]), int(parS[27]), int(parS[31])],
-                    [int(parS[32]), int(parS[36]), int(parS[40]), int(parS[44]), int(parS[48]), int(parS[52]), int(parS[56]), int(parS[60])],
-                    [int(parS[33]), int(parS[37]), int(parS[41]), int(parS[45]), int(parS[49]), int(parS[53]), int(parS[57]), int(parS[61])],
-                    [int(parS[34]), int(parS[38]), int(parS[42]), int(parS[46]), int(parS[50]), int(parS[54]), int(parS[58]), int(parS[62])],
-                    [int(parS[35]), int(parS[39]), int(parS[43]), int(parS[47]), int(parS[51]), int(parS[55]), int(parS[59]), int(parS[63])])
-        return error, None, None, None, None, None, None, None, None
-
-    """
-    @brief 从站端口错误帧清零
-    @param [in] slaveID 从站编号0~7
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SlavePortErrCounterClear(self, slaveID):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        slaveID = int(slaveID)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SlavePortErrCounterClear(slaveID)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 设置各轴速度前馈系数
-    @param [in] radio 各轴速度前馈系数
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SetVelFeedForwardRatio(self, radio):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        radio = list(map(float,radio))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetVelFeedForwardRatio([radio[0],radio[1],radio[2],radio[3],radio[4],radio[5]])
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 获取各轴速度前馈系数
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） radio 各轴速度前馈系数
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def GetVelFeedForwardRatio(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.GetVelFeedForwardRatio()
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, [float(_error[1]), float(_error[2]), float(_error[3]), float(_error[4]), float(_error[5]), float(_error[6])]
-        return error, None
-
-    """
-    @brief 机器人MCU日志生成
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def RobotMCULogCollect(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.RobotMCULogCollect()
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """3.9.0"""
-    """2025.11.03"""
-    """
-    @brief 移动到相贯线起始点
-    @param  [in] 必选参数 mainPoint 主管6个示教点的笛卡尔位姿
-    @param  [in] 必选参数 piecePoint 辅管6个示教点的笛卡尔位姿
-    @param  [in] 必选参数 tool 工具坐标系编号
-    @param  [in] 必选参数 wobj 工件坐标系编号
-    @param  [in] 必选参数 vel 速度百分比
-    @param  [in] 必选参数 acc 加速度百分比 
-    @param  [in] 必选参数 ovl 速度缩放因子
-    @param  [in] 必选参数 oacc 加速度缩放因子
-    @param  [in] 必选参数 moveType 运动类型; 0-PTP；1-LIN
-    @param  [in] 默认参数 mainExaxisPos 主管6个示教点扩展轴位置,默认[[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]]
-    @param  [in] 默认参数 pieceExaxisPos 拼接管6个示教点扩展轴位置,默认[[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]]
-    @param  [in] 默认参数 extAxisFlag 是否启用扩展轴；0-不启用；1-启用
-    @param  [in] 默认参数 exaxisPos 起点扩展轴位置[0.0,0.0,0.0,0.0]
-    @param  [in] 默认参数 moveDirection 运动方向；0-顺时针；1-逆时针
-    @param  [in] 默认参数 offset 偏移量
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def MoveToIntersectLineStart(self, mainPoint, piecePoint, tool, wobj, vel, acc, ovl, oacc, moveType,mainExaxisPos=[[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]],
-                                 pieceExaxisPos=[[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]],extAxisFlag=0,
-                                 exaxisPos=[0.0,0.0,0.0,0.0],moveDirection=0,offset=[0.0,0.0,0.0,0.0,0.0,0.0]):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        mainPoint0 = list(map(float, mainPoint[0]))
-        mainPoint1 = list(map(float, mainPoint[1]))
-        mainPoint2 = list(map(float, mainPoint[2]))
-        mainPoint3 = list(map(float, mainPoint[3]))
-        mainPoint4 = list(map(float, mainPoint[4]))
-        mainPoint5 = list(map(float, mainPoint[5]))
-        mainExaxisPos0 = list(map(float, mainExaxisPos[0]))
-        mainExaxisPos1 = list(map(float, mainExaxisPos[1]))
-        mainExaxisPos2 = list(map(float, mainExaxisPos[2]))
-        mainExaxisPos3 = list(map(float, mainExaxisPos[3]))
-        mainExaxisPos4 = list(map(float, mainExaxisPos[4]))
-        mainExaxisPos5 = list(map(float, mainExaxisPos[5]))
-        piecePoint0 = list(map(float, piecePoint[0]))
-        piecePoint1 = list(map(float, piecePoint[1]))
-        piecePoint2 = list(map(float, piecePoint[2]))
-        piecePoint3 = list(map(float, piecePoint[3]))
-        piecePoint4 = list(map(float, piecePoint[4]))
-        piecePoint5 = list(map(float, piecePoint[5]))
-        pieceExaxisPos0 = list(map(float, pieceExaxisPos[0]))
-        pieceExaxisPos1 = list(map(float, pieceExaxisPos[1]))
-        pieceExaxisPos2 = list(map(float, pieceExaxisPos[2]))
-        pieceExaxisPos3 = list(map(float, pieceExaxisPos[3]))
-        pieceExaxisPos4 = list(map(float, pieceExaxisPos[4]))
-        pieceExaxisPos5 = list(map(float, pieceExaxisPos[5]))
-        extAxisFlag = int(extAxisFlag)
-        exaxisPos = list(map(float, exaxisPos))
-
-        tool = int(tool)
-        wobj = int(wobj)
-        vel = float(vel)
-        acc = float(acc)
-        ovl = float(ovl)
-        oacc = float(oacc)
-        moveType = int(moveType)
-        moveDirection = int(moveDirection)
-        offset = list(map(float, offset))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveToIntersectLineStart([mainPoint0[0], mainPoint0[1], mainPoint0[2], mainPoint0[3], mainPoint0[4], mainPoint0[5],
-                                                             mainPoint1[0], mainPoint1[1], mainPoint1[2], mainPoint1[3], mainPoint1[4], mainPoint1[5],
-                                                             mainPoint2[0], mainPoint2[1], mainPoint2[2], mainPoint2[3], mainPoint2[4], mainPoint2[5],
-                                                             mainPoint3[0], mainPoint3[1], mainPoint3[2], mainPoint3[3], mainPoint3[4], mainPoint3[5],
-                                                             mainPoint4[0], mainPoint4[1], mainPoint4[2], mainPoint4[3], mainPoint4[4], mainPoint4[5],
-                                                             mainPoint5[0], mainPoint5[1], mainPoint5[2], mainPoint5[3], mainPoint5[4], mainPoint5[5],
-                                                             mainExaxisPos0[0], mainExaxisPos0[1], mainExaxisPos0[2], mainExaxisPos0[3],
-                                                             mainExaxisPos1[0], mainExaxisPos1[1], mainExaxisPos1[2], mainExaxisPos1[3],
-                                                             mainExaxisPos2[0], mainExaxisPos2[1], mainExaxisPos2[2], mainExaxisPos2[3],
-                                                             mainExaxisPos3[0], mainExaxisPos3[1], mainExaxisPos3[2], mainExaxisPos3[3],
-                                                             mainExaxisPos4[0], mainExaxisPos4[1], mainExaxisPos4[2], mainExaxisPos4[3],
-                                                             mainExaxisPos5[0], mainExaxisPos5[1], mainExaxisPos5[2], mainExaxisPos5[3],
-                                                             piecePoint0[0],piecePoint0[1],piecePoint0[2],piecePoint0[3],piecePoint0[4],piecePoint0[5],
-                                                             piecePoint1[0],piecePoint1[1],piecePoint1[2],piecePoint1[3],piecePoint1[4],piecePoint1[5],
-                                                             piecePoint2[0],piecePoint2[1],piecePoint2[2],piecePoint2[3],piecePoint2[4],piecePoint2[5],
-                                                             piecePoint3[0],piecePoint3[1],piecePoint3[2],piecePoint3[3],piecePoint3[4],piecePoint3[5],
-                                                             piecePoint4[0],piecePoint4[1],piecePoint4[2],piecePoint4[3],piecePoint4[4],piecePoint4[5],
-                                                             piecePoint5[0],piecePoint5[1],piecePoint5[2],piecePoint5[3],piecePoint5[4],piecePoint5[5],
-                                                             pieceExaxisPos0[0], pieceExaxisPos0[1], pieceExaxisPos0[2], pieceExaxisPos0[3],
-                                                             pieceExaxisPos1[0], pieceExaxisPos1[1], pieceExaxisPos1[2], pieceExaxisPos1[3],
-                                                             pieceExaxisPos2[0], pieceExaxisPos2[1], pieceExaxisPos2[2], pieceExaxisPos2[3],
-                                                             pieceExaxisPos3[0], pieceExaxisPos3[1], pieceExaxisPos3[2], pieceExaxisPos3[3],
-                                                             pieceExaxisPos4[0], pieceExaxisPos4[1], pieceExaxisPos4[2], pieceExaxisPos4[3],
-                                                             pieceExaxisPos5[0], pieceExaxisPos5[1], pieceExaxisPos5[2], pieceExaxisPos5[3],
-                                                             extAxisFlag,
-                                                             exaxisPos[0], exaxisPos[1], exaxisPos[2], exaxisPos[3],
-                                                             tool, wobj, vel, acc, ovl, oacc, moveType,moveDirection,
-                                                             offset[0],offset[1],offset[2],offset[3],offset[4],offset[5]])
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 相贯线运动
-    @param  [in] 必选参数 mainPoint 主管6个示教点的笛卡尔位姿
-    @param  [in] 必选参数 piecePoint 辅管6个示教点的笛卡尔位姿
-    @param  [in] 必选参数 tool 工具坐标系编号
-    @param  [in] 默认参数 wobj 工件坐标系编号
-    @param  [in] 默认参数 vel 速度百分比
-    @param  [in] 默认参数 acc 加速度百分比 
-    @param  [in] 默认参数 ovl 速度缩放因子
-    @param  [in] 默认参数 oacc 加速度缩放因子
-    @param  [in] 默认参数 moveDirection 运动方向; 0-顺时针；1-逆时针
-    @param  [in] 默认参数 mainExaxisPos 主管6个示教点扩展轴位置,默认[[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]]
-    @param  [in] 默认参数 pieceExaxisPos 拼接管6个示教点扩展轴位置,默认[[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]]
-    @param  [in] 默认参数 extAxisFlag 是否启用扩展轴；0-不启用；1-启用
-    @param  [in] 默认参数 exaxisPos 起点扩展轴位置[[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]]
-    @param  [in] 默认参数 offset 偏移量
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-
-    @log_call
-    @xmlrpc_timeout
-    def MoveIntersectLine(self, mainPoint, piecePoint, tool, wobj, vel, acc, ovl, oacc, moveDirection,mainExaxisPos=[[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]],
-                                 pieceExaxisPos=[[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]],extAxisFlag=0,
-                                 exaxisPos=[[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]],offset=[0.0,0.0,0.0,0.0,0.0,0.0]):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        mainPoint0 = list(map(float, mainPoint[0]))
-        mainPoint1 = list(map(float, mainPoint[1]))
-        mainPoint2 = list(map(float, mainPoint[2]))
-        mainPoint3 = list(map(float, mainPoint[3]))
-        mainPoint4 = list(map(float, mainPoint[4]))
-        mainPoint5 = list(map(float, mainPoint[5]))
-        mainExaxisPos0 = list(map(float, mainExaxisPos[0]))
-        mainExaxisPos1 = list(map(float, mainExaxisPos[1]))
-        mainExaxisPos2 = list(map(float, mainExaxisPos[2]))
-        mainExaxisPos3 = list(map(float, mainExaxisPos[3]))
-        mainExaxisPos4 = list(map(float, mainExaxisPos[4]))
-        mainExaxisPos5 = list(map(float, mainExaxisPos[5]))
-        piecePoint0 = list(map(float, piecePoint[0]))
-        piecePoint1 = list(map(float, piecePoint[1]))
-        piecePoint2 = list(map(float, piecePoint[2]))
-        piecePoint3 = list(map(float, piecePoint[3]))
-        piecePoint4 = list(map(float, piecePoint[4]))
-        piecePoint5 = list(map(float, piecePoint[5]))
-        pieceExaxisPos0 = list(map(float, pieceExaxisPos[0]))
-        pieceExaxisPos1 = list(map(float, pieceExaxisPos[1]))
-        pieceExaxisPos2 = list(map(float, pieceExaxisPos[2]))
-        pieceExaxisPos3 = list(map(float, pieceExaxisPos[3]))
-        pieceExaxisPos4 = list(map(float, pieceExaxisPos[4]))
-        pieceExaxisPos5 = list(map(float, pieceExaxisPos[5]))
-        extAxisFlag = int(extAxisFlag)
-        exaxisPos0 = list(map(float, exaxisPos[0]))
-        exaxisPos1 = list(map(float, exaxisPos[1]))
-        exaxisPos2 = list(map(float, exaxisPos[2]))
-        exaxisPos3 = list(map(float, exaxisPos[3]))
-        tool = int(tool)
-        wobj = int(wobj)
-        vel = float(vel)
-        acc = float(acc)
-        ovl = float(ovl)
-        oacc = float(oacc)
-        moveDirection = int(moveDirection)
-        offset = list(map(float, offset))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveIntersectLine(
-                    [mainPoint0[0], mainPoint0[1], mainPoint0[2], mainPoint0[3], mainPoint0[4], mainPoint0[5],
-                                                             mainPoint1[0], mainPoint1[1], mainPoint1[2], mainPoint1[3], mainPoint1[4], mainPoint1[5],
-                                                             mainPoint2[0], mainPoint2[1], mainPoint2[2], mainPoint2[3], mainPoint2[4], mainPoint2[5],
-                                                             mainPoint3[0], mainPoint3[1], mainPoint3[2], mainPoint3[3], mainPoint3[4], mainPoint3[5],
-                                                             mainPoint4[0], mainPoint4[1], mainPoint4[2], mainPoint4[3], mainPoint4[4], mainPoint4[5],
-                                                             mainPoint5[0], mainPoint5[1], mainPoint5[2], mainPoint5[3], mainPoint5[4], mainPoint5[5],
-                                                             mainExaxisPos0[0], mainExaxisPos0[1], mainExaxisPos0[2], mainExaxisPos0[3],
-                                                             mainExaxisPos1[0], mainExaxisPos1[1], mainExaxisPos1[2], mainExaxisPos1[3],
-                                                             mainExaxisPos2[0], mainExaxisPos2[1], mainExaxisPos2[2], mainExaxisPos2[3],
-                                                             mainExaxisPos3[0], mainExaxisPos3[1], mainExaxisPos3[2], mainExaxisPos3[3],
-                                                             mainExaxisPos4[0], mainExaxisPos4[1], mainExaxisPos4[2], mainExaxisPos4[3],
-                                                             mainExaxisPos5[0], mainExaxisPos5[1], mainExaxisPos5[2], mainExaxisPos5[3],
-                                                             piecePoint0[0],piecePoint0[1],piecePoint0[2],piecePoint0[3],piecePoint0[4],piecePoint0[5],
-                                                             piecePoint1[0],piecePoint1[1],piecePoint1[2],piecePoint1[3],piecePoint1[4],piecePoint1[5],
-                                                             piecePoint2[0],piecePoint2[1],piecePoint2[2],piecePoint2[3],piecePoint2[4],piecePoint2[5],
-                                                             piecePoint3[0],piecePoint3[1],piecePoint3[2],piecePoint3[3],piecePoint3[4],piecePoint3[5],
-                                                             piecePoint4[0],piecePoint4[1],piecePoint4[2],piecePoint4[3],piecePoint4[4],piecePoint4[5],
-                                                             piecePoint5[0],piecePoint5[1],piecePoint5[2],piecePoint5[3],piecePoint5[4],piecePoint5[5],
-                                                             pieceExaxisPos0[0], pieceExaxisPos0[1], pieceExaxisPos0[2], pieceExaxisPos0[3],
-                                                             pieceExaxisPos1[0], pieceExaxisPos1[1], pieceExaxisPos1[2], pieceExaxisPos1[3],
-                                                             pieceExaxisPos2[0], pieceExaxisPos2[1], pieceExaxisPos2[2], pieceExaxisPos2[3],
-                                                             pieceExaxisPos3[0], pieceExaxisPos3[1], pieceExaxisPos3[2], pieceExaxisPos3[3],
-                                                             pieceExaxisPos4[0], pieceExaxisPos4[1], pieceExaxisPos4[2], pieceExaxisPos4[3],
-                                                             pieceExaxisPos5[0], pieceExaxisPos5[1], pieceExaxisPos5[2], pieceExaxisPos5[3],
-                                                             extAxisFlag,
-                                                             exaxisPos0[0], exaxisPos0[1], exaxisPos0[2], exaxisPos0[3],
-                                                             exaxisPos1[0], exaxisPos1[1], exaxisPos1[2], exaxisPos1[3],
-                                                             exaxisPos2[0], exaxisPos2[1], exaxisPos2[2], exaxisPos2[3],
-                                                             exaxisPos3[0], exaxisPos3[1], exaxisPos3[2], exaxisPos3[3],
-                     tool, wobj, vel, acc, ovl, oacc, moveDirection,
-                                                             offset[0],offset[1],offset[2],offset[3],offset[4],offset[5]])
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """3.9.0"""
-    """2025.11.20"""
-    """
-    @brief 获取关节扭矩传感器迟滞误差
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） hysteresisError j1~j6关节迟滞误差
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def JointHysteresisError(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.JointHysteresisError()
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, [float(_error[1]), float(_error[2]), float(_error[3]), float(_error[4]), float(_error[5]), float(_error[6])]
-        return error, None
-
-
-    """
-    @brief 获取关节扭矩传感器重复精度
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） repeatability j1~j6关节重复精度
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def JointRepeatability(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.JointRepeatability()
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, [float(_error[1]), float(_error[2]), float(_error[3]), float(_error[4]), float(_error[5]), float(_error[6])]
-        return error, None
-
-    """
-    @brief 设置关节力传感器参数
-    @param  [in] 必选参数 M J1-J6质量系数[]
-    @param  [in] 必选参数 B J1-J6阻尼系数[]
-    @param  [in] 必选参数 K J1-J6刚度系数[]
-    @param  [in] 默认参数 threshold 力控制阈值，Nm
-    @param  [in] 默认参数 sensitivity 灵敏度,Nm/V,[]
-    @param  [in] 默认参数 setZeroFlag 功能开启标志位；0-关闭；1-开启；2-位置1记录零点；3-位置2记录零点
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SetAdmittanceParams(self, M, B, K, threshold, sensitivity, setZeroFlag):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        M = list(map(float, M))
-        B = list(map(float, B))
-        K = list(map(float, K))
-        threshold = list(map(float, threshold))
-        sensitivity = list(map(float, sensitivity))
-        setZeroFlag = int(setZeroFlag)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SetAdmittanceParams(
-                    [M[0], M[1], M[2], M[3], M[4], M[5],
-                     B[0], B[1], B[2], B[3], B[4], B[5],
-                     K[0], K[1], K[2], K[3], K[4], K[5],
-                     threshold[0], threshold[1], threshold[2], threshold[3], threshold[4], threshold[5],
-                     sensitivity[0], sensitivity[1], sensitivity[2], sensitivity[3], sensitivity[4], sensitivity[5],
-                     setZeroFlag])
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """3.9.1"""
-    """2025.12.01"""
-    """
-    @brief 开启力矩补偿功能及补偿系数
-    @param  [in] 必选参数 status 开关，0-关闭；1-开启
-    @param  [in] 必选参数 torqueCoeff J1-J6力矩补偿系数[0-1]
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def SerCoderCompenParams(self, status, torqueCoeff):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        status = int(status)
-        torqueCoeff = list(map(float, torqueCoeff))
-        flag = True
-        while flag:
-            try:
-                error = self.robot.SerCoderCompenParams([status,torqueCoeff[0],torqueCoeff[1],torqueCoeff[2],torqueCoeff[3],torqueCoeff[4],torqueCoeff[5]])
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-
-    """3.9.2"""
-    """2025.12.30"""
-    """
-    @brief 光电传感器TCP标定-计算工具RPY
-    @param  [in] 必选参数 机器人笛卡尔位置
-    @param  [in] 必选参数 Etool 当前工具坐标系数值
-    @param  [in] 必选参数 senser 当前传感器坐标系数值(暂未开放)
-    @param  [in] 必选参数 radius 圆周运动半径mm(暂未开放)
-    @param  [in] 必选参数 dz 沿基座标系z轴负方向运动距离；当dz = 10000时，函数直接返回工具RPY
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） TCPRPY 工具RPY数值
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def TCPComputeRPY(self, Btool, Etool, sensor, radius, dz):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        Btool = list(map(float, Btool))
-        Etool = list(map(float, Etool))
-        sensor = list(map(float, sensor))
-        radius = float(radius)
-        dz = float(dz)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.TCPComputeRPY([Btool[0],Btool[1],Btool[2],Btool[3],Btool[4],Btool[5],
-                                                   Etool[0],Etool[1],Etool[2],Etool[3],Etool[4],Etool[5],
-                                                   sensor[0],sensor[1],sensor[2],sensor[3],sensor[4],sensor[5],
-                                                   radius,dz,0.0,0.0,0.0,0.0])
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, [float(_error[1]), float(_error[2]), float(_error[3])]
-        return error, None
-
-    """
-    @brief 光电传感器TCP标定-计算工具XYZ
-    @param  [in] 必选参数 select 0-计算工具TCP；1-计算传感器原点；2-计算传感器姿态；3-直接返回工具TCP；4-记录当前工件坐标系和工具坐标系
-    @param  [in] 必选参数 originDirection 0-X方向；1-Y方向；2-Z方向
-    @param  [in] 必选参数 pos1 机器人笛卡尔位置1
-    @param  [in] 必选参数 pos2 机器人笛卡尔位置2
-    @param  [in] 必选参数 pos3 机器人笛卡尔位置3
-    @param  [in] 必选参数 pos4 机器人笛卡尔位置4
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） TCP 工具XYZ数值
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def TCPComputeXYZ(self, select, originDirection, pos1, pos2, pos3, pos4):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        select = int(select)
-        originDirection = float(originDirection)
-        pos1 = list(map(float, pos1))
-        pos2 = list(map(float, pos2))
-        pos3 = list(map(float, pos3))
-        pos4 = list(map(float, pos4))
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.TCPComputeXYZ([select,originDirection,
-                                                   pos1[0],pos1[1],pos1[2],
-                                                   pos2[0],pos2[1],pos2[2],
-                                                   pos3[0],pos3[1],pos3[2],
-                                                   pos4[0],pos4[1],pos4[2]])
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, [float(_error[1]), float(_error[2]), float(_error[3])]
-        return error, None
-
-    """
-    @brief 光电传感器TCP标定-开始记录末端法兰中心位置
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def TCPRecordFlangePosStart(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.TCPRecordFlangePosStart()
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 光电传感器TCP标定-停止记录末端法兰中心位置
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def TCPRecordFlangePosEnd(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.TCPRecordFlangePosEnd()
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 光电传感器TCP标定-获取末端工具中心点位置
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） TCP 工具中心点位置(x,y,z)
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def TCPGetRecordFlangePos(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                _error = self.robot.TCPGetRecordFlangePos()
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error[0]
-        if error == 0:
-            return error, [float(_error[1]), float(_error[2]), float(_error[3])]
-        return error, None
-
-    """
-    @brief 光电传感器TCP标定
-    @param  [in] 必选参数 luaPath 自动标定lua程序路径：QX版本机器人-"/fruser/FR_CalibrateTheToolTcp.lua";LA版本机器人-"/usr/local/etc/controller/lua/FR_CalibrateTheToolTcp.lua"
-    @param  [in] 必选参数 offsetX 示教点偏移(x,y,z)mm
-    @return 错误码 成功- 0, 失败-错误码
-    @return 返回值（调用成功返回） TCP 工具XYZ数值
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def PhotoelectricSensorTCPCalibration(self, luaPath, offsetX):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        luaPath = str(luaPath)
-        offsetX = list(map(float, offsetX))
-        flag = True
-        while flag:
-            try:
-                _error = self.SetSysVarValue(1,offsetX[0])
-                if _error != 0:
-                    return _error
-                _error = self.SetSysVarValue(2,offsetX[1])
-                if _error != 0:
-                    return _error
-                _error = self.SetSysVarValue(3,offsetX[2])
-                if _error != 0:
-                    return _error
-                _error = self.Mode(0)
-                if _error != 0:
-                    return _error
-                _error = self.ProgramLoad(luaPath)
-                if _error != 0:
-                    return _error
-                _error = self.ProgramRun()
-                if _error != 0:
-                    return _error
-                time.sleep(2)
-                while self.robot_state_pkg.program_state != 1:
-                    time.sleep(0.2)
-                _error,TCPxyz = self.TCPComputeXYZ(3,0,
-                                                   [0,0,0],
-                                                   [0,0,0],
-                                                   [0,0,0],
-                                                   [0,0,0])
-                if _error != 0:
-                    return _error
-                _error,TCPrpy = self.TCPComputeRPY([0,0,0,0,0,0],
-                                                   [0,0,0,0,0,0],
-                                                   [0,0,0,0,0,0],
-                                                   1.0,1000)
-                if _error != 0:
-                    return _error
-                flag = False
-            except socket.error as e:
-                flag = True
-        error = _error
-        if error == 0:
-            return error, [float(TCPxyz[0]), float(TCPxyz[1]), float(TCPxyz[2]),float(TCPrpy[0]), float(TCPrpy[1]), float(TCPrpy[2])]
-        return error, None
-
-    """2026.01.08"""
-    """
-    @brief 激光焊缝轨迹复现
-    @param  [in] 必选参数 delayMode 模式 0-延时时间 1-延时距离
-    @param  [in] 必选参数 delayTime 延时时间 单位ms
-    @param  [in] 必选参数 delayDisExAxisNum 扩展轴编号
-    @param  [in] 必选参数 delayDis 延时距离 单位mm
-    @param  [in] 必选参数 sensitivePara 补偿灵敏系数
-    @param  [in] 必选参数 trackMode 定点跟踪类型。0-扩展轴异步运动；1-机器人
-    @param  [in] 必选参数 triggerMode 定点跟踪触发方式。0-跟踪时长；1-IO
-    @param  [in] 必选参数 runTime 机器人定点跟踪时长(s)
-    @param  [in] 必选参数 speed 速度 单位%
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def LaserSensorRecordandReplay(self, delayMode, delayTime, delayDisExAxisNum, delayDis, sensitivePara, trackMode, triggerMode, runTime, speed):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        delayMode = int(delayMode)
-        delayTime = int(delayTime)
-        delayDisExAxisNum = int(delayDisExAxisNum)
-        delayDis = float(delayDis)
-        sensitivePara = float(sensitivePara)
-        trackMode = int(trackMode)
-        triggerMode = int(triggerMode)
-        runTime = float(runTime)
-        speed = float(speed)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.LaserSensorRecordandReplay(4, delayTime, speed, delayMode, delayDisExAxisNum, delayDis, sensitivePara, trackMode, triggerMode, runTime)
-                flag = False
-            except socket.error as e:
-                flag = True
-        return error
-
-    """
-    @brief 原地空运动
-    @return 错误码 成功- 0, 失败-错误码
-    """
-
-    @log_call
-    @xmlrpc_timeout
-    def MoveStationary(self):
-        while self.reconnect_flag:
-            time.sleep(0.1)
-        flag = True
-        while flag:
-            try:
-                error = self.robot.MoveStationary()
-                flag = False
-            except socket.error as e:
-                flag = True
+        error = self.robot.CustomCollisionDetectionEnd()
         return error
