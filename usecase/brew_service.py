@@ -4,6 +4,9 @@ import os
 import socket
 import time
 import traceback
+
+from PyQt5.QtWidgets import QMessageBox
+
 from threading import Lock
 import re
 from robot.Rail import RailSocket
@@ -108,6 +111,9 @@ class BrewService:
 
         try:
             target = int(target_pose) if target_pose is not None else self.RAIL_TARGET_PULSE.get(key)
+
+            QMessageBox.information(None, "Rail Move", f"Rail moving: {label}")
+
             # ✅ 폴링/포지션 로그 포함
             final_pos = self.rail.move_to_pulse_and_wait(
                 target_pulse=target,
