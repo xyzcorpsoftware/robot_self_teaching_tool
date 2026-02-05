@@ -10,6 +10,7 @@ if str(ROOT) not in sys.path:
 from PyQt5 import uic
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QDialog, QPushButton, QLabel, QWidget, QHBoxLayout, QVBoxLayout, QFrame
+from PyQt5.QtWidgets import QInputDialog
 from PyQt5.QtWidgets import QGridLayout, QGroupBox
 
 from PyQt5.QtCore import Qt, QTimer
@@ -46,6 +47,7 @@ class MainWindow(QDialog):
         component_db=None,
         component_table=None,
         brew_service=None,
+        use_sequence_mode=None,
     ):
         super().__init__(parent)
 
@@ -55,6 +57,10 @@ class MainWindow(QDialog):
         self.component_db = component_db
         self.component_table = component_table or "t_component_info"
         self.brew_service = brew_service
+        if use_sequence_mode is None:
+            self.use_sequence_mode = self.sequence is not None and self.brew_service is None
+        else:
+            self.use_sequence_mode = bool(use_sequence_mode)
 
         # 리소스 경로
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # app/
@@ -415,6 +421,18 @@ class MainWindow(QDialog):
             btn_home.clicked.connect(lambda _: self.go_home())
             self._pic2_row_layout.addWidget(btn_home)
 
+            btn_grip_open = QPushButton("gripper_open")
+            btn_grip_open.setObjectName("btn_gripper_open")
+            btn_grip_open.setFixedHeight(40)
+            btn_grip_open.clicked.connect(lambda _: self.open_gripper())
+            self._pic2_row_layout.addWidget(btn_grip_open)
+
+            btn_grip_close = QPushButton("gripper_close")
+            btn_grip_close.setObjectName("btn_gripper_close")
+            btn_grip_close.setFixedHeight(40)
+            btn_grip_close.clicked.connect(lambda _: self.close_gripper())
+            self._pic2_row_layout.addWidget(btn_grip_close)
+
             self._pic2_row_layout.addStretch(1)
 
             btn_pic2 = QPushButton("pickupzone front")
@@ -434,6 +452,10 @@ class MainWindow(QDialog):
 
 
     def _on_brew_button_clicked(self, component_cd: str, label: str):
+        if self.use_sequence_mode:
+            mapped = self._map_label_for_sequence(label)
+            self.on_point_clicked(mapped)
+            return
         if self.brew_service is None:
             print("[BREW][WARN] brew_service is None")
             return
@@ -451,6 +473,33 @@ class MainWindow(QDialog):
                 self.open_tcp_jog(jog_target or label, sequence=self.brew_service)
         except Exception as e:
             print(f"[BREW][WARN] brew run failed: {e}")
+
+    def _map_label_for_sequence(self, label: str) -> str:
+        """
+        Map brew UI labels to legacy main_window.ui labels.
+        Legacy labels: cup1-4, ice1-2, pow1-2, cof1-2, pic12, pic61, home
+        """
+        if not label:
+            return label
+
+        n = str(label).strip().lower()
+
+        # PIC mapping (brew UI -> legacy main_window.ui)
+        if n == "pic1":
+            return "pic12"
+        if n == "pic2":
+            return "pic61"
+
+        # Direct pass-through for legacy labels
+        if n in ("home", "pic12", "pic61"):
+            return n
+
+        # Pass-through for cup/ice/pow/cof with number
+        for prefix in ("cup", "ice", "pow", "cof"):
+            if n.startswith(prefix):
+                return n
+
+        return n
 
     def eventFilter(self, obj, event):
         if obj is self.robot_label and event.type() == event.MouseButtonPress:
@@ -584,4 +633,33 @@ class MainWindow(QDialog):
             self.controller.move_joint(home, vel=40, acc=40)
         else:
             print("[HOME][WARN] controller has no move_joint")
+
+    def open_gripper(self):
+        if self.controller is None:
+            print("[GRIP][WARN] controller is None")
+            return
+        if hasattr(self.controller, "move_gripper"):
+            self.controller.move_gripper(100)
+        else:
+            print("[GRIP][WARN] controller has no move_gripper")
+
+    def close_gripper(self, pos: int = None):
+        if self.controller is None:
+            print("[GRIP][WARN] controller is None")
+            return
+        if pos is None:
+            pos, ok = QInputDialog.getInt(
+                self,
+                "Gripper Close",
+                "Gripper position (0-100):",
+                value=7,
+                min=0,
+                max=100,
+            )
+            if not ok:
+                return
+        if hasattr(self.controller, "move_gripper"):
+            self.controller.move_gripper(pos)
+        else:
+            print("[GRIP][WARN] controller has no move_gripper")
                              

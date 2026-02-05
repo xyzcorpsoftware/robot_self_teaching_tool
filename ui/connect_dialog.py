@@ -94,14 +94,9 @@ class ConnectDialog(QDialog):
 
     def _resolve_main_window_ui_path(self):
         """
-        If t_robot_info has 1 row -> default main_window.ui
-        If 2+ rows -> main_window_brew.ui
+        Always use main_window_brew.ui (UI unified)
         """
-        row_count = self._read_info_table_row_count()
-        if row_count is None:
-            return None
-
-        ui_file = "main_window.ui" if row_count <= 1 else "main_window_brew.ui"
+        ui_file = "main_window_brew.ui"
         resources_dir = ROOT / "resources"
         candidate = resources_dir / ui_file
         if candidate.exists():
@@ -170,8 +165,14 @@ class ConnectDialog(QDialog):
         if os.name != "nt":
             self.run_killing(self.ROBOT_PROCESS_KEYWORD)
 
+        row_count = self._read_info_table_row_count()
+        if row_count is None:
+            print("[CONNECT][WARN] t_robot_info row count is None, default to sequence mode")
+            row_count = 1
+
+        use_sequence_mode = row_count <= 1
+
         ui_path = self._resolve_main_window_ui_path()
-        is_brew_ui = bool(ui_path) and os.path.basename(ui_path) == "main_window_brew.ui"
 
         # ✅ 체크박스 상태에 따라 실제 로봇/페이크 로봇 컨트롤러 선택
         if self.check_box.isChecked():
@@ -184,7 +185,7 @@ class ConnectDialog(QDialog):
         controller = FrRobotController(ip=ip) if self.use_real_robot else FakeRobotController(ip=ip)
         
         # ✅ UI별로 points_manager/sequence/brew_service 분리
-        if not is_brew_ui:
+        if use_sequence_mode:
             # main_window.ui (기존)
             points_manager = RobotPointsManager()              # 바리스 브루X 등 기존 DB 포인트
             sequence = BrewXService(points_manager=points_manager)
@@ -203,6 +204,7 @@ class ConnectDialog(QDialog):
             component_db=db_data.DB_CONFIG.config,
             component_table=db_data.DB_CONFIG.COMPONENT_INFO_TABLE,
             ui_path=ui_path,
+            use_sequence_mode=use_sequence_mode,
         )
         self.main_window.show()
         self.close()

@@ -426,10 +426,17 @@ class BrewXService:
 
             return {"open_jog": True, "jog_target": ui_name}
         
-        if n.startswith("coffee"):
+        if n in ("cof", "coffee") or n.startswith("cof") or n.startswith("coffee"):
+            # normalize to "coffee" label for legacy usage
+            if n.startswith("cof"):
+                num = n.replace("cof", "") or "1"
+                ui_name = f"coffee{num}"
             return self._run_place_sequence("COF", ui_name, controller, vel=20, acc=20)
 
-        if n.startswith("pow"):
+        if n in ("pow", "powder") or n.startswith("pow"):
+            # normalize to "pow" label for legacy usage
+            if n in ("pow", "powder"):
+                ui_name = "pow1"
             return self._run_place_sequence("POW", ui_name, controller, vel=20, acc=20)
 
         if n.startswith("pic") and len(n) == 5:
