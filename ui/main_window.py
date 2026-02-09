@@ -425,7 +425,7 @@ class MainWindow(QDialog):
             btn_move_origin = QPushButton("MoveOrigin")
             btn_move_origin.setObjectName("btn_rail_move_origin")
             # 높이는 조절 필요
-            btn_move_origin.setFixedHeight(30)
+            btn_move_origin.setFixedHeight(60)
             # 함수 연결 ???
             btn_move_origin.clicked.connect(lambda _: self.move_origin())
             self._pic2_row_layout.addWidget(btn_move_origin)
