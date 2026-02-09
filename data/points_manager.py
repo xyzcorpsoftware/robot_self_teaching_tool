@@ -58,6 +58,7 @@ class RobotPointsManager:
             )
         except Exception as error:
             print("[PointDB][ERROR] Connection failed:\n", traceback.format_exc())
+
     def load_points_from_db(self):
         """
         DB에서 포인트 로드
@@ -75,27 +76,25 @@ class RobotPointsManager:
 
             data_list: List[RobotSequenceData] = []
 
+            # ✅ dict에 바로 반영
+            self.points_dict.clear()
+
             for row in rows:
-                joint = None
-                tcp = None
+                name = row.get("name")
+                if not name:
+                    continue
 
                 j_fields = [row.get("j1"), row.get("j2"), row.get("j3"), row.get("j4"), row.get("j5"), row.get("j6")]
                 t_fields = [row.get("x"), row.get("y"), row.get("z"), row.get("rx"), row.get("ry"), row.get("rz")]
 
-                if None not in j_fields:
-                    joint = [float(v) for v in j_fields]
-                if None not in t_fields:
-                    tcp = [float(v) for v in t_fields]
+                joint = [float(v) for v in j_fields] if None not in j_fields else None
+                tcp = [float(v) for v in t_fields] if None not in t_fields else None
 
-                data_list.append(RobotSequenceData(name=row["name"], joint=joint, tcp=tcp))
-
-            # dict에 반영
-            self.points_dict.clear()
-            for point in data_list:
-                if point.joint and len(point.joint) == 6:
-                    self.points_dict[point.name] = point.joint
-                elif point.tcp and len(point.tcp) == 6:
-                    self.points_dict[point.name] = point.tcp
+                # joint 우선 저장, 없으면 tcp 저장
+                if joint and len(joint) == 6:
+                    self.points_dict[name] = joint
+                elif tcp and len(tcp) == 6:
+                    self.points_dict[name] = tcp
 
             print(f"[PM] Loaded points: {len(self.points_dict)}")
 
