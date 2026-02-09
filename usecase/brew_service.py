@@ -386,7 +386,16 @@ class BrewService:
             print(f"_Get Rail Pulse Error : {error}")
         finally:
             return pulse_dict
-
+    def _rail_find_home(self):
+        try:
+            if self.rail is None:
+                print("[BREW][RAIL] rail client is None: cannot find home")
+                return
+            self.rail.find_base()
+            print("[BREW][RAIL][INFO] rail find home successed")
+        except Exception as e:
+            print(f"[BREW][RAIL][WARN] rail find home failed: err={e}")
+            raise RuntimeError(f"Rail find home failed: err={e}")
     # --- public entrypoints ---
     def run(self, component_cd: str, label: str, controller=None):
         """

@@ -421,6 +421,15 @@ class MainWindow(QDialog):
             btn_home.clicked.connect(lambda _: self.go_home())
             self._pic2_row_layout.addWidget(btn_home)
 
+
+            btn_move_origin = QPushButton("MoveOrigin")
+            btn_move_origin.setObjectName("btn_rail_move_origin")
+            # 높이는 조절 필요
+            btn_move_origin.setFixedHeight(30)
+            # 함수 연결 ???
+            btn_move_origin.clicked.connect(lambda _: self.move_origin())
+            self._pic2_row_layout.addWidget(btn_move_origin)
+
             self._pic2_row_layout.addStretch(1)
 
             btn_grip_open = QPushButton("gripper_open")
@@ -669,4 +678,11 @@ class MainWindow(QDialog):
             self.controller.move_gripper(pos)
         else:
             print("[GRIP][WARN] controller has no move_gripper")
-                             
+    def move_origin(self):
+        if self.controller is None:
+            print("[RAIL][WARN] controller is None")
+            return
+        if hasattr(self.controller, "_rail_find_home"):
+            self.controller._rail_find_home()
+        else:
+            print("[RAIL][WARN] controller has no _rail_find_home")

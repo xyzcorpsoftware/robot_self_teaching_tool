@@ -1,7 +1,7 @@
 import socket
 from threading import Lock, Thread
 import time
-from robot.RailLibrary import RailAlarm, RailCheck, RailPacket, RailConstant, RailMotion
+from robot.RailLibrary import DataLength, RailAlarm, RailCheck, RailPacket, RailConstant, RailMotion
 import traceback
 
 
@@ -347,8 +347,35 @@ class RailSocket:
 
             last = curr
             time.sleep(0.05)
+    def find_base(self):
+        """
+            레일 시작, 원점 복귀
+            TODO EMG_STOP 또는 통신이 끊겼을 때 자동으로 실행되게 설정 필요
+        """
+        # 운전동작중을 확인하면서, 동작의 완료를 기다림
 
+        # 원점 센서 기준으로 위치를 0으로 잡는다.
+        print("[Move_origin]")
         
+        data = self._make_packet(length=DataLength.GET_DATA, command=RailPacket.MOVE_ORIGIN)
+        self._send_and_recv(data)
+        # # print("message to Servor : " + str(data.hex()))
+        
+        while (self.get_montioning()):
+            pass
+    def get_montioning(self) -> bool:
+        """
+            운전동작중 확인
+        """
+        data = self._make_packet(length=DataLength.GET_DATA, command=RailPacket.GET_MOTION)
+        resp = self._send_and_recv(data, min_resp_len=10)
+        self._check_idle_or_raise(resp, "get_motioning")
+        motion_bits = int.from_bytes(resp[6:10], "little", signed=False)
+        # print("motion_bits : " + str(motion_bits))
+        if (motion_bits & RailMotion.MOTIONING) == RailMotion.MOTIONING:
+            return True
+        else:
+            return False
 class RailPacket:
     MOVE_DATA_LENGTH = 0x2B
     HEADER = 0xAA
