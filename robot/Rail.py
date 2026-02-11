@@ -156,13 +156,13 @@ class RailSocket:
     # low-level getters
     # -------------------------
     def get_motion_bits(self) -> int:
-        pkt = self._make_packet(length=RailPacket.GET_DATA, command=RailPacket.GET_MOTION)
+        pkt = self._make_packet(length=DataLength.GET_DATA, command=RailPacket.GET_MOTION)
         resp = self._send_and_recv(pkt, min_resp_len=10)
         self._check_idle_or_raise(resp, "get_motion")
         return int.from_bytes(resp[6:10], "little", signed=False)
 
     def get_alarm_type_byte(self) -> int:
-        pkt = self._make_packet(length=RailPacket.GET_DATA, command=RailPacket.GET_ALARM_TYPE)
+        pkt = self._make_packet(length=DataLength.GET_DATA, command=RailPacket.GET_ALARM_TYPE)
         resp = self._send_and_recv(pkt, min_resp_len=7)
         self._check_idle_or_raise(resp, "get_alarm_type")
         return resp[6]
@@ -170,7 +170,7 @@ class RailSocket:
     def get_position_pulse(self) -> int:
         DATA_POS_START = 6
         DATA_POS_END = 10
-        pkt = self._make_packet(length=RailPacket.GET_DATA, command=RailPacket.GET_POSITION)
+        pkt = self._make_packet(length=DataLength.GET_DATA, command=RailPacket.GET_POSITION)
         resp = self._send_and_recv(pkt, min_resp_len=10)
         self._check_idle_or_raise(resp, "get_position")
         return int.from_bytes(resp[DATA_POS_START:DATA_POS_END], "little", signed=False)
@@ -232,7 +232,7 @@ class RailSocket:
     # commands
     # -------------------------
     def alarm_reset(self):
-        pkt = self._make_packet(length=RailPacket.GET_DATA, command=RailPacket.ALARM_RESET)
+        pkt = self._make_packet(length=DataLength.GET_DATA, command=RailPacket.ALARM_RESET)
         resp = self._send_and_recv(pkt, min_resp_len=6)
 
         self._check_idle_or_raise(resp, "alarm_reset")
@@ -240,7 +240,7 @@ class RailSocket:
 
     def servo_on(self, on: bool = True):
         pkt = self._make_packet(
-            length=RailPacket.SET_DATA,
+            length=DataLength.SET_DATA,
             command=RailPacket.SERVO_ON,
             set=RailPacket.SET_ON if on else RailPacket.SET_OFF,
         )
@@ -289,14 +289,14 @@ class RailSocket:
             + list(bytes_flag)
             + list(bytes_acc_time)
             + list(bytes_dec_time)
-            + list(bytes(RailPacket.FILLBYTE_LEN))  # 24 bytes of 0x00
+            + list(bytes(DataLength.FILLBYTE_LEN))  # 24 bytes of 0x00
         )
 
         payload = bytes(extra_value)
 
         # ✅ length는 반드시 0x2B 사용 (기존 DataLength.MOVE_DATA_LENGTH와 동일)
         pkt = self._make_packet(
-        length=RailPacket.MOVE_DATA_LENGTH,     # 0x2b
+        length=DataLength.MOVE_DATA_LENGTH,     # 0x2b
         command=RailPacket.MOVE_POS_VELOCITY,
         extra=extra_value,                       # ✅ payload 대신 extra
         )
@@ -325,7 +325,7 @@ class RailSocket:
             if log_poll:
                 print(f"[BREW][RAIL][POS] already at target: start={start}, target={target_pulse}, tol={tol}")
             return start
-
+x
         self.move_pos_velocity(target_pulse, pps)
 
         t0 = time.time()
@@ -376,26 +376,3 @@ class RailSocket:
             return True
         else:
             return False
-class RailPacket:
-    MOVE_DATA_LENGTH = 0x2B
-    HEADER = 0xAA
-    RESERVED = 0x00
-
-    # commands
-    GET_MOTION = 0x40
-    GET_ALARM_TYPE = 0x2E
-    ALARM_RESET = 0x2B
-    SERVO_ON = 0x2A
-    GET_POSITION = 0x53
-    MOVE_POS_VELOCITY = 0x80
-
-    # set values
-    SET_ON = 0x01
-    SET_OFF = 0x00
-
-    # lengths (원본 DataLength)
-    GET_DATA = 0x03
-    SET_DATA = 0x04
-    SET_PARAM = 0x08    
-    MOVE_DATA_LENGTH = 0x2b    
-    FILLBYTE_LEN = 24           # ✅ 원본 RailConstant.FILLBYTE

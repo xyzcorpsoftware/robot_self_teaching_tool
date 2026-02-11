@@ -163,7 +163,9 @@ class BrewService:
         if controller is None:
             return None
         if hasattr(controller, "get_actual_tcp_pose"):
-            return controller.get_actual_tcp_pose()
+            ret = controller.GetActualTCPPose()
+            print(f"get actual tcp points : {ret}")
+            return ret
         return None
 
     def _resolve_saved_point_name(self, ui_point_name: str) -> str:
@@ -386,6 +388,7 @@ class BrewService:
             print(f"_Get Rail Pulse Error : {error}")
         finally:
             return pulse_dict
+
     def _rail_find_home(self):
         try:
             if self.rail is None:

@@ -679,10 +679,11 @@ class MainWindow(QDialog):
         else:
             print("[GRIP][WARN] controller has no move_gripper")
     def move_origin(self):
-        if self.controller is None:
-            print("[RAIL][WARN] controller is None")
+        if self.brew_service is None:
+            print("[RAIL][WARN] brew_service is None")
             return
-        if hasattr(self.controller, "_rail_find_home"):
-            self.controller._rail_find_home()
+
+        if hasattr(self.brew_service, "_rail_find_home"):
+            self.brew_service._rail_find_home()
         else:
             print("[RAIL][WARN] controller has no _rail_find_home")

@@ -66,12 +66,14 @@ class RailCheck(IntEnum):
     
     #(3) 외부 입력 신호에 'Servo ON'이 설정되어 있습니다."
     SERVO_ON_FAIL3 = 137
+
 class DataLength:
     GET_DATA = 0x03
     SET_DATA = 0x04
     SET_PARAM = 0x08
     MOVE_DATA_LENGTH = 0x2b
-    
+    FILLBYTE_LEN = 24
+
 class RailPacket:
     SET_ON = 0x01
     SET_OFF = 0x00
