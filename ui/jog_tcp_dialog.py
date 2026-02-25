@@ -232,7 +232,7 @@ class TCPJogDialog(QDialog):
     def _on_cup_extra_clicked(self):
         channel = infer_channel_from_target_name(self.target_name)
         seq_no = make_seq_no("cup")
-        cmd = "EXTRACT"   # ✅ 네 cmd 규격에 맞게 변경
+        cmd = "dispense"   # ✅ 네 cmd 규격에 맞게 변경
 
         y = yaml_cup(seq_no, cmd, channel)
 
@@ -250,9 +250,9 @@ class TCPJogDialog(QDialog):
 
     def _on_coffee_extra_clicked(self):
         seq_no = make_seq_no("cof")
-        cmd = "EXTRACT"      # ✅ 변경 가능
-        protocol_id = 1      # ✅ 실제 규격값 넣기
-        device_id = 1        # ✅ 실제 규격값 넣기
+        cmd = "extract"      # ✅ 변경 가능
+        protocol_id = 11      # ✅ 실제 규격값 넣기
+        device_id = 0        # ✅ 실제 규격값 넣기
         delay_time = 0.0
 
         y = yaml_coffee(seq_no, cmd, protocol_id, device_id, delay_time)
@@ -271,10 +271,14 @@ class TCPJogDialog(QDialog):
 
     def _on_ice_extra_clicked(self):
         channel = infer_channel_from_target_name(self.target_name)
+        
+        channel = max(0, channel - 1)
+
         seq_no = make_seq_no("ice")
-        cmd = "DISPENSE"   # ✅ 변경 가능
-        ice_qty = 1        # ✅ 필요하면 UI 입력값으로 교체
-        water_qty = 0
+        # cmd = "dispense"   # ✅ push 
+        cmd = "extract"   # ✅ 변경 가능
+        ice_qty = 100        # ✅ 필요하면 UI 입력값으로 교체
+        water_qty = 100
 
         y = yaml_ice(seq_no, cmd, ice_qty, water_qty, channel)
 
@@ -284,19 +288,21 @@ class TCPJogDialog(QDialog):
             service_name=SVC_ICE,
             service_type=TYPE_ICE,
             yaml_req=y,
-            timeout_sec=8.0,
+            timeout_sec=12.0,
             on_ok=lambda out: print("[ROS2][OK][ICE]\n", out),
             on_fail=lambda err: print("[ROS2][FAIL][ICE]\n", err),
             keepalive_list=self._ros_threads,
         )
 
     def _on_powder_extra_clicked(self):
-        channel = infer_channel_from_target_name(self.target_name)
+        # channel = infer_channel_from_target_name(self.target_name)
+        channel = 2  # Fix - icetea
         seq_no = make_seq_no("pow")
-        cmd = "DISPENSE"    # ✅ 변경 가능
+        # cmd = "dispense"    # ✅ 변경 가능
+        cmd = "clean"    # ✅ 변경 가능
         part_no = 1         # ✅ 실제 규격값
-        menu_id = "BR00"    # ✅ 실제 menu_id로 연결 가능
-        opt_id = "0"
+        menu_id = ''  # ✅ 실제 menu_id로 연결 가능
+        opt_id = ''
         req_value = 1       # ✅ 실제 규격값
 
         y = yaml_powder(seq_no, cmd, part_no, menu_id, opt_id, channel, req_value)

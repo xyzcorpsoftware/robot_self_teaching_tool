@@ -32,7 +32,7 @@ class _CoffeeClientNode(Node):
         # cmd는 프로젝트마다 타입이 다를 수 있어서, 가능한 범위에서 자동 처리
         if cmd is None:
             try:
-                EXTRACT = "extract"
+                EXTRACT = "dispense"
                 req.cmd = EXTRACT
                 req.protocol_id = 11
                 req.device_id = 0
@@ -43,7 +43,7 @@ class _CoffeeClientNode(Node):
                 req.cmd = ""
         else:
             req.cmd = cmd
-            req.protocol_id = 21 if cmd == "extract" else 0
+            req.protocol_id = 21 if cmd == "dispense" else 0
             req.device_id = channel
             req.delay_time = 0.0
             req.channel = int(channel)

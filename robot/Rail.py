@@ -325,7 +325,7 @@ class RailSocket:
             if log_poll:
                 print(f"[BREW][RAIL][POS] already at target: start={start}, target={target_pulse}, tol={tol}")
             return start
-x
+
         self.move_pos_velocity(target_pulse, pps)
 
         t0 = time.time()
