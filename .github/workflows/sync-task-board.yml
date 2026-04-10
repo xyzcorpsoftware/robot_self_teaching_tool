@@ -1,0 +1,168 @@
+name: Sync Task Board
+
+# Security: All user-controllable inputs (PR title, body) are passed via env vars.
+# See: https://github.blog/security/vulnerability-research/how-to-catch-github-actions-workflow-injections-before-attackers-do/
+
+on:
+  pull_request:
+    types: [opened, closed]
+    branches:
+      - develop
+      - 'release/**'
+      - main
+      - master
+
+jobs:
+  sync:
+    # Skip if: PR was closed without merge (opened PRs and merged PRs always sync)
+    if: >-
+      github.event.action == 'opened' ||
+      (github.event.action == 'closed' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    env:
+      TASK_MGMT_PAT: ${{ secrets.TASK_MGMT_PAT }}
+      TASK_MGMT_REPO: xyzcorpsoftware/task-management
+      PR_BODY: ${{ github.event.pull_request.body }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_ACTION: ${{ github.event.action }}
+      PR_MERGED: ${{ github.event.pull_request.merged }}
+      PR_BASE: ${{ github.event.pull_request.base.ref }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+
+    steps:
+      - name: Check PAT
+        run: |
+          if [ -z "$TASK_MGMT_PAT" ]; then
+            echo "::warning::TASK_MGMT_PAT secret is not set. Skipping task board sync."
+            exit 0
+          fi
+
+      - name: Parse TM references and dispatch
+        run: |
+          # --- Determine default action from branch + event ---
+          if [ "$PR_ACTION" = "opened" ]; then
+            DEFAULT_ACTION="comment"
+            DEFAULT_COLUMN=""
+            EVENT_DESC="PR opened to ${PR_BASE}"
+          elif [ "$PR_MERGED" = "true" ]; then
+            EVENT_DESC="merged to ${PR_BASE}"
+            case "$PR_BASE" in
+              develop)
+                DEFAULT_ACTION="move"
+                DEFAULT_COLUMN="qa"
+                ;;
+              release/*)
+                DEFAULT_ACTION="move"
+                DEFAULT_COLUMN="deploy-wait"
+                ;;
+              main|master)
+                DEFAULT_ACTION="move"
+                DEFAULT_COLUMN="done"
+                ;;
+              *)
+                DEFAULT_ACTION="comment"
+                DEFAULT_COLUMN=""
+                ;;
+            esac
+          else
+            echo "PR closed without merge. Skipping."
+            exit 0
+          fi
+
+          echo "Default: action=${DEFAULT_ACTION}, column=${DEFAULT_COLUMN}, event=${EVENT_DESC}"
+
+          # --- Keyword to column mapping ---
+          keyword_to_column() {
+            case "$(echo "$1" | tr '[:upper:]' '[:lower:]')" in
+              start)  echo "dev" ;;
+              review) echo "qa" ;;
+              deploy) echo "deploy-wait" ;;
+              done)   echo "done" ;;
+              *)      echo "" ;;
+            esac
+          }
+
+          # --- Dispatch helper ---
+          dispatch() {
+            local NUM="$1" COLUMN="$2" ACTION="$3" EVENT="$4"
+
+            curl -sf -X POST \
+              -H "Authorization: token ${TASK_MGMT_PAT}" \
+              -H "Accept: application/vnd.github+v3+json" \
+              "https://api.github.com/repos/${TASK_MGMT_REPO}/dispatches" \
+              -d "$(jq -n \
+                --arg issue_number "$NUM" \
+                --arg target_column "$COLUMN" \
+                --arg action "$ACTION" \
+                --arg source_repo "$GITHUB_REPOSITORY" \
+                --arg pr_url "$PR_URL" \
+                --arg pr_title "$PR_TITLE" \
+                --arg pr_event "$EVENT" \
+                --arg pr_number "$PR_NUMBER" \
+                --arg pr_author "$PR_AUTHOR" \
+                '{
+                  event_type: "task-board-sync",
+                  client_payload: {
+                    issue_number: ($issue_number | tonumber),
+                    target_column: $target_column,
+                    action: $action,
+                    source_repo: $source_repo,
+                    pr_url: $pr_url,
+                    pr_title: $pr_title,
+                    pr_event: $pr_event,
+                    pr_number: ($pr_number | tonumber),
+                    pr_author: $pr_author
+                  }
+                }')" && echo "  -> Dispatched" || echo "::warning::Failed to dispatch for #${NUM}"
+          }
+
+          # --- 1. Process keyword-prefixed refs: "Start: TM#42" ---
+          KEYWORD_NUMS=""
+
+          while IFS= read -r MATCH; do
+            [ -z "$MATCH" ] && continue
+            KEYWORD=$(echo "$MATCH" | grep -oiE '^[A-Za-z]+')
+            NUM=$(echo "$MATCH" | grep -oE '[0-9]+')
+            KEYWORD_NUMS="${KEYWORD_NUMS} ${NUM}"
+
+            COLUMN=$(keyword_to_column "$KEYWORD")
+            echo "Keyword override: ${KEYWORD} -> issue #${NUM} -> column ${COLUMN}"
+            dispatch "$NUM" "$COLUMN" "move" "${KEYWORD} (${EVENT_DESC})"
+          done <<< "$(echo "$PR_BODY" | grep -oiE '(Start|Review|Deploy|Done)\s*:\s*TM#[0-9]+' || true)"
+
+          # --- 2. Process standalone TM# refs (auto-detect) ---
+          STANDALONE_NUMS=$(echo "$PR_BODY" | grep -oE 'TM#[0-9]+' | grep -oE '[0-9]+' | sort -u || true)
+
+          DISPATCH_COUNT=0
+          MAX_DISPATCHES=5
+
+          for NUM in $STANDALONE_NUMS; do
+            # Skip if already handled by keyword
+            if echo "$KEYWORD_NUMS" | grep -qw "$NUM" 2>/dev/null; then
+              continue
+            fi
+
+            DISPATCH_COUNT=$((DISPATCH_COUNT + 1))
+            if [ "$DISPATCH_COUNT" -gt "$MAX_DISPATCHES" ]; then
+              echo "::warning::Max ${MAX_DISPATCHES} TM references reached. Skipping remaining."
+              break
+            fi
+
+            echo "Auto-detect: issue #${NUM} -> action=${DEFAULT_ACTION}, column=${DEFAULT_COLUMN}"
+            dispatch "$NUM" "$DEFAULT_COLUMN" "$DEFAULT_ACTION" "$EVENT_DESC"
+          done
+
+          # --- 3. No TM# found: auto-create only on PR opened ---
+          ALL_NUMS="${KEYWORD_NUMS} ${STANDALONE_NUMS}"
+          ALL_NUMS=$(echo "$ALL_NUMS" | tr -s ' ' | xargs)
+
+          if [ -z "$ALL_NUMS" ]; then
+            if [ "$PR_ACTION" = "opened" ]; then
+              echo "No TM# references found. Dispatching auto-create..."
+              dispatch "0" "$DEFAULT_COLUMN" "auto-create" "$EVENT_DESC"
+            else
+              echo "No TM# references found on merge. Skipping."
+            fi
+          fi
