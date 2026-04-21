@@ -1,0 +1,136 @@
+name: PR Comment Commands
+
+# Manual column moves via PR comments, e.g. "Done: TM#200, TM#201".
+# Complements sync-task-board.yml:
+#   - Task Sync section (PR body)  = declarative: "issues this PR relates to"
+#   - PR comments (this workflow)  = imperative: "move this issue now"
+#
+# Security: the comment body is passed via env var (never inline ${{ }})
+# to prevent workflow injection.
+# ACL: only OWNER/MEMBER/COLLABORATOR comments trigger dispatches.
+# See: https://github.blog/security/vulnerability-research/how-to-catch-github-actions-workflow-injections-before-attackers-do/
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  process:
+    # Early filter: job spins up only for PR comments from a trusted role
+    # that contain BOTH "TM#" AND a keyword prefix. Skipped jobs cost 0
+    # minutes, so TM# mentions in general chatter never create runners.
+    # GitHub `contains()` is case-insensitive, so `Done:` / `done:` / `DONE:`
+    # all match — consistent with the case-insensitive grep inside the job.
+    if: >-
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, 'TM#') &&
+      (contains(github.event.comment.body, 'Start:') ||
+       contains(github.event.comment.body, 'Review:') ||
+       contains(github.event.comment.body, 'Deploy:') ||
+       contains(github.event.comment.body, 'Done:')) &&
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.comment.author_association == 'MEMBER' ||
+       github.event.comment.author_association == 'COLLABORATOR')
+    runs-on: ubuntu-latest
+    env:
+      TASK_MGMT_PAT: ${{ secrets.TASK_MGMT_PAT }}
+      TASK_MGMT_REPO: xyzcorpsoftware/task-management
+      COMMENT_BODY: ${{ github.event.comment.body }}
+      COMMENT_URL: ${{ github.event.comment.html_url }}
+      COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+      PR_URL: ${{ github.event.issue.html_url }}
+      PR_TITLE: ${{ github.event.issue.title }}
+      PR_NUMBER: ${{ github.event.issue.number }}
+
+    steps:
+      - name: Check PAT
+        run: |
+          if [ -z "$TASK_MGMT_PAT" ]; then
+            echo "::warning::TASK_MGMT_PAT secret is not set. Skipping."
+            exit 0
+          fi
+
+      - name: Parse keyword commands and dispatch
+        run: |
+          keyword_to_column() {
+            case "$(echo "$1" | tr '[:upper:]' '[:lower:]')" in
+              start)  echo "dev" ;;
+              review) echo "qa" ;;
+              deploy) echo "deploy-wait" ;;
+              done)   echo "done" ;;
+              *)      echo "" ;;
+            esac
+          }
+
+          dispatch() {
+            local NUM="$1" COLUMN="$2" EVENT="$3"
+
+            curl -sf -X POST \
+              -H "Authorization: token ${TASK_MGMT_PAT}" \
+              -H "Accept: application/vnd.github+v3+json" \
+              "https://api.github.com/repos/${TASK_MGMT_REPO}/dispatches" \
+              -d "$(jq -n \
+                --arg issue_number "$NUM" \
+                --arg target_column "$COLUMN" \
+                --arg action "move" \
+                --arg source_repo "$GITHUB_REPOSITORY" \
+                --arg pr_url "$PR_URL" \
+                --arg pr_title "$PR_TITLE" \
+                --arg pr_event "$EVENT" \
+                --arg pr_number "$PR_NUMBER" \
+                --arg pr_author "$COMMENT_AUTHOR" \
+                '{
+                  event_type: "task-board-sync",
+                  client_payload: {
+                    issue_number: ($issue_number | tonumber),
+                    target_column: $target_column,
+                    action: $action,
+                    source_repo: $source_repo,
+                    pr_url: $pr_url,
+                    pr_title: $pr_title,
+                    pr_event: $pr_event,
+                    pr_number: ($pr_number | tonumber),
+                    pr_author: $pr_author
+                  }
+                }')" && echo "  -> Dispatched" || echo "::warning::Failed to dispatch for #${NUM}"
+          }
+
+          # Line-anchored keyword matching. Narrative prose like
+          # "this finally closes TM#42" is NOT matched; only lines that begin
+          # with a keyword prefix qualify. Supports comma-separated TM#s, e.g.
+          #   "Done: TM#1, TM#2"
+          MATCHES=$(echo "$COMMENT_BODY" | grep -oiE \
+            '^[[:space:]]*(Start|Review|Deploy|Done)[[:space:]]*:[[:space:]]*TM#[0-9]+([[:space:]]*,[[:space:]]*TM#[0-9]+)*' \
+            || true)
+
+          if [ -z "$MATCHES" ]; then
+            echo "No keyword commands found in comment."
+            exit 0
+          fi
+
+          DISPATCH_COUNT=0
+          MAX_DISPATCHES=10
+
+          while IFS= read -r LINE; do
+            [ -z "$LINE" ] && continue
+
+            KEYWORD=$(echo "$LINE" | grep -oiE '(Start|Review|Deploy|Done)' | head -1)
+            COLUMN=$(keyword_to_column "$KEYWORD")
+
+            if [ -z "$COLUMN" ]; then
+              echo "::warning::Unknown keyword in: ${LINE}"
+              continue
+            fi
+
+            for NUM in $(echo "$LINE" | grep -oiE 'TM#[0-9]+' | grep -oE '[0-9]+'); do
+              DISPATCH_COUNT=$((DISPATCH_COUNT + 1))
+              if [ "$DISPATCH_COUNT" -gt "$MAX_DISPATCHES" ]; then
+                echo "::warning::Max ${MAX_DISPATCHES} commands reached."
+                break 2
+              fi
+
+              EVENT="Comment command by @${COMMENT_AUTHOR}: ${KEYWORD} (${COMMENT_URL})"
+              echo "Command: ${KEYWORD} TM#${NUM} -> ${COLUMN}"
+              dispatch "$NUM" "$COLUMN" "$EVENT"
+            done
+          done <<< "$MATCHES"
