@@ -39,7 +39,7 @@ jobs:
             exit 0
           fi
 
-      - name: Parse TM references and dispatch
+      - name: Parse Task Sync section and dispatch
         run: |
           # --- Determine default action from branch + event ---
           if [ "$PR_ACTION" = "opened" ]; then
@@ -72,17 +72,6 @@ jobs:
           fi
 
           echo "Default: action=${DEFAULT_ACTION}, column=${DEFAULT_COLUMN}, event=${EVENT_DESC}"
-
-          # --- Keyword to column mapping ---
-          keyword_to_column() {
-            case "$(echo "$1" | tr '[:upper:]' '[:lower:]')" in
-              start)  echo "dev" ;;
-              review) echo "qa" ;;
-              deploy) echo "deploy-wait" ;;
-              done)   echo "done" ;;
-              *)      echo "" ;;
-            esac
-          }
 
           # --- Dispatch helper ---
           dispatch() {
@@ -118,51 +107,55 @@ jobs:
                 }')" && echo "  -> Dispatched" || echo "::warning::Failed to dispatch for #${NUM}"
           }
 
-          # --- 1. Process keyword-prefixed refs: "Start: TM#42" ---
-          KEYWORD_NUMS=""
+          # --- Extract Task Sync section ---
+          # Parse from "## Task Sync" header to the next "## " header or EOF.
+          # Bare TM# refs outside this section are intentionally ignored.
+          #
+          # Rationale: bare TM# refs are ambiguous (closing vs mere mention)
+          # and previously caused unrelated issues to be auto-moved when the
+          # ref appeared anywhere in the PR body. Scoping the parser to a
+          # dedicated section eliminates this class of bug. Reference-only
+          # issues can be mentioned freely elsewhere in the body — they are
+          # ignored here. Manual column overrides go in PR COMMENTS via
+          # pr-comment-commands.yml (e.g. "Done: TM#200").
+          TASK_SYNC_BLOCK=$(echo "$PR_BODY" | awk '
+            /^##[[:space:]]+Task[[:space:]]+Sync[[:space:]]*$/ { inside=1; next }
+            inside && /^##[[:space:]]/ { inside=0 }
+            inside { print }
+          ')
 
-          while IFS= read -r MATCH; do
-            [ -z "$MATCH" ] && continue
-            KEYWORD=$(echo "$MATCH" | grep -oiE '^[A-Za-z]+')
-            NUM=$(echo "$MATCH" | grep -oE '[0-9]+')
-            KEYWORD_NUMS="${KEYWORD_NUMS} ${NUM}"
+          # Warn if keyword prefix was mistakenly placed inside the section.
+          # Keywords belong in PR comments; the bare TM# will be dispatched
+          # with the default (branch-based) column anyway.
+          if echo "$TASK_SYNC_BLOCK" | grep -qiE '(Start|Review|Deploy|Done)[[:space:]]*:[[:space:]]*TM#'; then
+            echo "::warning::Keyword prefix found inside Task Sync section. Post keywords (Start:/Review:/Deploy:/Done:) as PR COMMENTS instead. The bare TM# will use the default column."
+          fi
 
-            COLUMN=$(keyword_to_column "$KEYWORD")
-            echo "Keyword override: ${KEYWORD} -> issue #${NUM} -> column ${COLUMN}"
-            dispatch "$NUM" "$COLUMN" "move" "${KEYWORD} (${EVENT_DESC})"
-          done <<< "$(echo "$PR_BODY" | grep -oiE '(Start|Review|Deploy|Done)\s*:\s*TM#[0-9]+' || true)"
-
-          # --- 2. Process standalone TM# refs (auto-detect) ---
-          STANDALONE_NUMS=$(echo "$PR_BODY" | grep -oE 'TM#[0-9]+' | grep -oE '[0-9]+' | sort -u || true)
+          SYNC_NUMS=$(echo "$TASK_SYNC_BLOCK" | grep -oiE 'TM#[0-9]+' | grep -oE '[0-9]+' | sort -u || true)
 
           DISPATCH_COUNT=0
           MAX_DISPATCHES=5
 
-          for NUM in $STANDALONE_NUMS; do
-            # Skip if already handled by keyword
-            if echo "$KEYWORD_NUMS" | grep -qw "$NUM" 2>/dev/null; then
-              continue
-            fi
-
+          for NUM in $SYNC_NUMS; do
             DISPATCH_COUNT=$((DISPATCH_COUNT + 1))
             if [ "$DISPATCH_COUNT" -gt "$MAX_DISPATCHES" ]; then
               echo "::warning::Max ${MAX_DISPATCHES} TM references reached. Skipping remaining."
               break
             fi
 
-            echo "Auto-detect: issue #${NUM} -> action=${DEFAULT_ACTION}, column=${DEFAULT_COLUMN}"
+            echo "Task Sync: issue #${NUM} -> action=${DEFAULT_ACTION}, column=${DEFAULT_COLUMN}"
             dispatch "$NUM" "$DEFAULT_COLUMN" "$DEFAULT_ACTION" "$EVENT_DESC"
           done
 
-          # --- 3. No TM# found: auto-create only on PR opened ---
-          ALL_NUMS="${KEYWORD_NUMS} ${STANDALONE_NUMS}"
-          ALL_NUMS=$(echo "$ALL_NUMS" | tr -s ' ' | xargs)
-
-          if [ -z "$ALL_NUMS" ]; then
+          # --- No TM# in Task Sync section: auto-create only on PR opened ---
+          # cross-repo-sync.yml appends TM#NEW to the PR body on auto-create.
+          # Since the Task Sync section is the LAST section of the template,
+          # the appended TM# falls inside it and is picked up at merge time.
+          if [ -z "$SYNC_NUMS" ]; then
             if [ "$PR_ACTION" = "opened" ]; then
-              echo "No TM# references found. Dispatching auto-create..."
+              echo "No TM# in Task Sync section. Dispatching auto-create..."
               dispatch "0" "$DEFAULT_COLUMN" "auto-create" "$EVENT_DESC"
             else
-              echo "No TM# references found on merge. Skipping."
+              echo "No TM# in Task Sync section on merge. Skipping."
             fi
           fi
