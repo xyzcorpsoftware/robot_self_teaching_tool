@@ -190,12 +190,13 @@ class ConnectDialog(QDialog):
             points_manager = RobotPointsManager()              # 바리스 브루X 등 기존 DB 포인트
             sequence = BrewXService(points_manager=points_manager)
             brew_service = None
+            print("[MODE] BrewX 모드 (main_window.ui, BrewXService 사용)")
         else:
             # main_window_brew.ui (브루 전용)
             points_manager = BrewPointsManager()               # 바리스 브루 전용 DB 포인트
             sequence = None                                    # brew UI에서는 sequence 안 씀
             brew_service = BrewService(points_manager=points_manager,use_real_robot=self.use_real_robot)  # ✅ 여기 중요
-
+            print("[MODE] Brew 모드 (main_window_brew.ui, BrewService 사용)")
         self.main_window = MainWindow(
             controller=controller,
             points_manager=points_manager,

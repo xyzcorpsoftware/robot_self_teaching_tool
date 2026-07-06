@@ -592,6 +592,13 @@ class BrewService:
 
     
 
+    def _print_saved_box(self, name: str, pose):
+        line = "=" * 50
+        print(f"\n{line}")
+        print(f"   저장 완료 : {name}")
+        print(f"   좌표 : {pose}")
+        print(f"{line}\n")
+
     def save_point(self, ui_point_name: str, controller=None):
         if controller is None:
             return
@@ -614,6 +621,7 @@ class BrewService:
             self._return_motion_after_save(up_name, controller,
                                            vel=self.DEFAULT_RETURN_VEL,
                                            acc=self.DEFAULT_RETURN_ACC)
+            self._print_saved_box(up_name, up_pose)
             return
 
         if saved_point_name.startswith("POW") and saved_point_name.endswith("_Place_L"):
@@ -625,6 +633,7 @@ class BrewService:
             self._return_motion_after_save(up_name, controller,
                                            vel=self.DEFAULT_RETURN_VEL,
                                            acc=self.DEFAULT_RETURN_ACC)
+            self._print_saved_box(up_name, up_pose)
             return
 
         if saved_point_name.startswith("PIC_") and saved_point_name.endswith("_Place_L"):
@@ -642,6 +651,7 @@ class BrewService:
             self._return_motion_after_save(up_name, controller,
                                            vel=self.DEFAULT_RETURN_VEL,
                                            acc=self.DEFAULT_RETURN_ACC)
+            self._print_saved_box(up_name, up_pose)
             return
 
         self.points_manager.update_point_in_db(saved_point_name, pose6)
@@ -649,6 +659,7 @@ class BrewService:
         self._return_motion_after_save(saved_point_name, controller,
                                        vel=self.DEFAULT_RETURN_VEL,
                                        acc=self.DEFAULT_RETURN_ACC)
+        self._print_saved_box(saved_point_name, pose6)
         
     def jog_tcp(self, ui_point_name: str, direction: str, step: float, controller=None):
         if controller is None:

@@ -176,6 +176,13 @@ class BrewXService:
             controller.move_gripper(pos)
 
     # ───────────── public ─────────────
+    def _print_saved_box(self, name: str, pose):
+        line = "=" * 50
+        print(f"\n{line}")
+        print(f"   저장 완료 : {name}")
+        print(f"   좌표 : {pose}")
+        print(f"{line}\n")
+
     def save_point(self, ui_point_name: str, controller=None):
         if controller is None:
             return
@@ -209,8 +216,9 @@ class BrewXService:
             self._return_motion_after_save(up_name, controller,
                                         vel=self.DEFAULT_RETURN_VEL,
                                         acc=self.DEFAULT_RETURN_ACC)
+            self._print_saved_box(up_name, up_pose)
             return
-        
+
         # ✅ COF/POW: Place 조그 → Up 저장 (Z + 50)
         if (saved_point_name in ("COF_Place_L", "POW_Place_L")):
             up_name = saved_point_name.replace("_Place_L", "_Up_L")
@@ -221,13 +229,14 @@ class BrewXService:
             self.points_manager.update_point_in_db(up_name, up_pose)
             self._set_point_cache(up_name, up_pose)
             self._return_motion_after_save(up_name, controller, vel=self.DEFAULT_RETURN_VEL, acc=self.DEFAULT_RETURN_ACC)
+            self._print_saved_box(up_name, up_pose)
             return
-        
+
         print(f"[SEQ] save_point: {saved_point_name} -> {pose6}")
 
         # DB 저장
         self.points_manager.update_point_in_db(saved_point_name, pose6)
-        
+
         self._return_motion_after_save(
             saved_point_name,
             controller,
@@ -235,6 +244,7 @@ class BrewXService:
             acc=self.DEFAULT_RETURN_ACC
         )
         # 저장 후 복귀
+        self._print_saved_box(saved_point_name, pose6)
     
     # ───────────── return motion ─────────────
     def _return_motion_after_save(self, saved_point_name: str, controller, vel=45, acc=45):
