@@ -389,7 +389,7 @@ class BrewPointsManager:
             ("POW1_Up_L", "POW1_Place_L", [0, 0, -35, 0, 0, 0]),
             ("POW1_Up_L", "POW1_App_L", [0, -120, 0, 0, 0, 0]),
             ("POW1_Up_L", "POW1_Ret_L", [0, -160, 0, 0, 0, 0]),
-            ("POW2_Up_L", "POW2_Place_L", [0, 0, -60, 0, 0, 0]),
+            ("POW2_Up_L", "POW2_Place_L", [0, 0, -35, 0, 0, 0]),
             ("POW2_Up_L", "POW2_App_L", [0, -120, 0, 0, 0, 0]),
             ("POW2_Up_L", "POW2_Ret_L", [0, -160, 0, 0, 0, 0]),
             ("ICE2_Hold_L", "ICE2_PreHold_L", [0, -40, 0, 0, 0, 0]),
