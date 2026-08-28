@@ -149,8 +149,23 @@ class BrewService:
             return
         self.points_manager.points_dict[name] = list(pose6[:6])
 
+    def _infer_point_name(self, position):
+        if self.points_manager is None or position is None:
+            return None
+        try:
+            pos = [float(v) for v in list(position)[:6]]
+            for name, point in self.points_manager.points_dict.items():
+                if point is None or len(point) != 6:
+                    continue
+                point_pos = [float(v) for v in list(point)[:6]]
+                if all(abs(point_pos[i] - pos[i]) <= 1e-6 for i in range(6)):
+                    return name
+        except Exception:
+            return None
+        return None
+
     def _print_move_start(self, move_type: str, point_name: str, position, vel, acc, blendR=None):
-        label = point_name or "UNKNOWN_POINT"
+        label = point_name or self._infer_point_name(position) or "UNKNOWN_POINT"
         line = "=" * 78
         print(f"\n========== [MOVE START] {label} ==========")
         if move_type == "MoveJ":
@@ -318,11 +333,11 @@ class BrewService:
                 print(f"[BREW][RETURN][CUP][WARN] missing points: {missing}")
                 return
 
-            self._move_linear(controller, hold, vel=vel, acc=acc)
-            self._move_linear(controller, down, vel=vel, acc=acc)
-            self._move_linear(controller, ret, vel=vel, acc=acc)
-            self._move_linear(controller, app_cup, vel=vel, acc=acc)
-            self._move_joint(controller, app_j, vel=vel, acc=acc)
+            self._move_linear(controller, hold, vel=vel, acc=acc, point_name=f"CUP{num}_Hold_L")
+            self._move_linear(controller, down, vel=vel, acc=acc, point_name=f"CUP{num}_Down_L")
+            self._move_linear(controller, ret, vel=vel, acc=acc, point_name=f"CUP{num}_Ret_L")
+            self._move_linear(controller, app_cup, vel=vel, acc=acc, point_name="MAC_App_Cup_L")
+            self._move_joint(controller, app_j, vel=vel, acc=acc, point_name="MAC_App_J")
             return
 
         if name.startswith("ICE") and name.endswith("_Hold_L"):
@@ -341,9 +356,9 @@ class BrewService:
                 print(f"[BREW][RETURN][ICE][WARN] missing points: {missing}")
                 return
 
-            self._move_linear(controller, hold, vel=vel, acc=acc)
-            self._move_linear(controller, pre, vel=vel, acc=acc)
-            self._move_joint(controller, app_j, vel=vel, acc=acc)
+            self._move_linear(controller, hold, vel=vel, acc=acc, point_name=f"ICE{num}_Hold_L")
+            self._move_linear(controller, pre, vel=vel, acc=acc, point_name=f"ICE{num}_PreHold_L")
+            self._move_joint(controller, app_j, vel=vel, acc=acc, point_name="MAC_App_J")
             return
 
         if name.startswith("COF") and name.endswith(("_Up_L", "_Place_L")):
@@ -362,9 +377,9 @@ class BrewService:
                 print(f"[BREW][RETURN][COF][WARN] missing points: {missing}")
                 return
 
-            self._move_linear(controller, place, vel=vel, acc=acc)
-            self._move_linear(controller, up, vel=60, acc=60)
-            self._move_joint(controller, app_j, vel=vel, acc=acc)
+            self._move_linear(controller, place, vel=vel, acc=acc, point_name=f"COF{num}_Place_L")
+            self._move_linear(controller, up, vel=60, acc=60, point_name=f"COF{num}_Up_L")
+            self._move_joint(controller, app_j, vel=vel, acc=acc, point_name="MAC_App_J")
             return
 
         if name.startswith("POW") and name.endswith(("_Up_L", "_Place_L")):
@@ -383,9 +398,9 @@ class BrewService:
                 print(f"[BREW][RETURN][POW][WARN] missing points: {missing}")
                 return
 
-            self._move_linear(controller, place, vel=vel, acc=acc)
-            self._move_linear(controller, up, vel=60, acc=60)
-            self._move_joint(controller, app_j, vel=vel, acc=acc)
+            self._move_linear(controller, place, vel=vel, acc=acc, point_name=f"POW{num}_Place_L")
+            self._move_linear(controller, up, vel=60, acc=60, point_name=f"POW{num}_Up_L")
+            self._move_joint(controller, app_j, vel=vel, acc=acc, point_name="MAC_App_J")
             return
 
         if name.startswith("PIC_") and name.endswith(("_Up_L", "_Place_L")):
@@ -571,9 +586,9 @@ class BrewService:
              # Rail
             self._move_rail_before_motion(label)
 
-            self._move_joint(controller, app_j)
-            self._move_linear(controller, pre_hold)
-            self._move_linear(controller, hold)
+            self._move_joint(controller, app_j, point_name="MAC_App_J")
+            self._move_linear(controller, pre_hold, point_name=f"ICE{par2}_PreHold_L")
+            self._move_linear(controller, hold, point_name=f"ICE{par2}_Hold_L")
             return {"open_jog": True, "jog_target": label}
 
         if n in ("cof", "coffee") or n.startswith("cof"):
@@ -600,9 +615,9 @@ class BrewService:
              # Rail
             self._move_rail_before_motion(label)
 
-            self._move_joint(controller, app_j)
-            self._move_linear(controller, up_l)
-            self._move_linear(controller, place_l)
+            self._move_joint(controller, app_j, point_name="MAC_App_J")
+            self._move_linear(controller, up_l, point_name=f"COF{par2}_Up_L")
+            self._move_linear(controller, place_l, point_name=f"COF{par2}_Place_L")
             return {"open_jog": True, "jog_target": label}
 
         if n in ("pow", "powder") or n.startswith("pow"):
@@ -629,9 +644,9 @@ class BrewService:
              # Rail
             self._move_rail_before_motion(label)
 
-            self._move_joint(controller, app_j)
-            self._move_linear(controller, up_l)
-            self._move_linear(controller, place_l)
+            self._move_joint(controller, app_j, point_name="MAC_App_J")
+            self._move_linear(controller, up_l, point_name=f"POW{par2}_Up_L")
+            self._move_linear(controller, place_l, point_name=f"POW{par2}_Place_L")
             return {"open_jog": True, "jog_target": label}
 
         if component_cd == "pic":

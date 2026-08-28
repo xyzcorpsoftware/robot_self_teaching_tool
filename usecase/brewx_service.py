@@ -96,9 +96,9 @@ class BrewXService:
             print(f"[SEQ][{prefix}][WARN] missing points: {missing}")
             return {"open_jog": True, "jog_target": ui_name}
 
-        self._move_joint(controller, appj, vel=vel, acc=acc)
-        self._move_linear(controller, up,   vel=vel, acc=acc)
-        self._move_linear(controller, place,vel=vel, acc=acc)
+        self._move_joint(controller, appj, vel=vel, acc=acc, point_name=f"{prefix}_App_J")
+        self._move_linear(controller, up, vel=vel, acc=acc, point_name=f"{prefix}_Up_L")
+        self._move_linear(controller, place, vel=vel, acc=acc, point_name=f"{prefix}_Place_L")
         
 
         # ✅ 저장 타겟(Place) 캐시 세팅
@@ -183,8 +183,23 @@ class BrewXService:
             print(f"[SEQ][WARN] _parse_pic failed: {e}")
             return None, None
     
+    def _infer_point_name(self, position):
+        if self.points_manager is None or position is None:
+            return None
+        try:
+            pos = [float(v) for v in list(position)[:6]]
+            for name, point in self.points_manager.points_dict.items():
+                if point is None or len(point) != 6:
+                    continue
+                point_pos = [float(v) for v in list(point)[:6]]
+                if all(abs(point_pos[i] - pos[i]) <= 1e-6 for i in range(6)):
+                    return name
+        except Exception:
+            return None
+        return None
+
     def _print_move_start(self, move_type: str, point_name: str, position, vel, acc, blendR=None):
-        label = point_name or "UNKNOWN_POINT"
+        label = point_name or self._infer_point_name(position) or "UNKNOWN_POINT"
         line = "=" * 78
         print(f"\n========== [MOVE START] {label} ==========")
         if move_type == "MoveJ":
@@ -474,10 +489,10 @@ class BrewXService:
                 return {"open_jog": True, "jog_target": ui_name}
             
             self._move_gripper(controller, pos=7)  # 그리퍼 닫기
-            self._move_joint(controller, appj, vel=20, acc=20)
-            self._move_linear(controller, ret,  vel=20, acc=20)
-            self._move_linear(controller, down, vel=20, acc=20)
-            self._move_linear(controller, hold, vel=20, acc=20)
+            self._move_joint(controller, appj, vel=20, acc=20, point_name=f"{prefix}_App_J")
+            self._move_linear(controller, ret, vel=20, acc=20, point_name=f"{prefix}_Ret_L")
+            self._move_linear(controller, down, vel=20, acc=20, point_name=f"{prefix}_Down_L")
+            self._move_linear(controller, hold, vel=20, acc=20, point_name=f"{prefix}_Hold_L")
 
             # 캐시 초기화(hold 기준)
             self._tcp_cache[f"{prefix}_Hold_L"] = list(hold[:6])
@@ -504,9 +519,9 @@ class BrewXService:
                 return {"open_jog": True, "jog_target": ui_name}
 
             # ✅ ICE 시퀀스: App_J -> PreHold_L -> Hold_L
-            self._move_joint(controller, appj, vel=60, acc=60)
-            self._move_linear(controller, prehold, vel=20, acc=20)
-            self._move_linear(controller, hold, vel=20, acc=20)
+            self._move_joint(controller, appj, vel=60, acc=60, point_name="ICE_App_J")
+            self._move_linear(controller, prehold, vel=20, acc=20, point_name=f"ICE{num}_PreHold_L")
+            self._move_linear(controller, hold, vel=20, acc=20, point_name=f"ICE{num}_Hold_L")
 
             # ✅ jog 기준값(hold)을 캐시 + points_dict에 세팅 (누적 조그 저장용)
             saved_point = self._resolve_saved_point_name(ui_name)  # ICE1_Hold_L / ICE2_Hold_L
@@ -552,11 +567,11 @@ class BrewXService:
                 return {"open_jog": True, "jog_target": ui_name}
 
             # 원본 속도
-            self._move_joint(controller, home,      vel=30, acc=15)
-            self._move_joint(controller, pic_app_j, vel=60, acc=60)
-            self._move_linear(controller, app_l,    vel=60, acc=60, blendR=30.0)
-            self._move_linear(controller, up_l,     vel=60, acc=60)
-            self._move_linear(controller, place_l,  vel=20, acc=15)
+            self._move_joint(controller, home, vel=30, acc=15, point_name="HOME_J")
+            self._move_joint(controller, pic_app_j, vel=60, acc=60, point_name="PIC_App_J")
+            self._move_linear(controller, app_l, vel=60, acc=60, blendR=30.0, point_name=f"PIC{par2}_App_L")
+            self._move_linear(controller, up_l, vel=60, acc=60, point_name=f"PIC{par2}_{par3}_Up_L")
+            self._move_linear(controller, place_l, vel=20, acc=15, point_name=f"PIC{par2}_{par3}_Place_L")
 
             # ✅ 조그는 Place를 기준으로 누적
             place_name = f"PIC{par2}_{par3}_Place_L"

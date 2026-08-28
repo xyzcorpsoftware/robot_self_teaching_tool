@@ -313,10 +313,14 @@ class MainWindow(QDialog):
                     channel_count = 1
 
                 for _ in range(channel_count):
-                    label = f"cup{cup_index}"
-                    fast_label = f"{label}_fast"
-                    fast_point_name = f"CUP{cup_index}_FAST_HOLD_L"
+                    current_cup_index = cup_index
                     cup_index += 1
+                    if self.use_sequence_mode and current_cup_index > 3:
+                        continue
+
+                    label = f"cup{current_cup_index}"
+                    fast_label = f"{label}_fast"
+                    fast_point_name = f"CUP{current_cup_index}_FAST_HOLD_L"
                     group_specs["cup"].append({
                         "text": label,
                         "object_name": f"btn_tty_{s_label}_{label}",
