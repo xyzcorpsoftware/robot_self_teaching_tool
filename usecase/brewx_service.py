@@ -1,5 +1,6 @@
 from os import name
 import subprocess
+import re
 
 import sys
 from pathlib import Path
@@ -46,6 +47,7 @@ class BrewXService:
 
     def cup_extract_async(self, ui_point_name: str):
         n = (ui_point_name or "").lower().strip()
+
         if not n.startswith("cup"):
             return
 
@@ -113,6 +115,12 @@ class BrewXService:
         n = (ui_point_name or "").lower().strip()
 
         # 이미 포인트 형식이면 그대로(대소문자만 정리)
+        cup_num, is_fast = self._parse_cup_target(ui_point_name)
+        if cup_num:
+            if is_fast:
+                return f"CUP{cup_num}_FAST_HOLD_L"
+            return f"CUP{cup_num}_Hold_L"
+
         if "_" in ui_point_name:
             return ui_point_name.strip()
 
@@ -136,6 +144,24 @@ class BrewXService:
             return f"PIC{par2}_{par3}_Place_L"
 
         return ui_point_name.strip()
+
+    def _parse_cup_target(self, label: str):
+        compact = re.sub(r"[\s\-]+", "_", (label or "").lower().strip())
+        is_fast = "fast" in compact
+
+        match = re.search(r"cup[_]?(\d+)", compact)
+        if not match and is_fast:
+            match = re.search(r"fast(?:_mode)?[_]?(\d+)", compact)
+        if not match:
+            return None, False
+
+        num = match.group(1)
+        if num not in ("1", "2", "3"):
+            return None, False
+        return num, is_fast
+
+    def _normalize_cup_label(self, num: str, is_fast: bool) -> str:
+        return f"cup{num}_fast" if is_fast else f"cup{num}"
 
     def _parse_pic(self, ui_name: str):
         """
@@ -254,6 +280,17 @@ class BrewXService:
 
         name = (saved_point_name or "").strip()
 
+        fast_cup_match = re.match(r"^CUP([1-3])_FAST_HOLD_L$", name)
+        if fast_cup_match:
+            num = fast_cup_match.group(1)
+            step_names = [
+                f"CUP{num}_FAST_HOLD_L",
+                f"CUP{num}_FAST_APP_L",
+                f"CUP{num}_App_J",
+            ]
+            self._do_return(step_names, controller, vel, acc)
+            return
+
         # ✅ PIC: saved는 Up_L로 들어온다
         if name.startswith("PIC") and name.endswith("_Up_L"):
             # 예: PIC6_1_Up_L
@@ -371,6 +408,36 @@ class BrewXService:
             return {"open_jog": True, "jog_target": ui_name}
 
         n = (ui_name or "").lower().strip()
+
+        cup_num, is_fast_cup = self._parse_cup_target(ui_name)
+        if cup_num and is_fast_cup:
+            prefix = f"CUP{cup_num}"
+            appj = self._get_point(f"{prefix}_App_J")
+            fast_app = self._get_point(f"{prefix}_FAST_APP_L")
+            fast_hold = self._get_point(f"{prefix}_FAST_HOLD_L")
+            jog_label = self._normalize_cup_label(cup_num, True)
+
+            missing = [k for k, v in {
+                f"{prefix}_App_J": appj,
+                f"{prefix}_FAST_APP_L": fast_app,
+                f"{prefix}_FAST_HOLD_L": fast_hold,
+            }.items() if not v]
+
+            if missing:
+                print(f"[SEQ][CUP_FAST][WARN] missing points: {missing}")
+                return {"open_jog": True, "jog_target": jog_label}
+
+            self._move_joint(controller, appj, vel=20, acc=20)
+            self._move_gripper(controller, pos=100)
+            self._move_linear(controller, fast_app, vel=20, acc=20)
+            self._move_linear(controller, fast_hold, vel=20, acc=20)
+            self._move_gripper(controller, pos=7)
+
+            saved_point = f"{prefix}_FAST_HOLD_L"
+            self._tcp_cache[saved_point] = list(fast_hold[:6])
+            self._set_point_cache(saved_point, fast_hold[:6])
+
+            return {"open_jog": True, "jog_target": jog_label}
 
         if n.startswith("cup"):
             num = n.replace("cup", "")

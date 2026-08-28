@@ -304,6 +304,8 @@ class MainWindow(QDialog):
 
                 for _ in range(channel_count):
                     label = f"cup{cup_index}"
+                    fast_label = f"{label}_fast"
+                    fast_point_name = f"CUP{cup_index}_FAST_HOLD_L"
                     cup_index += 1
                     group_specs["cup"].append({
                         "text": label,
@@ -311,6 +313,17 @@ class MainWindow(QDialog):
                         "tooltip": tooltip,
                         "component_cd": component_cd,
                     })
+                    if (
+                        self.points_manager is not None
+                        and hasattr(self.points_manager, "get_points_by_name")
+                        and self.points_manager.get_points_by_name(fast_point_name) is not None
+                    ):
+                        group_specs["cup"].append({
+                            "text": fast_label,
+                            "object_name": f"btn_tty_{s_label}_{fast_label}",
+                            "tooltip": f"{tooltip} fast".strip(),
+                            "component_cd": component_cd,
+                        })
 
             # ICE
             elif comp == "ice":

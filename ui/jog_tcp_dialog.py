@@ -19,7 +19,10 @@ from ros import (
 
 class TCPDispenserName:
     name_dict ={
-        "cup" : ["cup1", "cup2", "cup3", "cup4"],
+        "cup" : [
+            "cup1", "cup2", "cup3", "cup4",
+            "cup1_fast", "cup2_fast", "cup3_fast", "cup4_fast",
+        ],
         "coffee" : ["cof1", "cof2"],
         "powder" : ["pow1", "pow2"],
         "ice" : ["ice1", "ice2"]

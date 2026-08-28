@@ -75,6 +75,10 @@ class BrewService:
             "btn_cup2": "cup2",
             "btn_cup3": "cup3",
             "btn_cup4": "cup4",
+            "btn_cup1_fast": "cup1_fast",
+            "btn_cup2_fast": "cup2_fast",
+            "btn_cup3_fast": "cup3_fast",
+            "btn_cup4_fast": "cup4_fast",
             "btn_pic2": "pic2",
             "btn_pic1": "pic1",
             "btn_home": "home",
@@ -171,9 +175,11 @@ class BrewService:
     def _resolve_saved_point_name(self, ui_point_name: str) -> str:
         n = (ui_point_name or "").lower().strip()
 
-        if n.startswith("cup"):
-            num = n.replace("cup", "")
-            return f"CUP{num}_Hold_L"
+        cup_num, is_fast = self._parse_cup_target(ui_point_name)
+        if cup_num:
+            if is_fast:
+                return f"CUP{cup_num}_FAST_HOLD_L"
+            return f"CUP{cup_num}_Hold_L"
 
         if n.startswith("ice"):
             num = n.replace("ice", "")
@@ -192,6 +198,25 @@ class BrewService:
             return f"PIC_{num}_Place_L"
 
         return ui_point_name.strip()
+
+    def _parse_cup_target(self, label: str, component_cd: str = ""):
+        raw = f"{component_cd or ''} {label or ''}".lower()
+        compact = re.sub(r"[\s\-]+", "_", raw.strip())
+        is_fast = "fast" in compact
+
+        match = re.search(r"cup[_]?(\d+)", compact)
+        if not match and is_fast:
+            match = re.search(r"fast(?:_mode)?[_]?(\d+)", compact)
+        if not match:
+            return None, False
+
+        num = match.group(1)
+        if num not in ("1", "2", "3", "4"):
+            return None, False
+        return num, is_fast
+
+    def _normalize_cup_label(self, num: str, is_fast: bool) -> str:
+        return f"cup{num}_fast" if is_fast else f"cup{num}"
 
     def _run_pic_motion(self, par2: str, controller):
         if par2 not in ("1", "2"):
@@ -228,6 +253,34 @@ class BrewService:
         if controller is None:
             return
         name = (saved_point_name or "").strip()
+
+        fast_cup_match = re.match(r"^CUP([1-4])_FAST_HOLD_L$", name)
+        if fast_cup_match:
+            num = fast_cup_match.group(1)
+            hold = self._get_point(f"CUP{num}_FAST_HOLD_L")
+            fast_app = self._get_point(f"CUP{num}_FAST_APP_L")
+            ready_app = self._get_point("READY_APP_CUP_L")
+            ready_j = self._get_point("READY_CUP_J")
+            app_j = self._get_point("MAC_App_J")
+
+            missing = [k for k, v in {
+                f"CUP{num}_FAST_HOLD_L": hold,
+                f"CUP{num}_FAST_APP_L": fast_app,
+                "READY_APP_CUP_L": ready_app,
+                "READY_CUP_J": ready_j,
+                "MAC_App_J": app_j,
+            }.items() if v is None]
+
+            if missing:
+                print(f"[BREW][RETURN][CUP_FAST][WARN] missing points: {missing}")
+                return
+
+            self._move_linear(controller, hold, vel=vel, acc=acc)
+            self._move_linear(controller, fast_app, vel=vel, acc=acc)
+            self._move_linear(controller, ready_app, vel=vel, acc=acc)
+            self._move_joint(controller, ready_j, vel=vel, acc=acc)
+            self._move_joint(controller, app_j, vel=vel, acc=acc)
+            return
 
         if name.startswith("CUP") and name.endswith("_Hold_L"):
             num = name.replace("CUP", "").replace("_Hold_L", "")
@@ -356,7 +409,11 @@ class BrewService:
         print(f"[BREW][RETURN] no rule for {saved_point_name} (skip)")
     def _get_rail_pulse(self, btn_value: list[str]):
         try:
-            hold_area = ["cup1", "cup2", "cup3", "cup4", "ice1", "ice2"]
+            hold_area = [
+                "cup1", "cup2", "cup3", "cup4",
+                "cup1_fast", "cup2_fast", "cup3_fast", "cup4_fast",
+                "ice1", "ice2",
+            ]
             pick_area = ["cof1", "cof2", "pow1", "pow2"]
             
             pz_area = ["pic2","pic1"]
@@ -376,6 +433,9 @@ class BrewService:
                             name = "powder"
                         cmd = 'place_' + name
                     pulse = self.robot_srv_manager.get_rail_pos(cmd, number-1)
+                    if pulse is None or str(pulse).strip() == "":
+                        print(f"[BREW][RAIL][WARN] rail pulse not found: {cmd}[{number-1}]")
+                        continue
 
                 elif v in pz_area:
                     place_cmd = "place_order"
@@ -383,6 +443,9 @@ class BrewService:
                         pulse = int(self.robot_srv_manager.get_rail_pos(place_cmd,1))
                     elif v == "pic2" :
                         pulse = int(self.robot_srv_manager.get_rail_pos(place_cmd,0))
+                if pulse is None or str(pulse).strip() == "":
+                    print(f"[BREW][RAIL][WARN] rail pulse not found: {v}")
+                    continue
                 pulse_dict[v] = int(pulse)
         except Exception as error :
             print(f"_Get Rail Pulse Error : {error}")
@@ -409,21 +472,28 @@ class BrewService:
             return {"open_jog": False, "jog_target": label}
 
         n = (label or "").lower().strip()
-        if n.startswith("cup"):
-            par2 = n.replace("cup", "")
+        cup_num, is_fast_cup = self._parse_cup_target(label, component_cd)
+        if cup_num:
+            par2 = cup_num
+            jog_label = self._normalize_cup_label(par2, is_fast_cup)
+            point_prefix = f"CUP{par2}_FAST" if is_fast_cup else f"CUP{par2}"
+            cup_label = jog_label if is_fast_cup else label
             if par2 not in ("1", "2", "3", "4"):
                 return {"open_jog": False, "jog_target": label}
 
             app_j = self._get_point("MAC_App_J")
-            app_cup = self._get_point("MAC_App_Cup_L")
-            cup_app = self._get_point(f"CUP{par2}_App_L")
-            cup_hold = self._get_point(f"CUP{par2}_Hold_L")
+            app_cup_name = "READY_APP_CUP_L" if is_fast_cup else "MAC_App_Cup_L"
+            app_cup = self._get_point(app_cup_name)
+            ready_j = self._get_point("READY_CUP_J") if is_fast_cup else None
+            cup_app = self._get_point(f"{point_prefix}_APP_L" if is_fast_cup else f"{point_prefix}_App_L")
+            cup_hold = self._get_point(f"{point_prefix}_HOLD_L" if is_fast_cup else f"{point_prefix}_Hold_L")
 
             missing = [k for k, v in {
                 "MAC_App_J": app_j,
-                "MAC_App_Cup_L": app_cup,
-                f"CUP{par2}_App_L": cup_app,
-                f"CUP{par2}_Hold_L": cup_hold,
+                app_cup_name: app_cup,
+                **({"READY_CUP_J": ready_j} if is_fast_cup else {}),
+                f"{point_prefix}_APP_L" if is_fast_cup else f"{point_prefix}_App_L": cup_app,
+                f"{point_prefix}_HOLD_L" if is_fast_cup else f"{point_prefix}_Hold_L": cup_hold,
             }.items() if v is None]
 
             if missing:
@@ -431,15 +501,15 @@ class BrewService:
                 return {"open_jog": False, "jog_target": label}
             
             # Rail
-            self._move_rail_before_motion(label)
+            self._move_rail_before_motion(cup_label)
 
             self._move_gripper(controller, 100)
-            self._move_joint(controller, app_j)
+            self._move_joint(controller, ready_j if is_fast_cup else app_j)
             self._move_linear(controller, app_cup)
             self._move_linear(controller, cup_app)
             self._move_linear(controller, cup_hold)
             self._move_gripper(controller, 7)
-            return {"open_jog": True, "jog_target": label}
+            return {"open_jog": True, "jog_target": jog_label}
 
         if n.startswith("ice"):
             par2 = n.replace("ice", "")
@@ -547,7 +617,11 @@ class BrewService:
         # Implement pulse saving logic here
         print(f"[BREW] save_pulse called: ui_point_name={ui_point_name}, pulse={pulse}")
 
-        hold_area = ["cup1", "cup2", "cup3", "cup4", "ice1", "ice2"]
+        hold_area = [
+            "cup1", "cup2", "cup3", "cup4",
+            "cup1_fast", "cup2_fast", "cup3_fast", "cup4_fast",
+            "ice1", "ice2",
+        ]
         pick_area = ["cof1", "cof2", "pow1", "pow2", "pic1", "pic2"]
 
         need_change_word = ["cof","pow"]
