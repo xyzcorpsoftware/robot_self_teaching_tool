@@ -193,7 +193,17 @@ class MainWindow(QDialog):
                 lay.setSpacing(8)
                 return gb, lay
 
-            self._cup_group, self._cup_row_layout = make_group("CUP")
+            self._cup_group = QGroupBox("CUP")
+            cup_layout = QVBoxLayout(self._cup_group)
+            cup_layout.setContentsMargins(10, 12, 10, 10)
+            cup_layout.setSpacing(8)
+            self._cup_row_layout = QHBoxLayout()
+            self._cup_fast_row_layout = QHBoxLayout()
+            self._cup_row_layout.setSpacing(8)
+            self._cup_fast_row_layout.setSpacing(8)
+            cup_layout.addLayout(self._cup_row_layout)
+            cup_layout.addLayout(self._cup_fast_row_layout)
+
             self._ice_group, self._ice_row_layout = make_group("ICE")
             self._coffee_group, self._coffee_row_layout = make_group("COFFEE")
             self._powder_group, self._powder_row_layout = make_group("POWDER")
@@ -276,7 +286,7 @@ class MainWindow(QDialog):
         rows_with_tty.sort(key=lambda x: tty_key(x[0]))
 
         # ✅ 그룹별 spec
-        group_specs = {"cup": [], "ice": [], "coffee": [], "powder": []}
+        group_specs = {"cup": [], "cup_fast": [], "ice": [], "coffee": [], "powder": []}
         ice_index = 1
         cup_index = 1
         coffee_index = 1
@@ -318,7 +328,7 @@ class MainWindow(QDialog):
                         and hasattr(self.points_manager, "get_points_by_name")
                         and self.points_manager.get_points_by_name(fast_point_name) is not None
                     ):
-                        group_specs["cup"].append({
+                        group_specs["cup_fast"].append({
                             "text": fast_label,
                             "object_name": f"btn_tty_{s_label}_{fast_label}",
                             "tooltip": f"{tooltip} fast".strip(),
@@ -389,6 +399,7 @@ class MainWindow(QDialog):
 
         # ✅ 레이아웃 clear
         self._clear_layout(self._cup_row_layout)
+        self._clear_layout(getattr(self, "_cup_fast_row_layout", None))
         self._clear_layout(self._ice_row_layout)
         self._clear_layout(self._coffee_row_layout)
         self._clear_layout(self._powder_row_layout)
@@ -402,7 +413,7 @@ class MainWindow(QDialog):
                 btn.setObjectName(spec["object_name"])
                 if spec.get("tooltip"):
                     btn.setToolTip(spec["tooltip"])
-                btn.setMinimumWidth(70)
+                btn.setMinimumWidth(95 if "_fast" in spec["text"] else 70)
                 btn.setFixedHeight(40)
 
                 btn.clicked.connect(
@@ -418,6 +429,7 @@ class MainWindow(QDialog):
         )
 
         add_buttons(self._cup_row_layout, group_specs["cup"])
+        add_buttons(self._cup_fast_row_layout, group_specs["cup_fast"])
         add_buttons(self._ice_row_layout, group_specs["ice"])
         add_buttons(self._coffee_row_layout, group_specs["coffee"])
         add_buttons(self._powder_row_layout, group_specs["powder"])
