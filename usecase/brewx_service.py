@@ -183,16 +183,28 @@ class BrewXService:
             print(f"[SEQ][WARN] _parse_pic failed: {e}")
             return None, None
     
-    def _move_joint(self, controller, joints, vel=20, acc=20):
+    def _print_move_start(self, move_type: str, point_name: str, position, vel, acc, blendR=None):
+        label = point_name or "UNKNOWN_POINT"
+        line = "=" * 78
+        print(f"\n========== [MOVE START] {label} ==========")
+        if move_type == "MoveJ":
+            print(f"[FR][MoveJ][{label}] joint={position} | vel={vel} | acc={acc}")
+        else:
+            print(f"[FR][MoveL][{label}] tcp={position} | vel={vel} | acc={acc} | blendR={blendR}")
+        print(line)
+
+    def _move_joint(self, controller, joints, vel=20, acc=20, point_name=None):
         if controller is None or joints is None:
             return
         if hasattr(controller, "move_joint"):
+            self._print_move_start("MoveJ", point_name, joints, vel, acc)
             controller.move_joint(joints, vel=vel, acc=acc)
 
-    def _move_linear(self, controller, pose, vel=20, acc=20, blendR=None):
+    def _move_linear(self, controller, pose, vel=20, acc=20, blendR=None, point_name=None):
         if controller is None or pose is None:
             return
         if hasattr(controller, "move_linear"):
+            self._print_move_start("MoveL", point_name, pose, vel, acc, blendR)
             controller.move_linear(pose, vel=vel, acc=acc, blendR=blendR)
 
     def _move_gripper(self, controller, pos: int):
@@ -392,12 +404,12 @@ class BrewXService:
 
         print(f"[SEQ][RETURN] vel={vel} acc={acc}: " + " -> ".join(step_names))
         for nm, pt in zip(step_names[:-1], points[:-1]):
-            self._move_linear(controller, pt, vel=vel, acc=acc)
+            self._move_linear(controller, pt, vel=vel, acc=acc, point_name=nm)
         last_name, last_pt = step_names[-1], points[-1]
         if last_name.endswith("_J"):
-            self._move_joint(controller, last_pt, vel=vel, acc=acc)
+            self._move_joint(controller, last_pt, vel=vel, acc=acc, point_name=last_name)
         else:
-            self._move_linear(controller, last_pt, vel=vel, acc=acc)
+            self._move_linear(controller, last_pt, vel=vel, acc=acc, point_name=last_name)
 
     def run(self, ui_name: str, controller=None):
         """
@@ -427,10 +439,10 @@ class BrewXService:
                 print(f"[SEQ][CUP_FAST][WARN] missing points: {missing}")
                 return {"open_jog": True, "jog_target": jog_label}
 
-            self._move_joint(controller, appj, vel=20, acc=20)
+            self._move_joint(controller, appj, vel=20, acc=20, point_name=f"{prefix}_App_J")
             self._move_gripper(controller, pos=100)
-            self._move_linear(controller, fast_app, vel=20, acc=20)
-            self._move_linear(controller, fast_hold, vel=20, acc=20)
+            self._move_linear(controller, fast_app, vel=20, acc=20, point_name=f"{prefix}_FAST_APP_L")
+            self._move_linear(controller, fast_hold, vel=20, acc=20, point_name=f"{prefix}_FAST_HOLD_L")
             self._move_gripper(controller, pos=7)
 
             saved_point = f"{prefix}_FAST_HOLD_L"
@@ -603,5 +615,5 @@ class BrewXService:
         self._set_point_cache(saved_point, new_pose)
 
         # 4) 이동
-        self._move_linear(controller, new_pose, vel=20, acc=20)
+        self._move_linear(controller, new_pose, vel=20, acc=20, point_name=saved_point)
 

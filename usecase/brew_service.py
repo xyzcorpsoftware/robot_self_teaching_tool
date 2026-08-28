@@ -100,8 +100,14 @@ class BrewService:
         #     "pic2": 1260000,
         # }
 
+    def _normalize_rail_key(self, label: str) -> str:
+        cup_num, is_fast = self._parse_cup_target(label)
+        if cup_num:
+            return self._normalize_cup_label(cup_num, is_fast)
+        return (label or "").lower().strip().replace(" ", "").replace("-", "_")
+
     def _move_rail_before_motion(self, label: str, target_pose: str = None):
-        key = (label or "").lower().strip().replace(" ", "").replace("_", "")
+        key = self._normalize_rail_key(label)
         if not key or key == "none":
             print("[BREW][RAIL] skip (empty label)")
             return
@@ -143,18 +149,28 @@ class BrewService:
             return
         self.points_manager.points_dict[name] = list(pose6[:6])
 
-    def _move_joint(self, controller, joints, vel=20, acc=20):
+    def _print_move_start(self, move_type: str, point_name: str, position, vel, acc, blendR=None):
+        label = point_name or "UNKNOWN_POINT"
+        line = "=" * 78
+        print(f"\n========== [MOVE START] {label} ==========")
+        if move_type == "MoveJ":
+            print(f"[FR][MoveJ][{label}] joint={position} | vel={vel} | acc={acc}")
+        else:
+            print(f"[FR][MoveL][{label}] tcp={position} | vel={vel} | acc={acc} | blendR={blendR}")
+        print(line)
+
+    def _move_joint(self, controller, joints, vel=20, acc=20, point_name=None):
         if controller is None or joints is None:
             return
         if hasattr(controller, "move_joint"):
-            print(f"joint : {joints}")
+            self._print_move_start("MoveJ", point_name, joints, vel, acc)
             controller.move_joint(joints, vel=vel, acc=acc)
 
-    def _move_linear(self, controller, pose, vel=20, acc=20, blendR=None):
+    def _move_linear(self, controller, pose, vel=20, acc=20, blendR=None, point_name=None):
         if controller is None or pose is None:
             return
         if hasattr(controller, "move_linear"):
-            print(f"tcp : {pose}")
+            self._print_move_start("MoveL", point_name, pose, vel, acc, blendR)
             controller.move_linear(pose, vel=vel, acc=acc, blendR=blendR)
 
     def _move_gripper(self, controller, pos: int):
@@ -275,11 +291,11 @@ class BrewService:
                 print(f"[BREW][RETURN][CUP_FAST][WARN] missing points: {missing}")
                 return
 
-            self._move_linear(controller, hold, vel=vel, acc=acc)
-            self._move_linear(controller, fast_app, vel=vel, acc=acc)
-            self._move_linear(controller, ready_app, vel=vel, acc=acc)
-            self._move_joint(controller, ready_j, vel=vel, acc=acc)
-            self._move_joint(controller, app_j, vel=vel, acc=acc)
+            self._move_linear(controller, hold, vel=vel, acc=acc, point_name=f"CUP{num}_FAST_HOLD_L")
+            self._move_linear(controller, fast_app, vel=vel, acc=acc, point_name=f"CUP{num}_FAST_APP_L")
+            self._move_linear(controller, ready_app, vel=vel, acc=acc, point_name="READY_APP_CUP_L")
+            self._move_joint(controller, ready_j, vel=vel, acc=acc, point_name="READY_CUP_J")
+            self._move_joint(controller, app_j, vel=vel, acc=acc, point_name="MAC_App_J")
             return
 
         if name.startswith("CUP") and name.endswith("_Hold_L"):
@@ -419,11 +435,20 @@ class BrewService:
             pz_area = ["pic2","pic1"]
             pulse_dict = {}
             
+            known_targets = set(hold_area + pick_area + pz_area)
+
             for v in btn_value:
+                if v not in known_targets:
+                    continue
+
                 pulse = 0
                 if v not in pz_area:
                     name = re.sub(r'\d+', '', v)
-                    number = int(re.findall(r'\d+', v)[0])
+                    numbers = re.findall(r'\d+', v)
+                    if not numbers:
+                        print(f"[BREW][RAIL][WARN] skip label without index: {v}")
+                        continue
+                    number = int(numbers[0])
                     if v in hold_area:
                         cmd = 'hold_' + name
                     if v in pick_area :
@@ -478,6 +503,7 @@ class BrewService:
             jog_label = self._normalize_cup_label(par2, is_fast_cup)
             point_prefix = f"CUP{par2}_FAST" if is_fast_cup else f"CUP{par2}"
             cup_label = jog_label if is_fast_cup else label
+            print(f"[BREW][CUP] label={label}, fast={is_fast_cup}, target_prefix={point_prefix}")
             if par2 not in ("1", "2", "3", "4"):
                 return {"open_jog": False, "jog_target": label}
 
@@ -504,10 +530,22 @@ class BrewService:
             self._move_rail_before_motion(cup_label)
 
             self._move_gripper(controller, 100)
-            self._move_joint(controller, ready_j if is_fast_cup else app_j)
-            self._move_linear(controller, app_cup)
-            self._move_linear(controller, cup_app)
-            self._move_linear(controller, cup_hold)
+            self._move_joint(
+                controller,
+                ready_j if is_fast_cup else app_j,
+                point_name="READY_CUP_J" if is_fast_cup else "MAC_App_J",
+            )
+            self._move_linear(controller, app_cup, point_name=app_cup_name)
+            self._move_linear(
+                controller,
+                cup_app,
+                point_name=f"{point_prefix}_APP_L" if is_fast_cup else f"{point_prefix}_App_L",
+            )
+            self._move_linear(
+                controller,
+                cup_hold,
+                point_name=f"{point_prefix}_HOLD_L" if is_fast_cup else f"{point_prefix}_Hold_L",
+            )
             self._move_gripper(controller, 7)
             return {"open_jog": True, "jog_target": jog_label}
 
@@ -774,7 +812,7 @@ class BrewService:
 
         self._tcp_cache[saved_point] = new_pose
         self._set_point_cache(saved_point, new_pose)
-        self._move_linear(controller, new_pose, vel=20, acc=20)
+        self._move_linear(controller, new_pose, vel=20, acc=20, point_name=saved_point)
 
 
 # -------------------------

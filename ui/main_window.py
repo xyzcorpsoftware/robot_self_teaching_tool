@@ -493,6 +493,7 @@ class MainWindow(QDialog):
 
 
     def _on_brew_button_clicked(self, component_cd: str, label: str):
+        print(f"[BrewUI] clicked component_cd={component_cd}, label={label}")
         if self.use_sequence_mode:
             mapped = self._map_label_for_sequence(label)
             self.on_point_clicked(mapped)
