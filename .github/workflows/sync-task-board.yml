@@ -14,14 +14,50 @@ on:
 
 jobs:
   sync:
-    # Skip if: PR was closed without merge (opened PRs and merged PRs always sync)
+    # Skip if: PR was closed without merge (opened PRs and merged PRs always sync).
+    # Also skip events Dependabot triggers: they get Dependabot's secret store, not
+    # this repo's, so the key is empty by design. That used to be a silent skip and
+    # stays one, while a missing key on a person's PR is now red. A Dependabot PR
+    # that a person merges is that person's event and syncs as usual.
     if: >-
-      github.event.action == 'opened' ||
-      (github.event.action == 'closed' && github.event.pull_request.merged == true)
-    runs-on: ubuntu-latest
+      github.actor != 'dependabot[bot]' &&
+      (github.event.action == 'opened' ||
+       (github.event.action == 'closed' && github.event.pull_request.merged == true))
+    runs-on: ${{ vars.ACTIONS_RUNNER || 'self-hosted' }}
+    timeout-minutes: 5
+    # The merge-time recovery reads THIS repo's PR comments with GITHUB_TOKEN, so
+    # the job asks for exactly that. Nothing here writes to this repo.
+    permissions:
+      issues: read
+      pull-requests: read
     env:
-      TASK_MGMT_PAT: ${{ secrets.TASK_MGMT_PAT }}
+      # The sender App's private key. Must be a repo-level secret, never org-level:
+      # GitHub Free doesn't deliver org secrets to private repos (API reports it
+      # configured, runtime gets ""). See CLAUDE.md "Secret management" in
+      # xyzcorpsoftware/task-management. The client ID is not a secret, so it is a
+      # constant here rather than one more per-repo setting to forget.
+      SENDER_APP_PRIVATE_KEY: ${{ secrets.TASK_SYNC_SENDER_APP_PRIVATE_KEY }}
+      SENDER_APP_CLIENT_ID: Iv23liZzDF9D9VB7zJxi
       TASK_MGMT_REPO: xyzcorpsoftware/task-management
+      # The receiver, run through workflow_dispatch: the sender App holds Actions:
+      # write on the task board and NOT Contents: write, which is what
+      # repository_dispatch would need (task-management#4982).
+      RECEIVER_WORKFLOW: cross-repo-sync.yml
+      RECEIVER_REF: main
+      # The board App writes the auto-create link comment the recovery step trusts.
+      # An App comment is author_association NONE, so it is trusted by exact login.
+      BOARD_APP_LOGIN: 'xyz-task-board[bot]'
+      # Column a develop merge lands in. Per-repo because the work-item lifecycle
+      # differs: most repos end at QA, while did_client and lounge-x-app treat the
+      # develop merge itself as completion and keep release states on a per-version
+      # Release ticket (task-management#1161). Those repos set the repo variable to
+      # "done"; everyone else inherits the default and needs no configuration. This
+      # is the ONLY sanctioned way to differ — editing the deployed copy instead
+      # forks it from this template and the next deploy silently reverts it.
+      # Deleting the variable fails nothing either: merges keep syncing, just to
+      # 'qa'. So on a repo that needs "done" it is load-bearing configuration, not
+      # a stray variable safe to prune during cleanup.
+      DEVELOP_COLUMN: ${{ vars.TASK_SYNC_DEVELOP_COLUMN || 'qa' }}
       PR_BODY: ${{ github.event.pull_request.body }}
       PR_URL: ${{ github.event.pull_request.html_url }}
       PR_TITLE: ${{ github.event.pull_request.title }}
@@ -32,14 +68,44 @@ jobs:
       PR_AUTHOR: ${{ github.event.pull_request.user.login }}
 
     steps:
-      - name: Check PAT
+      # ubuntu-latest preinstalls jq, curl; a bare self-hosted runner does not. The
+      # steps below call them inside `cmd || echo '::warning::'` lists, which swallow a
+      # non-zero exit -- a missing binary would leave this job GREEN while doing nothing.
+      # Fail loudly here instead of rotting silently.
+      - name: Preflight - runner has the tools this job assumes
         run: |
-          if [ -z "$TASK_MGMT_PAT" ]; then
-            echo "::warning::TASK_MGMT_PAT secret is not set. Skipping task board sync."
-            exit 0
+          missing=''
+          for bin in jq curl; do
+            command -v "$bin" >/dev/null 2>&1 || missing="$missing $bin"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::self-hosted runner is missing:$missing - install it on the runner (e.g. sudo apt-get install -y jq)"
+            exit 1
           fi
 
+      # A missing key used to be a warning and exit 0, so the job stayed green while
+      # syncing nothing; 2026-07-02 to 07-07 every sender ran that way and nobody
+      # noticed. Now it is red.
+      - name: Check the sender App key
+        run: |
+          if [ -z "$SENDER_APP_PRIVATE_KEY" ]; then
+            echo "::error::Repo secret TASK_SYNC_SENDER_APP_PRIVATE_KEY is not set, so this PR cannot reach the task board. Set it on this repo (repo-level, not org-level): see CLAUDE.md 'Secret management' in ${TASK_MGMT_REPO}."
+            exit 1
+          fi
+
+      - name: Mint the sender App token (task board only)
+        id: sender-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ env.SENDER_APP_CLIENT_ID }}
+          private-key: ${{ secrets.TASK_SYNC_SENDER_APP_PRIVATE_KEY }}
+          owner: xyzcorpsoftware
+          repositories: task-management
+
       - name: Parse Task Sync section and dispatch
+        env:
+          SENDER_TOKEN: ${{ steps.sender-token.outputs.token }}
+          GITHUB_READ_TOKEN: ${{ github.token }}
         run: |
           # --- Determine default action from branch + event ---
           if [ "$PR_ACTION" = "opened" ]; then
@@ -51,7 +117,18 @@ jobs:
             case "$PR_BASE" in
               develop)
                 DEFAULT_ACTION="move"
-                DEFAULT_COLUMN="qa"
+                # Validate here rather than letting the receiver reject it: a typo in
+                # the repo variable would otherwise fail every develop merge in this
+                # repo, and the sender is where the operator can still see why.
+                case "$DEVELOP_COLUMN" in
+                  backlog|design|dev|qa|deploy-wait|done)
+                    DEFAULT_COLUMN="$DEVELOP_COLUMN"
+                    ;;
+                  *)
+                    echo "::warning::Repo variable TASK_SYNC_DEVELOP_COLUMN='${DEVELOP_COLUMN}' is not a valid column. Falling back to 'qa'."
+                    DEFAULT_COLUMN="qa"
+                    ;;
+                esac
                 ;;
               release/*)
                 DEFAULT_ACTION="move"
@@ -74,14 +151,19 @@ jobs:
           echo "Default: action=${DEFAULT_ACTION}, column=${DEFAULT_COLUMN}, event=${EVENT_DESC}"
 
           # --- Dispatch helper ---
+          # workflow_dispatch inputs are strings only, so the numbers go as strings;
+          # the receiver validates them. A failed dispatch is counted and turns the
+          # job red at the end, after every TM# has had its attempt.
+          DISPATCH_FAILED=""
           dispatch() {
             local NUM="$1" COLUMN="$2" ACTION="$3" EVENT="$4"
 
-            curl -sf -X POST \
-              -H "Authorization: token ${TASK_MGMT_PAT}" \
-              -H "Accept: application/vnd.github+v3+json" \
-              "https://api.github.com/repos/${TASK_MGMT_REPO}/dispatches" \
+            if curl -sf -X POST \
+              -H "Authorization: Bearer ${SENDER_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${TASK_MGMT_REPO}/actions/workflows/${RECEIVER_WORKFLOW}/dispatches" \
               -d "$(jq -n \
+                --arg ref "$RECEIVER_REF" \
                 --arg issue_number "$NUM" \
                 --arg target_column "$COLUMN" \
                 --arg action "$ACTION" \
@@ -92,19 +174,24 @@ jobs:
                 --arg pr_number "$PR_NUMBER" \
                 --arg pr_author "$PR_AUTHOR" \
                 '{
-                  event_type: "task-board-sync",
-                  client_payload: {
-                    issue_number: ($issue_number | tonumber),
+                  ref: $ref,
+                  inputs: {
+                    issue_number: $issue_number,
                     target_column: $target_column,
                     action: $action,
                     source_repo: $source_repo,
                     pr_url: $pr_url,
                     pr_title: $pr_title,
                     pr_event: $pr_event,
-                    pr_number: ($pr_number | tonumber),
+                    pr_number: $pr_number,
                     pr_author: $pr_author
                   }
-                }')" && echo "  -> Dispatched" || echo "::warning::Failed to dispatch for #${NUM}"
+                }')"; then
+              echo "  -> Dispatched"
+            else
+              echo "::error::Failed to dispatch TM#${NUM} to ${TASK_MGMT_REPO}"
+              DISPATCH_FAILED="${DISPATCH_FAILED} #${NUM}"
+            fi
           }
 
           # --- Extract Task Sync section ---
@@ -136,26 +223,109 @@ jobs:
           DISPATCH_COUNT=0
           MAX_DISPATCHES=5
 
-          for NUM in $SYNC_NUMS; do
-            DISPATCH_COUNT=$((DISPATCH_COUNT + 1))
-            if [ "$DISPATCH_COUNT" -gt "$MAX_DISPATCHES" ]; then
-              echo "::warning::Max ${MAX_DISPATCHES} TM references reached. Skipping remaining."
-              break
-            fi
+          # action=comment is a no-op in cross-repo-sync.yml: the email-bomb fix
+          # gated its column-move and comment steps to action=move, so a "comment"
+          # dispatch now only spins a receiver runner and does nothing — a wasted
+          # ~1-min Actions floor per TM#. On PR open the action is always "comment"
+          # (and so is a merge to a non-standard base), so skip the per-TM# loop in
+          # those cases. Empty sections still auto-create below, and real column
+          # transitions (action=move on merge to develop/release/main) still dispatch.
+          if [ "$DEFAULT_ACTION" != "comment" ]; then
+            for NUM in $SYNC_NUMS; do
+              DISPATCH_COUNT=$((DISPATCH_COUNT + 1))
+              if [ "$DISPATCH_COUNT" -gt "$MAX_DISPATCHES" ]; then
+                echo "::warning::Max ${MAX_DISPATCHES} TM references reached. Skipping remaining."
+                break
+              fi
 
-            echo "Task Sync: issue #${NUM} -> action=${DEFAULT_ACTION}, column=${DEFAULT_COLUMN}"
-            dispatch "$NUM" "$DEFAULT_COLUMN" "$DEFAULT_ACTION" "$EVENT_DESC"
-          done
+              echo "Task Sync: issue #${NUM} -> action=${DEFAULT_ACTION}, column=${DEFAULT_COLUMN}"
+              dispatch "$NUM" "$DEFAULT_COLUMN" "$DEFAULT_ACTION" "$EVENT_DESC"
+            done
+          fi
 
-          # --- No TM# in Task Sync section: auto-create only on PR opened ---
-          # cross-repo-sync.yml appends TM#NEW to the PR body on auto-create.
-          # Since the Task Sync section is the LAST section of the template,
-          # the appended TM# falls inside it and is picked up at merge time.
+          # --- No TM# in Task Sync section ---
+          # On open there is nothing to sync yet, so ask the receiver to create the
+          # tracking issue. cross-repo-sync.yml appends TM#NEW to the PR body; since
+          # Task Sync is the LAST section of the template, the appended ref falls
+          # inside it and is picked up at merge time.
+          #
+          # On merge, an empty section does NOT prove the PR is untracked. The PR body
+          # is a mutable store with two writers — the receiver's append, and anyone who
+          # later edits the PR — and any whole-body rewrite (`gh pr edit --body-file`,
+          # or editing in the GitHub UI) silently drops the appended ref. That is not a
+          # rare mistake: rewriting the body as scope changes is normal practice, and
+          # the local file being written back never contains the bot's append. So
+          # recover the link from the receiver's own PR comment, which a body edit
+          # cannot clobber, instead of leaving the task issue open behind a merged PR.
           if [ -z "$SYNC_NUMS" ]; then
             if [ "$PR_ACTION" = "opened" ]; then
               echo "No TM# in Task Sync section. Dispatching auto-create..."
               dispatch "0" "$DEFAULT_COLUMN" "auto-create" "$EVENT_DESC"
+            elif [ "$DEFAULT_ACTION" != "move" ]; then
+              echo "No TM# in Task Sync section, and this merge maps to no column. Skipping."
             else
-              echo "No TM# in Task Sync section on merge. Skipping."
+              # CROSS-REPO CONTRACT — the other half lives in cross-repo-sync.yml,
+              # step "Update source PR with TM reference". It comments the created
+              # issue URL *and* a matching `TM#N` token; we require BOTH, carrying the
+              # same N, from an OWNER/MEMBER/COLLABORATOR (the ACL pr-comment-commands
+              # .yml uses) or from the board App by its exact login. That comment is
+              # written by the representative account today (MEMBER) and by the board
+              # App after task-management#4983 (author_association NONE); allowing
+              # every Bot instead would let any bot comment inject a TM#. Demanding
+              # both halves is what keeps an outsider's comment, or a human casually
+              # pasting one or the other, from moving a task issue — the same
+              # false-positive class the section-scoped parser above fixed. Dropping
+              # either half from that comment disables this recovery.
+              # Fetch and match are SEPARATE steps on purpose. Piping curl into jq
+              # merges "the lookup failed" into "there is nothing to recover": the
+              # default shell here is `bash -e` with NO pipefail, and jq exits 0 on
+              # empty stdin, so a 404 leaves RECOVERED empty with exit status 0 —
+              # `|| RECOVERED=""` never even fires — and the run reports this PR as
+              # untracked when it may in fact have an orphaned task issue. Same
+              # green-while-broken failure this pipeline already took once with the
+              # org-level TASK_MGMT_PAT. The two outcomes need different operator
+              # responses, so they get different messages.
+              # The comments are this repo's own, so GITHUB_TOKEN reads them (the
+              # job grants issues/pull-requests: read). The sender App could not:
+              # it is installed on the task board only.
+              COMMENTS_JSON="${RUNNER_TEMP:-/tmp}/task-sync-pr-comments.json"
+              HTTP_CODE=$(curl -s -o "$COMMENTS_JSON" -w '%{http_code}' \
+                -H "Authorization: Bearer ${GITHUB_READ_TOKEN}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments?per_page=100") || HTTP_CODE="000"
+
+              RECOVERED=""
+              LOOKUP_OK=1
+              if [ "$HTTP_CODE" != "200" ]; then
+                LOOKUP_OK=0
+                echo "::error::Could not read this PR's comments to check for an auto-created task issue (HTTP ${HTTP_CODE}). This is a LOOKUP FAILURE, not a verdict — a TM# may have been auto-created and is now orphaned behind this merged PR. Check that this job still grants issues: read and pull-requests: read to GITHUB_TOKEN, then move the task manually or re-run this job."
+              elif ! RECOVERED=$(jq -r --arg tm "$TASK_MGMT_REPO" --arg board "$BOARD_APP_LOGIN" '
+                    def firstnum($re): [scan($re)] | flatten | first // "";
+                    [ .[]
+                      | select(.author_association == "OWNER"
+                            or .author_association == "MEMBER"
+                            or .author_association == "COLLABORATOR"
+                            or .user.login == $board)
+                      | (.body // "")
+                      | { u: firstnum($tm + "/issues/([0-9]+)"), t: firstnum("TM#([0-9]+)") }
+                      | select(.u != "" and .u == .t)
+                      | .t
+                    ] | last // ""' < "$COMMENTS_JSON"); then
+                LOOKUP_OK=0
+                RECOVERED=""
+                echo "::error::PR comments came back HTTP 200 but could not be parsed, so the auto-created task issue could not be looked up. This is a LOOKUP FAILURE, not a verdict — the task issue may be orphaned behind this merged PR. Move it manually or re-run this job."
+              fi
+
+              if [ -n "$RECOVERED" ]; then
+                echo "::warning::Task Sync section is empty, but TM#${RECOVERED} was auto-created for this PR — the ref was dropped from the body after the bot appended it (a whole-body rewrite does this). Recovered from the PR comment; moving TM#${RECOVERED} to '${DEFAULT_COLUMN}' anyway. To avoid this, re-read the live body (gh pr view --json body) before editing it."
+                dispatch "$RECOVERED" "$DEFAULT_COLUMN" "$DEFAULT_ACTION" "$EVENT_DESC"
+              elif [ "$LOOKUP_OK" = "1" ]; then
+                echo "::warning::Merged with an empty Task Sync section and no auto-created issue to recover — this PR merged untracked and moved no task board column."
+              fi
             fi
+          fi
+
+          if [ -n "$DISPATCH_FAILED" ]; then
+            echo "::error::Dispatch failed for${DISPATCH_FAILED}. The task board did not hear about this PR; move those tickets by hand or re-run this job."
+            exit 1
           fi
