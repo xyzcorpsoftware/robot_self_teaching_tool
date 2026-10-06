@@ -32,9 +32,21 @@ jobs:
        github.event.comment.author_association == 'MEMBER' ||
        github.event.comment.author_association == 'COLLABORATOR')
     runs-on: ubuntu-latest
+    # The installation token it mints expires in 60 minutes; this job takes seconds.
+    timeout-minutes: 5
+    # Nothing here touches this repo through GITHUB_TOKEN.
+    permissions: {}
     env:
-      TASK_MGMT_PAT: ${{ secrets.TASK_MGMT_PAT }}
+      # The sender App's private key. Must be a repo-level secret, never org-level:
+      # GitHub Free doesn't deliver org secrets to private repos (API reports it
+      # configured, runtime gets ""). See CLAUDE.md "Secret management" in
+      # xyzcorpsoftware/task-management. Same App and same receiver door as
+      # sync-task-board.yml; the reasons are written there.
+      SENDER_APP_PRIVATE_KEY: ${{ secrets.TASK_SYNC_SENDER_APP_PRIVATE_KEY }}
+      SENDER_APP_CLIENT_ID: Iv23liZzDF9D9VB7zJxi
       TASK_MGMT_REPO: xyzcorpsoftware/task-management
+      RECEIVER_WORKFLOW: cross-repo-sync.yml
+      RECEIVER_REF: main
       COMMENT_BODY: ${{ github.event.comment.body }}
       COMMENT_URL: ${{ github.event.comment.html_url }}
       COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
@@ -43,14 +55,25 @@ jobs:
       PR_NUMBER: ${{ github.event.issue.number }}
 
     steps:
-      - name: Check PAT
+      - name: Check the sender App key
         run: |
-          if [ -z "$TASK_MGMT_PAT" ]; then
-            echo "::warning::TASK_MGMT_PAT secret is not set. Skipping."
-            exit 0
+          if [ -z "$SENDER_APP_PRIVATE_KEY" ]; then
+            echo "::error::Repo secret TASK_SYNC_SENDER_APP_PRIVATE_KEY is not set, so this command cannot reach the task board. Set it on this repo (repo-level, not org-level): see CLAUDE.md 'Secret management' in ${TASK_MGMT_REPO}."
+            exit 1
           fi
 
+      - name: Mint the sender App token (task board only)
+        id: sender-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ env.SENDER_APP_CLIENT_ID }}
+          private-key: ${{ secrets.TASK_SYNC_SENDER_APP_PRIVATE_KEY }}
+          owner: xyzcorpsoftware
+          repositories: task-management
+
       - name: Parse keyword commands and dispatch
+        env:
+          SENDER_TOKEN: ${{ steps.sender-token.outputs.token }}
         run: |
           keyword_to_column() {
             case "$(echo "$1" | tr '[:upper:]' '[:lower:]')" in
@@ -62,14 +85,18 @@ jobs:
             esac
           }
 
+          # Inputs are strings only; the receiver validates them. A failed dispatch
+          # is counted and turns the job red at the end.
+          DISPATCH_FAILED=""
           dispatch() {
             local NUM="$1" COLUMN="$2" EVENT="$3"
 
-            curl -sf -X POST \
-              -H "Authorization: token ${TASK_MGMT_PAT}" \
-              -H "Accept: application/vnd.github+v3+json" \
-              "https://api.github.com/repos/${TASK_MGMT_REPO}/dispatches" \
+            if curl -sf -X POST \
+              -H "Authorization: Bearer ${SENDER_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${TASK_MGMT_REPO}/actions/workflows/${RECEIVER_WORKFLOW}/dispatches" \
               -d "$(jq -n \
+                --arg ref "$RECEIVER_REF" \
                 --arg issue_number "$NUM" \
                 --arg target_column "$COLUMN" \
                 --arg action "move" \
@@ -80,19 +107,24 @@ jobs:
                 --arg pr_number "$PR_NUMBER" \
                 --arg pr_author "$COMMENT_AUTHOR" \
                 '{
-                  event_type: "task-board-sync",
-                  client_payload: {
-                    issue_number: ($issue_number | tonumber),
+                  ref: $ref,
+                  inputs: {
+                    issue_number: $issue_number,
                     target_column: $target_column,
                     action: $action,
                     source_repo: $source_repo,
                     pr_url: $pr_url,
                     pr_title: $pr_title,
                     pr_event: $pr_event,
-                    pr_number: ($pr_number | tonumber),
+                    pr_number: $pr_number,
                     pr_author: $pr_author
                   }
-                }')" && echo "  -> Dispatched" || echo "::warning::Failed to dispatch for #${NUM}"
+                }')"; then
+              echo "  -> Dispatched"
+            else
+              echo "::error::Failed to dispatch TM#${NUM} to ${TASK_MGMT_REPO}"
+              DISPATCH_FAILED="${DISPATCH_FAILED} #${NUM}"
+            fi
           }
 
           # Line-anchored keyword matching. Narrative prose like
@@ -134,3 +166,8 @@ jobs:
               dispatch "$NUM" "$COLUMN" "$EVENT"
             done
           done <<< "$MATCHES"
+
+          if [ -n "$DISPATCH_FAILED" ]; then
+            echo "::error::Dispatch failed for${DISPATCH_FAILED}. The task board did not move them; post the command again or move them by hand."
+            exit 1
+          fi
