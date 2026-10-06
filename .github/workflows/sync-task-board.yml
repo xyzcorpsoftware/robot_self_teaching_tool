@@ -44,8 +44,14 @@ jobs:
       # repository_dispatch would need (task-management#4982).
       RECEIVER_WORKFLOW: cross-repo-sync.yml
       RECEIVER_REF: main
-      # The board App writes the auto-create link comment the recovery step trusts.
-      # An App comment is author_association NONE, so it is trusted by exact login.
+      # The two identities that write the auto-create link comment the recovery
+      # step trusts: the representative account's PAT today, the board App after
+      # task-management#4983. Both are trusted by exact login, because
+      # author_association cannot vouch for either here: an App comment is NONE,
+      # and the recovery reads with GITHUB_TOKEN, which cannot see a PRIVATE org
+      # membership, so the PAT account's comments arrive as NONE too (measured
+      # 2026-10-06, task-management#4982).
+      PAT_LOGIN: xyzcorporation
       BOARD_APP_LOGIN: 'xyz-task-board[bot]'
       # Column a develop merge lands in. Per-repo because the work-item lifecycle
       # differs: most repos end at QA, while did_client and lounge-x-app treat the
@@ -268,10 +274,10 @@ jobs:
               # step "Update source PR with TM reference". It comments the created
               # issue URL *and* a matching `TM#N` token; we require BOTH, carrying the
               # same N, from an OWNER/MEMBER/COLLABORATOR (the ACL pr-comment-commands
-              # .yml uses) or from the board App by its exact login. That comment is
-              # written by the representative account today (MEMBER) and by the board
-              # App after task-management#4983 (author_association NONE); allowing
-              # every Bot instead would let any bot comment inject a TM#. Demanding
+              # .yml uses) or from one of its two writers by exact login (PAT_LOGIN,
+              # BOARD_APP_LOGIN above — read there why association alone cannot
+              # vouch for either). Allowing every Bot, or every NONE, instead would
+              # let any bot or outsider comment inject a TM#. Demanding
               # both halves is what keeps an outsider's comment, or a human casually
               # pasting one or the other, from moving a task issue — the same
               # false-positive class the section-scoped parser above fixed. Dropping
@@ -299,12 +305,13 @@ jobs:
               if [ "$HTTP_CODE" != "200" ]; then
                 LOOKUP_OK=0
                 echo "::error::Could not read this PR's comments to check for an auto-created task issue (HTTP ${HTTP_CODE}). This is a LOOKUP FAILURE, not a verdict — a TM# may have been auto-created and is now orphaned behind this merged PR. Check that this job still grants issues: read and pull-requests: read to GITHUB_TOKEN, then move the task manually or re-run this job."
-              elif ! RECOVERED=$(jq -r --arg tm "$TASK_MGMT_REPO" --arg board "$BOARD_APP_LOGIN" '
+              elif ! RECOVERED=$(jq -r --arg tm "$TASK_MGMT_REPO" --arg board "$BOARD_APP_LOGIN" --arg pat "$PAT_LOGIN" '
                     def firstnum($re): [scan($re)] | flatten | first // "";
                     [ .[]
                       | select(.author_association == "OWNER"
                             or .author_association == "MEMBER"
                             or .author_association == "COLLABORATOR"
+                            or .user.login == $pat
                             or .user.login == $board)
                       | (.body // "")
                       | { u: firstnum($tm + "/issues/([0-9]+)"), t: firstnum("TM#([0-9]+)") }
