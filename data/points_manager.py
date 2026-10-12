@@ -169,24 +169,28 @@ class RobotPointsManager:
         def apply_offset(base_point: List[float], offset: List[float]):
             return [base_point[i] + offset[i] for i in range(6)]
 
-        def cos_deg(deg):
-            return math.cos(math.radians(deg))
+        for base_name, new_name, offset in self.relative_defs():
+            base = self.points_dict.get(base_name)
+            if base and len(base) == 6:
+                self.points_dict[new_name] = apply_offset(base, offset)
+            else:
+                # 상대 포인트는 기준이 없으면 생성 못하니 skip
+                pass
 
-        def sin_deg(deg):
-            return math.sin(math.radians(deg))
-
-        x_offset = y_offset = x_offset_ret = y_offset_ret = 0.0
-
+    def cof_offset(self, distance: float):
+        """COF_Up_L의 rz 방향 기준으로 distance만큼 뒤로 빠지는 (x, y) 오프셋"""
         base = self.points_dict.get("COF_Up_L")
-        if base and len(base) == 6:
-            rz = base[5]
-            angle_deg = rz - 90
-            x_offset = round(-240 * cos_deg(angle_deg), 1)
-            y_offset = round(-240 * sin_deg(angle_deg), 1)
-            x_offset_ret = round(-210 * cos_deg(angle_deg), 1)
-            y_offset_ret = round(-210 * sin_deg(angle_deg), 1)
+        if not (base and len(base) == 6):
+            return 0.0, 0.0
+        angle = math.radians(base[5] - 90)
+        return round(-distance * math.cos(angle), 1), round(-distance * math.sin(angle), 1)
 
-        relative_defs = [
+    def relative_defs(self):
+        """(기준 포인트, 새 포인트, [x, y, z, rx, ry, rz] 오프셋) 목록 - BrewX"""
+        x_offset, y_offset = self.cof_offset(240)
+        x_offset_ret, y_offset_ret = self.cof_offset(210)
+
+        return [
             ("CUP3_Hold_L", "CUP3_Down_L", [0, 0, -70, 0, 0, 0]),
             ("CUP3_Hold_L", "CUP3_Ret_L",  [-100, 0, -70, 0, 0, 0]),
             ("CUP2_Hold_L", "CUP2_Down_L", [0, 0, -70, 0, 0, 0]),
@@ -205,14 +209,6 @@ class RobotPointsManager:
             ("CUP2_FAST_HOLD_L", "CUP2_FAST_APP_L", [-150, 0, 0, 0, 0, 0]),
             ("CUP1_FAST_HOLD_L", "CUP1_FAST_APP_L", [-150, 0, 0, 0, 0, 0]),
         ]
-
-        for base_name, new_name, offset in relative_defs:
-            base = self.points_dict.get(base_name)
-            if base and len(base) == 6:
-                self.points_dict[new_name] = apply_offset(base, offset)
-            else:
-                # 상대 포인트는 기준이 없으면 생성 못하니 skip
-                pass
 
     def add_pic_relative_points(self):
         """
@@ -285,6 +281,33 @@ class RobotPointsManager:
             B2 + 60 * sin_80,
             C - 30, rx, ry, rz_6_2
         ])
+
+
+class SlimPointsManager(RobotPointsManager):
+    """BrewX Slim: DB/PIC 계산은 BrewX와 동일, 상대 좌표만 다름 (baris-brew-station-v3 slim.py 기준)"""
+
+    def relative_defs(self):
+        x_offset_ret, y_offset_ret = self.cof_offset(210)
+
+        return [
+            ("CUP3_Hold_L", "CUP3_Down_L", [0, 0, -100, 0, 0, 0]),
+            ("CUP3_Hold_L", "CUP3_Ret_L",  [-170, 0, -100, 0, 0, 0]),
+            ("CUP2_Hold_L", "CUP2_Down_L", [0, 0, -100, 0, 0, 0]),
+            ("CUP2_Hold_L", "CUP2_Ret_L",  [-170, 0, -100, 0, 0, 0]),
+            ("CUP1_Hold_L", "CUP1_Down_L", [0, 0, -100, 0, 0, 0]),
+            ("CUP1_Hold_L", "CUP1_Ret_L",  [-170, 0, -100, 0, 0, 0]),
+            ("COF_Up_L", "COF_Place_L", [0, 0, -50, 0, 0, 0]),
+            ("COF_Up_L", "COF_Ret_L",   [x_offset_ret, y_offset_ret, -50, 0, 0, 0]),
+            ("COF_Up_L", "COF_App_L",   [0, -100, 0, 0, 0, 0]),
+            ("POW_Up_L", "POW_Place_L", [0, 0, -50, 0, 0, 0]),
+            ("POW_Up_L", "POW_App_L",   [0, -160, 0, 0, 0, 0]),
+            ("POW_Up_L", "POW_Ret_L",   [0, -160, -40, 0, 0, 0]),
+            ("ICE2_Hold_L", "ICE2_PreHold_L", [0, -50, 0, 0, 0, 0]),
+            ("ICE1_Hold_L", "ICE1_PreHold_L", [0, -50, 0, 0, 0, 0]),
+            ("CUP3_FAST_HOLD_L", "CUP3_FAST_APP_L", [-150, 0, 0, 0, 0, 0]),
+            ("CUP2_FAST_HOLD_L", "CUP2_FAST_APP_L", [-150, 0, 0, 0, 0, 0]),
+            ("CUP1_FAST_HOLD_L", "CUP1_FAST_APP_L", [-150, 0, 0, 0, 0, 0]),
+        ]
 
 
 class BrewPointsManager:

@@ -1,8 +1,6 @@
 import subprocess
 import os
-import traceback
-import pymysql
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QCheckBox
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QCheckBox, QComboBox
 from PyQt5.QtCore import Qt
 
 import sys
@@ -16,6 +14,7 @@ from robot.fake_controller import FakeRobotController
 from robot.fr_controller import FrRobotController
 from data.points_manager import RobotPointsManager
 from data.points_manager import BrewPointsManager
+from data.points_manager import SlimPointsManager
 from usecase.brewx_service import BrewXService
 from usecase.brew_service import BrewService
 from ui.main_window import MainWindow
@@ -57,6 +56,14 @@ class ConnectDialog(QDialog):
 
         layout.addWidget(self.check_box)
 
+        # 콤보박스: 장비 모델 선택
+        model_layout = QHBoxLayout()
+        model_layout.addWidget(QLabel("Model:"))
+        self.combo_model = QComboBox()
+        self.combo_model.addItems(["Brew", "BrewX", "BrewX Slim"])
+        model_layout.addWidget(self.combo_model)
+        layout.addLayout(model_layout)
+
         # IP 입력란
         self.edit_ip = QLineEdit()
         self.edit_ip.setPlaceholderText("예: 192.168.0.13")
@@ -72,25 +79,6 @@ class ConnectDialog(QDialog):
         self.btn_connect.clicked.connect(self.on_connect_clicked)
 
         self.main_window = None
-
-    def _read_info_table_row_count(self):
-        """
-        Count rows for t_robot_info. Returns int or None on error.
-        """
-        conn = None
-        try:
-            conn = pymysql.connect(**db_data.DB_CONFIG.config)
-            cursor = conn.cursor()
-            sql = f"SELECT COUNT(*) FROM {db_data.DB_CONFIG.ROBOT_INFO_TABLE}"
-            cursor.execute(sql)
-            row = cursor.fetchone()
-            return int(row[0]) if row else None
-        except Exception:
-            print("[CONNECT][WARN] t_robot_info column count failed:\n", traceback.format_exc())
-            return None
-        finally:
-            if conn:
-                conn.close()
 
     def _resolve_main_window_ui_path(self):
         """
@@ -165,12 +153,8 @@ class ConnectDialog(QDialog):
         if os.name != "nt":
             self.run_killing(self.ROBOT_PROCESS_KEYWORD)
 
-        row_count = self._read_info_table_row_count()
-        if row_count is None:
-            print("[CONNECT][WARN] t_robot_info row count is None, default to sequence mode")
-            row_count = 1
-
-        use_sequence_mode = row_count <= 1
+        model = self.combo_model.currentText()
+        use_sequence_mode = model != "Brew"
 
         ui_path = self._resolve_main_window_ui_path()
 
@@ -187,10 +171,11 @@ class ConnectDialog(QDialog):
         # ✅ UI별로 points_manager/sequence/brew_service 분리
         if use_sequence_mode:
             # main_window.ui (기존)
-            points_manager = RobotPointsManager()              # 바리스 브루X 등 기존 DB 포인트
-            sequence = BrewXService(points_manager=points_manager)
+            slim = model == "BrewX Slim"
+            points_manager = SlimPointsManager() if slim else RobotPointsManager()  # 바리스 브루X / 슬림 DB 포인트
+            sequence = BrewXService(points_manager=points_manager, slim=slim)
             brew_service = None
-            print("[MODE] BrewX 모드 (main_window.ui, BrewXService 사용)")
+            print(f"[MODE] {model} 모드 (BrewXService 사용)")
         else:
             # main_window_brew.ui (브루 전용)
             points_manager = BrewPointsManager()               # 바리스 브루 전용 DB 포인트

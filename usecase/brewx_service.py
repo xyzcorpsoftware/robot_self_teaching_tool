@@ -20,8 +20,9 @@ class BrewXResult:
 
 
 class BrewXService:
-    def __init__(self, points_manager=None):
+    def __init__(self, points_manager=None, slim=False):
         self.points_manager = points_manager
+        self.slim = slim  # BrewX Slim: COF/POW 복귀가 Place -> App_J (Ret 미사용)
 
         self._tcp_cache = {}  # saved_point_name -> [x,y,z,rx,ry,rz]
 
@@ -394,6 +395,12 @@ class BrewXService:
                 f"{base}_App_J",
             ]
             self._do_return(step_names, controller, vel, acc)
+            return
+
+        # ✅ Slim COF/POW: Place_L -> App_J (slim.py place_motion 기준)
+        if self.slim and (name.startswith("COF") or name.startswith("POW")):
+            prefix = name.split("_")[0]
+            self._do_return([f"{prefix}_Place_L", f"{prefix}_App_J"], controller, vel, acc)
             return
 
         # ✅ COF: COF_Place_L -> COF_Up_L -> COF_Ret_L -> COF_App_L
