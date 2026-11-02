@@ -310,6 +310,22 @@ class SlimPointsManager(RobotPointsManager):
         ]
 
 
+class SlimRightPointsManager(SlimPointsManager):
+    """우형 SLIM 전용 상대 포인트 규칙."""
+
+    def relative_defs(self):
+        right_offsets = {
+            "CUP1_FAST_APP_L": [-170, 0, 0, 0, 0, 0],
+            "ICE1_PreHold_L": [0, 50, 0, 0, 0, 0],
+            "ICE2_PreHold_L": [0, 50, 0, 0, 0, 0],
+            "POW_Ret_L": [-150, 200, -50, 0, 0, 0],
+        }
+        return [
+            (base_name, new_name, right_offsets.get(new_name, offset))
+            for base_name, new_name, offset in super().relative_defs()
+        ]
+
+
 class BrewPointsManager:
     """
     - MySQL DB(T_ROBOT_POINTS)에서 포인트 로드

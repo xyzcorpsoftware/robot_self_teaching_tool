@@ -15,6 +15,7 @@ from robot.fr_controller import FrRobotController
 from data.points_manager import RobotPointsManager
 from data.points_manager import BrewPointsManager
 from data.points_manager import SlimPointsManager
+from data.points_manager import SlimRightPointsManager
 from usecase.brewx_service import BrewXService
 from usecase.brew_service import BrewService
 from ui.main_window import MainWindow
@@ -60,7 +61,7 @@ class ConnectDialog(QDialog):
         model_layout = QHBoxLayout()
         model_layout.addWidget(QLabel("Model:"))
         self.combo_model = QComboBox()
-        self.combo_model.addItems(["Brew", "BrewX", "BrewX Slim"])
+        self.combo_model.addItems(["Brew", "BrewX", "BrewX Slim", "SLIM_RIGHT"])
         model_layout.addWidget(self.combo_model)
         layout.addLayout(model_layout)
 
@@ -171,8 +172,11 @@ class ConnectDialog(QDialog):
         # ✅ UI별로 points_manager/sequence/brew_service 분리
         if use_sequence_mode:
             # main_window.ui (기존)
-            slim = model == "BrewX Slim"
-            points_manager = SlimPointsManager() if slim else RobotPointsManager()  # 바리스 브루X / 슬림 DB 포인트
+            slim = model in ("BrewX Slim", "SLIM_RIGHT")
+            if model == "SLIM_RIGHT":
+                points_manager = SlimRightPointsManager()
+            else:
+                points_manager = SlimPointsManager() if slim else RobotPointsManager()
             sequence = BrewXService(points_manager=points_manager, slim=slim)
             brew_service = None
             print(f"[MODE] {model} 모드 (BrewXService 사용)")
