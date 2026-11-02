@@ -271,16 +271,20 @@ class RobotPointsManager:
         sin_80 = 0.984807
         cos_100 = -0.173648
 
-        self.points_dict["PIC1_2_Ret_L"] = round6([
-            a1 - 60 * cos_80,
-            B2 + 60 * sin_80,
-            C - 30, rx, ry, rz_1_2
-        ])
-        self.points_dict["PIC6_2_Ret_L"] = round6([
-            a2 - 60 * cos_100,
-            B2 + 60 * sin_80,
-            C - 30, rx, ry, rz_6_2
-        ])
+        # DB에 개별 Ret 좌표가 있으면 교시값을 우선 사용한다.
+        # 없는 경우에만 기존 상대좌표 계산값으로 보완한다.
+        if "PIC1_2_Ret_L" not in self.points_dict:
+            self.points_dict["PIC1_2_Ret_L"] = round6([
+                a1 - 60 * cos_80,
+                B2 + 60 * sin_80,
+                C - 30, rx, ry, rz_1_2
+            ])
+        if "PIC6_2_Ret_L" not in self.points_dict:
+            self.points_dict["PIC6_2_Ret_L"] = round6([
+                a2 - 60 * cos_100,
+                B2 + 60 * sin_80,
+                C - 30, rx, ry, rz_6_2
+            ])
 
 
 class SlimPointsManager(RobotPointsManager):
