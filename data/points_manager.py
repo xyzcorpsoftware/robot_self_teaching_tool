@@ -319,7 +319,9 @@ class SlimRightPointsManager(SlimPointsManager):
 
     def relative_defs(self):
         right_offsets = {
-            "CUP1_FAST_APP_L": [-170, 0, 0, 0, 0, 0],
+            "CUP1_FAST_APP_L": [-180, 0, 0, 0, 0, 0],
+            "CUP2_FAST_APP_L": [-170, 0, 0, 0, 0, 0],
+            "CUP3_FAST_APP_L": [-170, 0, 0, 0, 0, 0],
             "ICE1_PreHold_L": [0, 50, 0, 0, 0, 0],
             "ICE2_PreHold_L": [0, 50, 0, 0, 0, 0],
             "POW_Ret_L": [-150, 200, -50, 0, 0, 0],
