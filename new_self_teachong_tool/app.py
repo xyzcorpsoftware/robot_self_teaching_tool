@@ -8,10 +8,12 @@ import ipaddress
 import os
 import sys
 import threading
+import time
 import traceback
 
 from PyQt5.QtCore import QObject, Qt, QTimer, pyqtSignal
-from PyQt5.QtWidgets import (QApplication, QButtonGroup, QCheckBox, QDialog, QFrame, QGridLayout, QHBoxLayout,
+from PyQt5.QtWidgets import (QApplication, QButtonGroup, QCheckBox, QDialog, QFileDialog, QFrame, QGridLayout,
+                             QHBoxLayout,
                              QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton, QStackedWidget,
                              QVBoxLayout, QWidget)
 
@@ -21,23 +23,24 @@ import motions
 LIMIT = 30   # ponytail: one ±mm clamp from the saved Hold, per-point limits once real envelopes are known
 
 QSS = """
-QWidget { font-family:'Noto Sans CJK KR','Malgun Gothic',sans-serif; font-size:15px; color:#1f3a30; }
+QWidget { font-family:'Noto Sans CJK KR','Malgun Gothic',sans-serif; font-size:28px; color:#1f3a30; }
 QMainWindow, QDialog, #page { background:#eef2ef; }
 QFrame[card="true"] { background:#ffffff; border:1px solid #d3ddd6; border-radius:14px; }
 QFrame[card="true"][active="true"] { border:2px solid #1f6a4f; }
 QLabel { background:transparent; }
-QLabel[sub="true"] { color:#5f7068; font-size:13px; }
+QLabel[sub="true"] { color:#5f7068; font-size:22px; }
 QLabel[bad="true"] { color:#a8580f; font-weight:600; }
 QLabel[good="true"] { color:#1f6a4f; font-weight:600; }
-QPushButton { background:#ffffff; border:1px solid #d3ddd6; border-radius:9px; padding:8px 14px; min-height:26px; }
+QPushButton { background:#ffffff; border:1px solid #d3ddd6; border-radius:9px; padding:12px 20px; min-height:46px; }
 QPushButton:hover { background:#e1eee5; }
 QPushButton:checked, QPushButton[primary="true"] { background:#1f6a4f; color:#ffffff; border-color:#1f6a4f; font-weight:600; }
 QPushButton:disabled { color:#a3b0aa; background:#f4f6f5; border-color:#e3e9e5; }
 QPushButton:checked:disabled { background:#8fb5a3; color:#ffffff; border-color:#8fb5a3; }
-QPushButton#stop { border:2px solid #a8580f; color:#a8580f; font-weight:700; min-width:110px; min-height:40px; }
-QPushButton#back { border:2px solid #1f6a4f; color:#1f6a4f; font-weight:600; min-height:44px; }
-QPushButton[jog="true"] { min-height:48px; font-size:17px; font-weight:600; }
-QLineEdit { background:#ffffff; border:1px solid #d3ddd6; border-radius:9px; padding:6px 10px; min-height:26px; }
+QPushButton#stop { border:2px solid #a8580f; color:#a8580f; font-weight:700; min-width:190px; min-height:70px; }
+QPushButton#back { border:2px solid #1f6a4f; color:#1f6a4f; font-weight:600; min-height:84px; }
+QPushButton[tall="true"] { min-height:84px; }
+QPushButton[jog="true"] { min-height:90px; font-size:34px; font-weight:600; }
+QLineEdit { background:#ffffff; border:1px solid #d3ddd6; border-radius:9px; padding:10px 14px; min-height:46px; }
 QCheckBox { background:transparent; }
 """
 
@@ -86,11 +89,10 @@ class App(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("BREW 미세티칭")
-        self.resize(1180, 760)
         self.bus = Bus()
         self.bus.call.connect(lambda fn: fn())
         self.robot = self.store = self.rail = None
-        self.hw, self.mode, self.ip, self.fake = "BREW", "NORMAL", "", False
+        self.hw, self.mode, self.ip, self.fake, self.sql = "BREW", "NORMAL", "", False, None
         self.stack = QStackedWidget()
         self.setCentralWidget(self.stack)
         self.connect_page = ConnectPage(self)
@@ -126,23 +128,29 @@ class ConnectPage(QWidget):
         super().__init__()
         self.app = app
         self.setObjectName("page")
-        outer = QHBoxLayout(self)
-        outer.addStretch()
+        # cards keep their content height and sit in the middle of the window
+        page_v = QVBoxLayout(self)
+        page_v.addStretch(1)
+        outer = QHBoxLayout()
+        page_v.addLayout(outer)
+        page_v.addStretch(2)
+        outer.addStretch(1)
 
         c = card()
-        c.setFixedWidth(430)
         v = QVBoxLayout(c)
         v.setContentsMargins(20, 18, 20, 18)
         v.addWidget(label("<b style='letter-spacing:3px'>BARIS</b>"))
-        v.addWidget(label("<span style='font-size:19px;font-weight:700'>로봇 연결</span>"))
+        v.addWidget(label("<span style='font-size:36px;font-weight:700'>로봇 연결</span>"))
         v.addWidget(label("① 장비", sub=True))
         row = QHBoxLayout()
-        self.hw_btns = []
-        for name, ready in (("BREW", True), ("BREWX", False), ("SLIM", False), ("SLIM LEFT", False)):
-            b = button(name if ready else f"{name}\n준비 중")
+        self.hw_btns, self.hw_group = [], QButtonGroup(self)
+        for name, ready in (("BREW", True), ("BREWX", True), ("SLIM", False), ("SLIM LEFT", False)):
+            b = button(name if ready else f"{name}\n준비 중", tall=not ready)
             b.setCheckable(True)
             b.setChecked(name == "BREW")
             b.setEnabled(ready)
+            b.setProperty("hw", name)
+            self.hw_group.addButton(b)
             self.hw_btns.append((b, ready))
             row.addWidget(b)
         v.addLayout(row)
@@ -166,24 +174,36 @@ class ConnectPage(QWidget):
         self.fake = QCheckBox("가짜 로봇 (로봇 없이 화면만 확인)")
         self.fake.setChecked(os.name == "nt")
         v.addWidget(self.fake)
+        v.addWidget(label("④ 좌표 (DB가 없는 PC면 그 기계의 덤프 파일)", sub=True))
+        row = QHBoxLayout()
+        self.sql = QLineEdit()
+        self.sql.setReadOnly(True)
+        self.sql.setPlaceholderText("DB 사용")
+        self.sql_pick = button("파일 선택", self.pick_sql)
+        self.sql_clear = button("DB 사용", lambda: self.sql.clear())
+        row.addWidget(self.sql, 1)
+        row.addWidget(self.sql_pick)
+        row.addWidget(self.sql_clear)
+        v.addLayout(row)
         v.addWidget(label("연결하면 매장 운영 프로그램의 로봇 제어는 잠시 멈춰요.", sub=True))
         self.msg = label()
         v.addWidget(self.msg)
-        v.addStretch()
-        outer.addWidget(c)
+        c.setMinimumWidth(660)   # room for "SLIM LEFT / 준비 중" at the big font
+        c.setMaximumWidth(860)
+        outer.addWidget(c, 4, Qt.AlignTop)
 
         self.pick = card()
-        self.pick.setFixedWidth(430)
         v = QVBoxLayout(self.pick)
         v.setContentsMargins(20, 18, 20, 18)
-        v.addWidget(label("<span style='font-size:19px;font-weight:700'>무엇을 티칭할까요?</span>"))
+        v.addWidget(label("<span style='font-size:36px;font-weight:700'>무엇을 티칭할까요?</span>"))
         grid = QGridLayout()
         self.pick_btns = []
         for i, (key, name, ready) in enumerate((("CUP", "컵", True), ("ICE", "얼음", False), ("COF", "커피", False),
                                                ("POW", "파우더", False), ("PIC", "픽업존", False))):
-            b = button(f"{name}\n{'4개' if ready else '준비 중'}", lambda _=False, k=key: self.choose(k))
-            b.setMinimumHeight(72)
-            b.setStyleSheet("font-size:17px; font-weight:600; text-align:left; padding-left:16px;")
+            b = button(f"{name}\n준비 중", lambda _=False, k=key: self.choose(k))
+            b.setProperty("dp_name", name)
+            b.setMinimumHeight(130)
+            b.setStyleSheet("font-size:32px; font-weight:600; text-align:left; padding-left:16px;")
             b.setEnabled(ready)
             self.pick_btns.append((b, ready))
             grid.addWidget(b, i // 2, i % 2)
@@ -191,9 +211,10 @@ class ConnectPage(QWidget):
         v.addWidget(label("BREW는 고르면 레일을 같이 연결해요. 이때 레일 서보가 켜져요.", sub=True))
         self.pick_msg = label()
         v.addWidget(self.pick_msg)
-        v.addStretch()
-        outer.addWidget(self.pick)
-        outer.addStretch()
+        self.pick.setMinimumWidth(560)
+        self.pick.setMaximumWidth(860)
+        outer.addWidget(self.pick, 4, Qt.AlignTop)
+        outer.addStretch(1)
         self.refresh()
 
     def refresh(self, busy=False):
@@ -203,6 +224,8 @@ class ConnectPage(QWidget):
         for b in self.mode_group.buttons():
             b.setEnabled(not on and not busy)
         self.ip.setEnabled(not on and not busy)
+        self.sql_pick.setEnabled(not on and not busy)
+        self.sql_clear.setEnabled(not on and not busy)
         self.fake.setEnabled(not on and not busy)
         self.go.setEnabled(not busy)
         self.go.setText("연결 끊기" if on else "연결")
@@ -210,8 +233,17 @@ class ConnectPage(QWidget):
         self.pick.setEnabled(on and not busy)
         for b, ready in self.pick_btns:
             b.setEnabled(ready and on and not busy)
+            if ready:
+                b.setText(f"{b.property('dp_name')}\n{motions.SLOTS[self.hw_group.checkedButton().property('hw')]}개")
         if on:
-            set_msg(self.msg, f"로봇 연결됨 · {a.hw} · {a.mode}" + (" · 가짜 로봇" if a.fake else ""), "good")
+            set_msg(self.msg, f"로봇 연결됨 · {a.hw} · {a.mode}" + (" · 가짜 로봇" if a.fake else "")
+                    + (f"\n좌표: {os.path.basename(a.sql)} (저장은 {os.path.basename(a.store.saved_path)})" if a.sql else ""),
+                    "good")
+
+    def pick_sql(self):
+        path, _ = QFileDialog.getOpenFileName(self, "그 기계의 DB 덤프 파일", "", "SQL dump (*.sql)")
+        if path:
+            self.sql.setText(path)
 
     def toggle(self):
         a = self.app
@@ -229,13 +261,15 @@ class ConnectPage(QWidget):
             set_msg(self.msg, "IP 형식이 맞지 않아요. 예: 192.168.0.13", "bad")
             return
         a.ip, a.fake, a.mode = ip, self.fake.isChecked(), self.mode_group.checkedButton().text()
+        a.hw = self.hw_group.checkedButton().property("hw")
+        a.sql = self.sql.text() or None
         set_msg(self.msg, "로봇에 연결하는 중…")
         self.refresh(busy=True)
 
         def work():
             robot = dv.Robot.connect(ip, fake=a.fake)
             try:
-                store = dv.FakeStore() if a.fake else dv.Store()
+                store = dv.FileStore(a.sql) if a.sql else dv.FakeStore(a.hw) if a.fake else dv.Store()
             except Exception:
                 robot.close()
                 raise
@@ -286,9 +320,11 @@ class TeachPage(QWidget):
         root.setContentsMargins(16, 12, 16, 12)
 
         head = QHBoxLayout()
-        head.addWidget(label("<b style='letter-spacing:3px'>BARIS BREW</b>"))
+        self.brand = label()
+        self.brand.setWordWrap(False)
+        head.addWidget(self.brand)
         self.title = label()
-        self.title.setStyleSheet("font-size:19px; font-weight:700;")
+        self.title.setStyleSheet("font-size:36px; font-weight:700;")
         head.addWidget(self.title)
         self.info = label(sub=True)
         self.info.setWordWrap(False)
@@ -314,28 +350,42 @@ class TeachPage(QWidget):
         nv.setContentsMargins(24, 20, 24, 20)
         nv.addWidget(label("지금", sub=True))
         self.now_step = label("준비")
-        self.now_step.setStyleSheet("font-size:28px; font-weight:700;")
+        self.now_step.setStyleSheet("font-size:58px; font-weight:700;")
         nv.addWidget(self.now_step)
         nv.addSpacing(16)
-        nv.addWidget(label("로봇 현재 위치 (mm)", sub=True))
+        grid = QGridLayout()   # position and distance side by side to leave room for the adjust panel
+        grid.addWidget(label("로봇 현재 위치 (mm)", sub=True), 0, 0)
+        dist_lab = label("목표까지 남은 거리", sub=True)
+        dist_lab.setWordWrap(False)
+        grid.addWidget(dist_lab, 0, 1)
         self.now_pose = label()
-        self.now_pose.setStyleSheet("font-size:24px; font-family:Consolas,monospace;")
-        nv.addWidget(self.now_pose)
-        nv.addSpacing(10)
-        nv.addWidget(label("목표까지 남은 거리", sub=True))
+        self.now_pose.setWordWrap(False)
+        self.now_pose.setStyleSheet("font-size:44px; font-family:Consolas,monospace;")
+        grid.addWidget(self.now_pose, 1, 0)
         self.now_left = label("—")
-        self.now_left.setStyleSheet("font-size:24px; font-weight:600;")
-        nv.addWidget(self.now_left)
+        self.now_left.setWordWrap(False)
+        self.now_left.setMinimumWidth(200)
+        self.now_left.setStyleSheet("font-size:44px; font-weight:600;")
+        grid.addWidget(self.now_left, 1, 1)
+        grid.setColumnStretch(0, 3)
+        grid.setHorizontalSpacing(40)
+        grid.setColumnStretch(1, 1)
+        nv.addLayout(grid)
         nv.addStretch()
+        self.panel = AdjustPanel(self)
+        self.jog_win = JogWindow(self, self.panel)
         self.status = label()
-        self.status.setStyleSheet("font-size:16px;")
+        self.status.setStyleSheet("font-size:30px;")
         nv.addWidget(self.status)
-        body.addWidget(now, 1)
+        body.addWidget(now, 3)
 
         # right: phases with their steps, then help + back
         side = QVBoxLayout()
         self.phase_box = QVBoxLayout()
         side.addLayout(self.phase_box)
+        self.play_btn = button("▶ 동작 보기\n운영과 같은 순서·속도로 HOLD → UNHOLD", self.run_play, primary=True,
+                               tall=True)
+        side.addWidget(self.play_btn)
         side.addStretch()
         back = button("← 다른 동작 고르기\n컵 · 얼음 · 커피 · 파우더 · 픽업존", self.back)
         back.setObjectName("back")
@@ -343,8 +393,8 @@ class TeachPage(QWidget):
         side.addWidget(back)
         sw = QWidget()
         sw.setLayout(side)
-        sw.setFixedWidth(380)
-        body.addWidget(sw)
+        sw.setMinimumWidth(620)
+        body.addWidget(sw, 2)
         root.addLayout(body, 1)
 
         self.timer = QTimer(self)
@@ -354,13 +404,17 @@ class TeachPage(QWidget):
     # ── model ──
     def enter(self, dp):
         a = self.app
-        self.info.setText(f"{a.hw} · {a.mode} · {a.ip}" + (" · 가짜 로봇" if a.fake else ""))
+        self.info.setText(f"{a.hw} · {a.mode} · {a.ip}" + (" · 가짜 로봇" if a.fake else "")
+                          + (f" · 좌표 파일 {os.path.basename(a.sql)}" if a.sql else ""))
+        self.brand.setText(f"<b style='letter-spacing:3px'>BARIS {a.hw}</b>")
+        for b in self.slot_group.buttons():
+            b.setVisible(self.slot_group.id(b) <= motions.SLOTS[a.hw])
         self.set_slot(1)
 
     def set_slot(self, n):
         self.n, self.idx, self.step_mode = n, -1, False
         self.slot_group.button(n).setChecked(True)
-        self.m = motions.cup(self.app.mode, n)
+        self.m = motions.cup(self.app.hw, self.app.mode, n)
         self.flat, self.groups = [], []
         for gid, name, steps in self.m["phases"]:
             self.groups.append((gid, name, len(self.flat), len(self.flat) + len(steps) - 1))
@@ -420,6 +474,7 @@ class TeachPage(QWidget):
         for b in self.slot_group.buttons():
             b.setEnabled(not self.busy and not self.dlg)
         self.back_btn.setEnabled(not self.busy and not self.dlg)
+        self.play_btn.setEnabled(not self.busy and not self.dlg)
         if self.dlg:
             self.dlg.set_busy(self.busy)
 
@@ -441,9 +496,11 @@ class TeachPage(QWidget):
             self.dlg.update_readout(p)
 
     # ── running ──
-    def start(self, work, then=None):
+    def start(self, work, then=None, arm=True):
         """Run work() on a thread with the UI locked; then() on success."""
         a = self.app
+        if arm:   # a new run by the user clears an old stop (an automatic follow-up must not)
+            a.robot.arm()   # a stop pressed during this run stays until it ends
         self.busy = True
         self.refresh()
 
@@ -456,7 +513,8 @@ class TeachPage(QWidget):
         def fail(e):
             self.busy, self.target = False, None
             if self.dlg:   # stopped / failed while adjusting: the robot is near the cup, start over from HOLD
-                self.dlg.close()
+                self.dlg.deactivate()
+                self.jog_win.hide()
                 self.dlg = None
             self.refresh()
             if isinstance(e, dv.Stopped):
@@ -492,7 +550,7 @@ class TeachPage(QWidget):
         for k, lab in enumerate(self.step_labels):
             lab.setStyleSheet("font-weight:700; color:#1f6a4f;" if k == i else "color:#a3b0aa;" if k < i else "")
 
-    def run_phase(self, gid):
+    def run_phase(self, gid, arm=True):
         _, name, s, e = self.group(gid)
         self.step_mode = False
         first = s if gid == "hold" else self.idx + 1
@@ -501,7 +559,7 @@ class TeachPage(QWidget):
         def work():
             for i in range(first, e + 1):
                 self.do_step(i)
-        self.start(work, lambda: self.after(gid))
+        self.start(work, lambda: self.after(gid), arm)
 
     def run_one(self, gid):
         _, name, s, e = self.group(gid)
@@ -526,6 +584,48 @@ class TeachPage(QWidget):
             self.idx = -1
             self.refresh()
             self.say("② UNHOLD 완료. 다시 하려면 ① HOLD부터 실행하세요.")
+
+    def run_play(self):
+        """Production cup motion end to end (gripper included, no adjust window) with production vel/acc/blend."""
+        a = self.app
+        yes = QMessageBox.question(self, "동작 보기",
+                                   f"컵 {self.n}번을 운영과 같은 속도로 HOLD → UNHOLD까지 끝까지 움직여요.\n"
+                                   "티칭할 때보다 훨씬 빨라요. 로봇 주변에 사람이나 물건이 없는지 확인하세요.",
+                                   QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
+        if yes != QMessageBox.Yes:
+            return
+        acts = motions.play(a.hw, a.mode, self.n)
+        self.idx = -1
+        self.say(f"컵 {self.n}번 동작 보기 중… 멈추려면 ■ 정지")
+
+        def work():
+            for k, act in enumerate(acts):
+                kind, title = act[0], act[1]
+                a.ui(lambda k=k, t=title: self.now_step.setText(f"동작 보기 {k + 1}/{len(acts)} · {t}"))
+                if kind == "rail":
+                    pulse = a.store.rail_pulse(self.m["rail_cmd"], self.n)
+                    if pulse is None:
+                        raise dv.MotionError("DB에 이 칸의 레일 위치가 없어요")
+                    if a.robot.stop_req:
+                        raise dv.Stopped()
+                    if a.rail:
+                        a.rail.move_to_pulse_and_wait(target_pulse=pulse, pps=motions.RAIL_PPS, tol=50,
+                                                      timeout_s=20.0, log_poll=False)
+                elif kind == "grip":
+                    pos = dv.GRIP_OPEN if act[2] == "open" else a.store.gripper_close()
+                    a.robot.gripper(pos, block=act[3])
+                elif kind == "sleep":
+                    time.sleep(act[2])
+                else:
+                    _, _, where, vel, acc, blend = act
+                    target = where(a.store)
+                    self.target = target if kind == "L" else None
+                    a.robot.move(kind, target, vel=vel, acc=acc, blend=blend)
+
+        def done():
+            self.now_step.setText("동작 보기 완료")
+            self.say(f"컵 {self.n}번 동작 보기 끝. 고칠 곳이 있으면 ① HOLD로 티칭하세요.")
+        self.start(work, done)
 
     def stop(self):
         if self.app.robot:
@@ -553,24 +653,31 @@ class TeachPage(QWidget):
 
     # ── adjust Hold ──
     def open_adjust(self):
-        self.dlg = AdjustDialog(self)
+        self.panel.activate()
+        self.dlg = self.panel   # "adjusting" state: set while the jog window is open
         self.refresh()
-        self.dlg.show()
+        # about 2/3 of the main window, centred over it (the size the user picked on screen)
+        main = self.window()
+        self.jog_win.resize(int(main.width() * 0.66), int(main.height() * 0.7))
+        self.jog_win.move(main.geometry().center() - self.jog_win.rect().center())
+        self.jog_win.show()
+        self.jog_win.raise_()
 
     def leave(self, save):
         """Close the adjust dialog; save Hold (+ rail) or go back to the saved Hold; then UNHOLD."""
         a, d = self.app, self.dlg
         hold = self.m["hold_point"]
         base = a.store.point(hold)
-        d.close()
-        self.dlg = None
         rail_new = d.rail_value()
+        d.deactivate()
+        self.jog_win.hide()
+        self.dlg = None
 
         def work():
             if save:
                 p = a.robot.pose()
                 a.store.save_point(hold, p[:3] + base[3:])   # only XYZ is jogged; keep the saved rotation
-                if rail_new is not None and rail_new != d.rail0:
+                if self.m["rail_cmd"] and rail_new is not None and rail_new != d.rail0:
                     a.store.save_rail(self.m["rail_cmd"], self.n, rail_new)
             else:
                 self.target = base
@@ -582,22 +689,36 @@ class TeachPage(QWidget):
                 self.say(f"{msg} ② UNHOLD의 ‘한 단계씩’으로 빼세요.")
             else:
                 self.say(f"{msg} 빼는 중…")
-                self.run_phase("unhold")
+                self.run_phase("unhold", arm=False)
         self.start(work, then)
 
 
-class AdjustDialog(QDialog):
-    def __init__(self, page):
+class JogWindow(QDialog):
+    """Small window that pops up when HOLD reaches the cup; holds the AdjustPanel."""
+
+    def __init__(self, page, panel):
         super().__init__(page)
-        self.page, a = page, page.app
-        self.setWindowTitle("컵 잡는 위치 조정")
-        self.setModal(False)
+        self.setWindowTitle("위치 조정")
         self.setWindowFlag(Qt.WindowCloseButtonHint, False)
-        self.base = a.store.point(page.m["hold_point"])
-        self.rail0 = a.store.rail_pulse(page.m["rail_cmd"], page.n)
         v = QVBoxLayout(self)
-        v.addWidget(label(f"<b style='font-size:17px'>컵 {page.n}번 · 컵 잡는 위치</b>"))
-        v.addWidget(label("1 mm씩 움직여서 맞추세요. 저장된 위치에서 ±%d mm까지 움직일 수 있어요." % LIMIT, sub=True))
+        v.setContentsMargins(20, 12, 20, 20)
+        v.addWidget(panel)
+
+    def reject(self):   # Esc must not hide it: leaving goes through save / leave
+        pass
+
+
+class AdjustPanel(QFrame):
+    """Hold adjustment (1 mm jog, rail, save / leave); usable only after HOLD reached the cup."""
+
+    def __init__(self, page):
+        super().__init__()
+        self.page = page
+        self.base, self.rail0 = None, None
+        v = QVBoxLayout(self)
+        v.setContentsMargins(0, 12, 0, 0)
+        self.title = label()
+        v.addWidget(self.title)
         pad = QGridLayout()
         self.jogs = []
         for (r, c, ax, mm, t) in ((0, 1, "y", 1, "+Y"), (1, 0, "x", -1, "-X"), (1, 2, "x", 1, "+X"),
@@ -608,29 +729,47 @@ class AdjustDialog(QDialog):
         mid = label("1 mm", sub=True)
         mid.setAlignment(Qt.AlignCenter)
         pad.addWidget(mid, 1, 1)
-        pad.setColumnMinimumWidth(3, 16)
+        pad.setColumnMinimumWidth(3, 24)
         v.addLayout(pad)
         self.readout = label()
+        self.readout.setWordWrap(False)
         self.readout.setAlignment(Qt.AlignCenter)
         v.addWidget(self.readout)
         self.rail_row = QWidget()
         rr = QHBoxLayout(self.rail_row)
         rr.setContentsMargins(0, 0, 0, 0)
         rr.addWidget(label("레일 위치 (pulse)", sub=True))
-        self.rail = QLineEdit("" if self.rail0 is None else str(self.rail0))
+        self.rail = QLineEdit()
         rr.addWidget(self.rail, 1)
         self.rail_btn = button("레일 이동", self.move_rail)
         rr.addWidget(self.rail_btn)
-        self.rail_row.setVisible(a.rail is not None)
         v.addWidget(self.rail_row)
+        row = QHBoxLayout()
         self.save_btn = button("저장하고 빼기", lambda: page.leave(True), primary=True)
         self.leave_btn = button("저장 없이 빼기", lambda: page.leave(False))
-        v.addWidget(self.save_btn)
-        v.addWidget(self.leave_btn)
-        self.resize(420, 0)
+        row.addWidget(self.save_btn, 1)
+        row.addWidget(self.leave_btn, 1)
+        v.addLayout(row)
+        self.deactivate()
 
-    def reject(self):   # Esc must not hide the dialog: leaving goes through save / leave
-        pass
+    def activate(self):
+        p, a = self.page, self.page.app
+        self.base = a.store.point(p.m["hold_point"])
+        self.rail0 = a.store.rail_pulse(p.m["rail_cmd"], p.n) if p.m["rail_cmd"] else None
+        self.rail.setText("" if self.rail0 is None else str(self.rail0))
+        self.rail_row.setVisible(a.rail is not None)
+        self.title.setText(f"<b style='font-size:32px'>컵 {p.n}번 · 컵 잡는 위치</b>"
+                           f"<br><span style='font-size:22px;color:#5f7068'>1 mm씩 움직여서 맞추세요. "
+                           f"저장된 위치에서 ±{LIMIT} mm까지 움직일 수 있어요.</span>")
+        self.set_busy(False)
+
+    def deactivate(self):
+        self.base = None
+        self.title.setText("<b style='font-size:32px;color:#a3b0aa'>위치 조정</b>"
+                           "<br><span style='font-size:22px;color:#a3b0aa'>① HOLD로 컵 잡는 위치에 도착하면 쓸 수 있어요.</span>")
+        self.readout.setText("")
+        self.rail_row.setVisible(False)
+        self.set_busy(True)
 
     def rail_value(self):
         try:
@@ -640,7 +779,7 @@ class AdjustDialog(QDialog):
 
     def set_busy(self, busy):
         for b in self.jogs + [self.rail_btn, self.save_btn, self.leave_btn]:
-            b.setEnabled(not busy)
+            b.setEnabled(not busy and self.base is not None)
 
     def update_readout(self, p):
         d = [p[i] - self.base[i] for i in range(3)]
@@ -669,6 +808,10 @@ def main():
     qa = QApplication(sys.argv)
     qa.setStyleSheet(QSS)
     w = App()
+    # a normal window sized to its content (no big empty areas), centred; still resizable
+    w.adjustSize()
+    area = qa.primaryScreen().availableGeometry()
+    w.move(area.center() - w.rect().center())
     w.show()
     sys.exit(qa.exec_())
 

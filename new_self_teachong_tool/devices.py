@@ -63,18 +63,22 @@ class Robot:
             return (p.main_code, p.sub_code)
         return None
 
-    def move(self, kind, target, vel=TEACH_VEL):
+    def move(self, kind, target, vel=TEACH_VEL, acc=None, blend=0):
         """kind 'J' (target = joints) or 'L' (target = TCP). Waits until done; raises Stopped / MotionError.
 
-        Sent non-blocking (blendT/blendR = 0, as production does) and then polled, so stop() works mid-move.
-        We wait for each move to finish before the next, so nothing is blended — same result as blend -1.
+        Like production send_move_*: send, then wait for motion done before the next move. blend -1 would make the
+        SDK call block until arrival, so the stop button couldn't get through; it is sent as 0 instead. Same path:
+        production waits for each move anyway, so a blend value never joins two moves there either.
         """
-        self.stop_req = False
+        if self.stop_req:   # stop pressed between moves (or during a gripper/rail step) must end the run
+            raise Stopped()
+        acc = vel if acc is None else acc
+        blend = max(blend, 0)
         with self.lock:
             if kind == "J":
-                ret = self.rpc.MoveJ(joint_pos=list(target), tool=TOOL, user=USER, vel=vel, acc=vel, blendT=0)
+                ret = self.rpc.MoveJ(joint_pos=list(target), tool=TOOL, user=USER, vel=vel, acc=acc, blendT=blend)
             else:
-                ret = self.rpc.MoveL(desc_pos=list(target), tool=TOOL, user=USER, vel=vel, acc=vel, blendR=0)
+                ret = self.rpc.MoveL(desc_pos=list(target), tool=TOOL, user=USER, vel=vel, acc=acc, blendR=blend)
         if ret != 0:
             raise MotionError(f"Move{kind} 거부 (code {ret})")
         self._wait()
@@ -101,12 +105,19 @@ class Robot:
         p["xyz".index(axis)] += mm
         self.move("L", p, vel=JOG_VEL)
 
-    def gripper(self, pos):
+    def gripper(self, pos, block=0):
+        """block 0 = wait until the gripper finishes, 1 = return at once (production GRIPPER_NON_BLOCKING)."""
+        if self.stop_req:
+            raise Stopped()
         with self.lock:
-            ret = self.rpc.MoveGripper(index=1, pos=pos, vel=100, force=100, maxtime=30000, block=0,
+            ret = self.rpc.MoveGripper(index=1, pos=pos, vel=100, force=100, maxtime=30000, block=block,
                                        type=0, rotNum=0, rotVel=0, rotTorque=0)
         if ret != 0:
             raise MotionError(f"그리퍼 오류 (code {ret})")
+
+    def arm(self):
+        """Clear a previous stop. Only the UI calls this, when the user starts a new run."""
+        self.stop_req = False
 
     def stop(self):
         self.stop_req = True
@@ -188,27 +199,28 @@ class _Pkg:
 
 
 class FakeRPC:
-    """Mimics the SDK calls Robot uses. Moves at ~150 mm/s. MoveJ treats its target as a TCP (fake only)."""
+    """Mimics the SDK calls Robot uses. MoveL glides at ~300 mm/s.
+    ponytail: no kinematics, so MoveJ just takes 0.8 s and leaves the shown TCP where it was."""
 
     def __init__(self):
         self.robot_state_pkg = _Pkg()
-        self._target, self._t = None, None
-
-    def _go(self, target):
-        self._start, self._target, self._t = list(self.robot_state_pkg.tl_cur_pos), list(target), time.monotonic()
-        return 0
+        self._target, self._t, self._j_until = None, None, 0.0
 
     def MoveL(self, desc_pos, **_):
-        return self._go(desc_pos)
+        self._start, self._target, self._t = list(self.robot_state_pkg.tl_cur_pos), list(desc_pos), time.monotonic()
+        return 0
 
     def MoveJ(self, joint_pos, **_):
-        return self._go(joint_pos)
+        self._j_until = time.monotonic() + 0.8
+        return 0
 
     def GetRobotMotionDone(self):
+        if time.monotonic() < self._j_until:
+            return 0, 0
         if self._target is None:
             return 0, 1
         dist = sum((a - b) ** 2 for a, b in zip(self._start[:3], self._target[:3])) ** 0.5
-        k = min(1.0, (time.monotonic() - self._t) * 150 / max(dist, 1e-6))
+        k = min(1.0, (time.monotonic() - self._t) * 300 / max(dist, 1e-6))
         self.robot_state_pkg.tl_cur_pos = [a + (b - a) * k for a, b in zip(self._start, self._target)]
         if k >= 1:
             self._target = None
@@ -216,11 +228,12 @@ class FakeRPC:
 
     def StopMove(self):
         self.GetRobotMotionDone()
-        self._target = None
+        self._target, self._j_until = None, 0.0
         return 0
 
-    def MoveGripper(self, **_):
-        time.sleep(0.3)
+    def MoveGripper(self, block=0, **_):
+        if block == 0:
+            time.sleep(0.3)
         return 0
 
     def ResetAllError(self):
@@ -244,10 +257,33 @@ class FakeRail:
         return self.pos
 
 
-class FakeStore:
-    """Plausible numbers only — shapes the screens, says nothing about a real store."""
+# Fake BREWX uses a real store dump (bx001, 2026-11-11). ponytail: dev-PC path, override with FAKE_BREWX_SQL.
+BREWX_SQL = os.getenv("FAKE_BREWX_SQL", str(Path.home() / "OneDrive/Desktop/baris-brew-station-v3/DB"
+                                                       "/직영점_2026_11월11일기준/bx001_1111.sql"))
 
-    def __init__(self):
+
+def load_sql_dump(path):
+    """(points, gripper_close_pos) from a mysqldump. Same rule as production: joints if all 6 set, else TCP."""
+    import re
+    text = Path(path).read_text(encoding="utf-8")
+    pts = {}
+    rows = re.search(r"INSERT INTO `T_ROBOT_POINTS` VALUES (.*?);\s*$", text, re.M).group(1)
+    for name, vals in re.findall(r"\('([^']*)',([^)]*)\)", rows):
+        v = [None if x == "NULL" else float(x) for x in vals.split(",")]
+        j, t = v[:6], v[6:12]
+        pts[name] = j if None not in j else t
+    grip = re.search(r"INSERT INTO `T_ROBOT_ATTRIBUTE` VALUES \(1,\d+,\d+,(\d+)\)", text)
+    return pts, int(grip.group(1)) if grip else GRIP_CLOSE_DEFAULT
+
+
+class FakeStore:
+    """BREWX: points from the bx001 dump. BREW: plausible made-up numbers that only shape the screens."""
+
+    def __init__(self, hw="BREW"):
+        self.rail, self.grip = {}, GRIP_CLOSE_DEFAULT
+        if hw == "BREWX":
+            self.points, self.grip = load_sql_dump(BREWX_SQL)
+            return
         self.points = {
             "MAC_App_J": [-250.0, 150.0, 450.0, 90.0, 0.0, 0.0],
             "MAC_App_Cup_L": [-250.0, 300.0, 450.0, 90.0, 0.0, 0.0],
@@ -257,9 +293,10 @@ class FakeStore:
         for n in range(1, 5):
             self.points[f"CUP{n}_Hold_L"] = [-250.0 + 60 * n, 480.0, 380.0, 90.0, 0.0, 0.0]
             self.points[f"CUP{n}_FAST_HOLD_L"] = [-250.0 + 60 * n, 470.0, 380.0, 90.0, 0.0, 0.0]
-        self.rail = {}
 
     def point(self, name):
+        if name not in self.points:
+            raise KeyError(f"DB에 {name} 좌표가 없어요")
         return list(self.points[name])
 
     def save_point(self, name, pose):
@@ -272,4 +309,22 @@ class FakeStore:
         self.rail[(cmd, n)] = int(pulse)
 
     def gripper_close(self):
-        return GRIP_CLOSE_DEFAULT
+        return self.grip
+
+
+class FileStore(FakeStore):
+    """DB stand-in for a PC without MySQL (e.g. a laptop on the real robot): points come from a mysqldump of
+    THAT machine; saves go to <dump>.teach.json next to it (never the DB) and are applied again on the next start."""
+
+    def __init__(self, sql_path):
+        import json
+        self.rail, (self.points, self.grip) = {}, load_sql_dump(sql_path)
+        self.saved_path = Path(sql_path).with_suffix(".teach.json")
+        self.saved = json.loads(self.saved_path.read_text(encoding="utf-8")) if self.saved_path.exists() else {}
+        self.points.update(self.saved)
+
+    def save_point(self, name, pose):
+        import json
+        super().save_point(name, pose)
+        self.saved[name] = self.points[name]
+        self.saved_path.write_text(json.dumps(self.saved, indent=1, ensure_ascii=False), encoding="utf-8")
